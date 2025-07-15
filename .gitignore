@@ -3,12 +3,68 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# directories
+# directories and notebook stuff
 data/
 *.csv
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
 
 # C extensions
 *.so
+
+# Pixi
+target
+.idea
+.vscode
+.test-projects
+__pycache__
+.pixi
+.build
+.DS_store
+site/
+.cache
+pytest-temp
+/vendor
+*.conda
+*.local.*
+
+# Snakemake
+*~
+*.pyc
+*.swp
+
+docs/_build
+apidocs/_build
+apidocs/**/_autosummary
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+.snakemake*
+.venv
+.venv/*
+.python-version
+/version.txt
+
+.pytest*
+.cache
+.mypy_cache
+.ipynb*
+.vscode
+.ropeproject
+.test*
+tests/test*/*
+playground/*
+tutorial/*
+
+src/snakemake/assets/data
+src/snakemake/_version.py
+
+# pixi environments
+.pixi
+*.egg-info
+pixi.lock
 
 # Distribution / packaging
 .Python
@@ -209,3 +265,5 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+# pixi environments
+.pixi
