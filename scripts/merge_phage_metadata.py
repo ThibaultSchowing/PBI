@@ -17,15 +17,15 @@ dfs = []
 for infile in inputs:
     df = pd.read_csv(infile, sep="\t")
     
-    # Ajoute la colonne 'data_source' si elle n'existe pas
-    if 'data_source' not in df.columns:
-        source_name = os.path.basename(infile).split(".")[0]
+    # Ajoute la colonne 'Phage_source' si elle n'existe pas
+    if 'Phage_source' not in df.columns:
+        source_name = os.path.basename(infile).split("_")[0]
         # Log info the source_name
         logging.info(f"Processing {infile} with source name '{source_name}'")
-        df['data_source'] = source_name
+        df['Phage_source'] = source_name
+        logging.info(f"Added 'Phage_source' column to {infile} with value '{source_name}'")
 
     dfs.append(df)
-    logging.info(f"Added 'data_source' column to {infile} with value '{source_name}'")
 
 # Concatène tous les DataFrames
 merged_df = pd.concat(dfs, ignore_index=True)

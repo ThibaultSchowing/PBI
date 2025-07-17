@@ -14,6 +14,14 @@ Notes à supprimer:
 - ajouter un gitignore avec les éléments pour pixi et snakemake (done)
 
 
+## Effectué: 
+- snakemake --cores 4 data/merged/merged_annotated_proteins_metadata.csv
+    - en option: --dag | dot -Tsvg > dag.svg
+- snakemake --cores 4 data/merged/merged_phage_metadata.csv
+    - en option: --dag | dot -Tsvg > dag.svg
+
+
+
 
 
 

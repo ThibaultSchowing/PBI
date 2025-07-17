@@ -1,3 +1,6 @@
+
+configfile: "config.yaml"
+
 FEATURES = [
     "phage_metadata", 
     "annotated_proteins_metadata", 
@@ -7,9 +10,24 @@ FEATURES = [
     "phage_transmembrane_protein_metadata"
 ]
 
+# Récupération des paramètres de config
+protein_fasta_urls = config["protein_fasta_urls"]
+compressed_dir = config["protein_fasta_compressed_output"]
+output_protein_fasta_dir = config["protein_fasta_output"]
+
+# Génération de la liste des dossiers extraits attendus pour les fichiers fasta (protéines)
+extracted_dirs = [
+    os.path.join(output_protein_fasta_dir, name)
+    for name in protein_fasta_urls.keys()
+]
+
+#print(f"Extracted directories: {extracted_dirs}") # Remove for DAG generation
+
+# ['data/protein_fasta/Genbank', 'data/protein_fasta/RefSeq', 'data/protein_fasta/DDBJ', 'data/protein_fasta/EMBL', 
+# 'data/protein_fasta/PhagesDB', 'data/protein_fasta/GPD', 'data/protein_fasta/GVD', 'data/protein_fasta/MGV', 'data/protein_fasta/TemPhD',
+# 'data/protein_fasta/CHVD', 'data/protein_fasta/IGVD', 'data/protein_fasta/GOV2', 'data/protein_fasta/STV']
 
 
-configfile: "config.yaml"
 
 import os
 
@@ -17,6 +35,7 @@ import os
 
 # ----------------------------------------
 # ✅ RULE ALL (tous les rapports)
+# Demander de générer les csv merged est redondant
 # ----------------------------------------
 
 rule all:
@@ -28,7 +47,8 @@ rule all:
         expand(
             "reports/{feature}_report.html",
             feature=FEATURES
-        )
+        ),
+        extracted_dirs
 
 # ----------------------------------------
 # ✅ RULE DOWNLOAD (UNIQUE)
@@ -59,6 +79,7 @@ rule download_tsv:
         mkdir -p data/intermediate_csv/{wildcards.feature}
         wget -O {output} {params.url}
         """
+
 
 # ----------------------------------------
 # ✅ RULE MERGE PHAGE METADATA
@@ -137,10 +158,53 @@ rule merge_phage_transmembrane_protein_metadata_tsvs:
     input:
         expand(
             "data/intermediate_csv/phage_transmembrane_protein_metadata/{source}.tsv",
-            source=list(config["phage_transmembrane_protein_metadata_urls"].keys())
+            source=list(config["phage_transmembrane_protein_metadata_urls"].keys()) # e.g. STV_Phage_Metadata_URL
         )
     output:
         config["phage_transmembrane_protein_metadata_merged_output"]
     script:
         "scripts/merge_phage_transmembrane_protein_metadata.py"
+
+rule generate_report:
+    input:
+        "data/merged/merged_{feature}.csv"
+    output:
+        "reports/{feature}_report.html"
+    shell:
+        """
+        pixi run -e reporting python scripts/generate_reports.py {input} {output}
+        """
+
+# Protein fasta files
+
+rule download_protein_fasta:
+    """
+    Télécharge un fichier .tar.gz à partir de son URL.
+    L'input est dynamique et dépend du nom.
+    """
+    output:
+        os.path.join(compressed_dir, "{dataset}.tar.gz")
+    params:
+        url = lambda wildcards: protein_fasta_urls[wildcards.dataset]
+    shell:
+        """
+        wget -O {output} {params.url}
+        """
+
+rule extract_protein_fasta:
+    """
+    Extrait le contenu d'une archive .tar.gz dans un dossier dédié par dataset.
+    Dépend du téléchargement de l'archive correspondante.
+    """
+    input:
+        os.path.join(compressed_dir, "{dataset}.tar.gz")
+    output:
+        directory(os.path.join(output_protein_fasta_dir, "{dataset}"))
+    shell:
+        """
+        mkdir -p {output}
+        tar -xzf {input} -C {output}
+        """
+
+
 

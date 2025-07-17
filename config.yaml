@@ -19,7 +19,7 @@ phage_metadata_urls:
   "STV_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/stv_phage_meta_data.tsv"
 
 annotated_proteins_metadata_intermediate_output: "data/intermediate_csv/annotated_proteins"
-annotated_proteins_metadata_merged_output: "data/merged/merged_annotated_proteins.csv"
+annotated_proteins_metadata_merged_output: "data/merged/merged_annotated_proteins_metadata.csv"
 annotated_proteins_metadata_report_output: "reports/annotated_proteins_report.html"
 
 annotated_proteins_metadata_urls:
@@ -39,7 +39,7 @@ annotated_proteins_metadata_urls:
     "STV_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/stv_phage_annotated_protein_meta_data.tsv"
 
 phage_trna_tmrna_metadata_intermediate_output: "data/intermediate_csv/phage_trna_tmrna"
-phage_trna_tmrna_metadata_merged_output: "data/merged/merged_phage_trna_tmrna.csv"
+phage_trna_tmrna_metadata_merged_output: "data/merged/merged_phage_trna_tmrna_metadata.csv"
 phage_trna_tmrna_metadata_report_output: "reports/phage_trna_tmrna_report.html"
 
 phage_trna_tmrna_metadata_urls:
@@ -59,7 +59,7 @@ phage_trna_tmrna_metadata_urls:
     "STV_Phage_tRNA_tmRNA_Metadata_URL": "https://phageapi.deepomics.org/files/Download/tRNA_tmRNA_gene_meta_data_v2/stv_phage_trna_gene_meta_data.tsv"
 
 phage_anti_crispr_metadata_intermediate_output: "data/intermediate_csv/phage_anti_crispr"
-phage_anti_crispr_metadata_merged_output: "data/merged/merged_phage_anti_crispr.csv"
+phage_anti_crispr_metadata_merged_output: "data/merged/merged_phage_anti_crispr_metadata.csv"
 phage_anti_crispr_metadata_report_output: "reports/phage_anti_crispr_report.html"
 
 phage_anti_crispr_metadata_urls:
@@ -71,7 +71,7 @@ phage_anti_crispr_metadata_urls:
     "GVD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/gvd_phage_anticrispr_protein_meta_data.tsv"
     "GPD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/gpd_phage_anticrispr_protein_meta_data.tsv"
     "MGV_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/mgv_phage_anticrispr_protein_meta_data.tsv"
-    "TemPhD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/temphd_phage_anticrispr_protein_meta_data.tsv"
+    #"TemPhD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/temphd_phage_anticrispr_protein_meta_data.tsv"
     "CHVD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/chvd_phage_anticrispr_protein_meta_data.tsv"
     "IGVD_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/igvd_phage_anticrispr_protein_meta_data.tsv"
     "IMGVR_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/img_vr_phage_anticrispr_protein_meta_data.tsv"
@@ -80,7 +80,7 @@ phage_anti_crispr_metadata_urls:
 
 
 phage_virulent_factor_metadata_intermediate_output: "data/intermediate_csv/phage_virulent_factor"
-phage_virulent_factor_metadata_merged_output: "data/merged/merged_phage_virulent_factor.csv"
+phage_virulent_factor_metadata_merged_output: "data/merged/merged_phage_virulent_factor_metadata.csv"
 phage_virulent_factor_metadata_report_output: "reports/phage_virulent_factor_report.html"
 
 phage_virulent_factor_metadata_urls:
@@ -94,12 +94,12 @@ phage_virulent_factor_metadata_urls:
     "TemPhD_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/TemPhD_virulent_factor_data.tsv"
     "CHVD_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/CHVD_virulent_factor_data.tsv"
     "IGVD_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/IGVD_virulent_factor_data.tsv"
-    "IMGVR_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/IMGVR_virulent_factor_data.tsv"
+    #"IMGVR_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/IMGVR_virulent_factor_data.tsv"
     "GOV2_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/GOV2_virulent_factor_data.tsv"
 
 
 phage_transmembrane_protein_metadata_intermediate_output: "data/intermediate_csv/phage_transmembrane_protein"
-phage_transmembrane_protein_metadata_merged_output: "data/merged/merged_phage_transmembrane_protein.csv"
+phage_transmembrane_protein_metadata_merged_output: "data/merged/merged_phage_transmembrane_protein_metadata.csv"
 phage_transmembrane_protein_metadata_report_output: "reports/phage_transmembrane_protein_report.html"
 
 phage_transmembrane_protein_metadata_urls:
@@ -114,9 +114,29 @@ phage_transmembrane_protein_metadata_urls:
     "TemPhD_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/temphd_phage_transmembrane_protein_meta_data.tsv"
     "CHVD_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/chvd_phage_transmembrane_protein_meta_data.tsv"
     "IGVD_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/igvd_phage_transmembrane_protein_meta_data.tsv"
-    "IMGVR_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/imgvr_phage_transmembrane_protein_meta_data.tsv"
+    #"IMGVR_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/img_vr_phage_transmembrane_protein_meta_data.tsv"
     "GOV2_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/gov2_phage_transmembrane_protein_meta_data.tsv"
     "STV_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/stv_phage_transmembrane_protein_meta_data.tsv"
+
+
+protein_fasta_compressed_output: "data/protein_fasta_compressed"
+protein_fasta_output: "data/protein_fasta"
+
+protein_fasta_urls:
+    "Genbank": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/Genbank.tar.gz"
+    "RefSeq": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/RefSeq.tar.gz"
+    "DDBJ": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/DDBJ.tar.gz"
+    "EMBL": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/EMBL.tar.gz"
+    "PhagesDB": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/PhagesDB.tar.gz"
+    "GPD": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/GPD.tar.gz"
+    "GVD": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/GVD.tar.gz"
+    "MGV": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/MGV.tar.gz"
+    "TemPhD": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/TemPhD.tar.gz"
+    "CHVD": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/CHVD.tar.gz"
+    "IGVD": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/IGVD.tar.gz"
+    #"IMGVR": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/IMGVR.tar.gz"
+    "GOV2": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/GOV2.tar.gz"
+    "STV": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/STV.tar.gz"
 
 
 
