@@ -38,6 +38,29 @@ annotated_proteins_metadata_urls:
     "GOV2_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/gov2_phage_annotated_protein_meta_data.tsv"
     "STV_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/stv_phage_annotated_protein_meta_data.tsv"
 
+
+
+transcription_terminator_metadata_intermediate_output: "data/intermediate_csv/transcription_terminator"
+transcription_terminator_metadata_merged_output: "data/merged/merged_transcription_terminator_metadata.csv"
+transcription_terminator_metadata_report_output: "reports/transcription_terminator_report.html"
+
+transcription_terminator_metadata_urls:
+    "RefSeq_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/refseq_phage_transcription_terminator_meta_data.tsv"
+    "Genbank_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/genbank_phage_transcription_terminator_meta_data.tsv"
+    "EMBL_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/embl_phage_transcription_terminator_meta_data.tsv"
+    "DDBJ_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/ddbj_phage_transcription_terminator_meta_data.tsv"
+    "PhagesDB_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/phagesdb_phage_transcription_terminator_meta_data.tsv"
+    "GVD_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/gvd_phage_transcription_terminator_meta_data.tsv"
+    "GPD_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/gpd_phage_transcription_terminator_meta_data.tsv"
+    "MGV_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/mgv_phage_transcription_terminator_meta_data.tsv"
+    "TemPhD_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/temphd_phage_transcription_terminator_meta_data.tsv"
+    "CHVD_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/chvd_phage_transcription_terminator_meta_data.tsv"
+    "IGVD_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/igvd_phage_transcription_terminator_meta_data.tsv"
+    #"IMGVR_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/imgvr_phage_transcription_terminator_meta_data.tsv"
+    "GOV2_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/gov2_phage_transcription_terminator_meta_data.tsv"
+    "STV_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/stv_phage_transcription_terminator_meta_data.tsv"
+
+
 phage_trna_tmrna_metadata_intermediate_output: "data/intermediate_csv/phage_trna_tmrna"
 phage_trna_tmrna_metadata_merged_output: "data/merged/merged_phage_trna_tmrna_metadata.csv"
 phage_trna_tmrna_metadata_report_output: "reports/phage_trna_tmrna_report.html"
@@ -139,6 +162,23 @@ protein_fasta_urls:
     "STV": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/STV.tar.gz"
 
 
+phage_fasta_compressed_output: "data/phage_fasta_compressed"
+phage_fasta_output: "data/phage_fasta"
 
+phage_fasta_urls:
+    "Genbank": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=Genbank"
+    "RefSeq": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=RefSeq"
+    "DDBJ": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=DDBJ"
+    "EMBL": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=EMBL"
+    "PhagesDB": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=PhagesDB"
+    "GPD": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=GPD"
+    "GVD": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=GVD"
+    "MGV": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=MGV"
+    "TemPhD": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=TemPhD"
+    "CHVD": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=CHVD"
+    "IGVD": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=IGVD"
+    "IMGVR": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=IMG_VR"
+    "GOV2": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=GOV2"
+    "STV": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=STV"
 
 

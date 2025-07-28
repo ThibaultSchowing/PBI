@@ -33,19 +33,23 @@ def reservoir_sampling(file_path, sample_size):
     return df_sample
 
 def fast_sample_known_size(file_path, sample_size, total_rows):
-    """
-    Faster sampling if total_rows is known.
-    Generates random indices and collects only required rows.
-    """
+    import numpy as np
     logging.info(f"Sampling {sample_size} rows from {file_path} using fast sampling with known size....")
     sample_indices = set(random.sample(range(total_rows), sample_size))
     sample = []
+    current_row = 0
 
-    for i, chunk in enumerate(pd.read_csv(file_path, chunksize=1)):
-        if i in sample_indices:
-            sample.append(chunk)
-        if len(sample) >= sample_size:
-            break  # Early exit when sample is complete
+    chunksize = 100000  # 100k lignes par chunk
+
+    for chunk in pd.read_csv(file_path, chunksize=chunksize):
+        chunk_indices = range(current_row, current_row + len(chunk))
+        rows_to_keep = list(sample_indices.intersection(chunk_indices))
+        if rows_to_keep:
+            sample_rows = [i - current_row for i in rows_to_keep]
+            sample.append(chunk.iloc[sample_rows])
+        current_row += len(chunk)
+        if len(set().union(*[df.index for df in sample])) >= sample_size:
+            break
 
     df_sample = pd.concat(sample, ignore_index=True)
     return df_sample
@@ -95,8 +99,11 @@ def main():
                 # Too slow !
                 #df_sampled = reservoir_sampling(input_file, sample_size)
 
-                # We know that the data has 43088582 rows, so we can use a faster method
-                total_rows = 43088582 - 1  # Known total rows in the dataset
+                # We know that the data has 43088582 rows, so we can use a faster method # !!! maybe not all files have the same number of rows
+                #total_rows = 43088582 - 1  # Known total rows in the dataset
+                # Get the total rows from the file without loading the entire file in memory (use sed or wc)
+                total_rows = sum(1 for _ in open(input_file)) - 1
+                logging.info(f"Total rows in the file: {total_rows}")
                 df_sampled = fast_sample_known_size(input_file, sample_size, total_rows)
 
             if df_sampled.empty:

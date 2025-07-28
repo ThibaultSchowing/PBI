@@ -4,6 +4,7 @@ configfile: "config.yaml"
 FEATURES = [
     "phage_metadata", 
     "annotated_proteins_metadata", 
+    "transcription_terminator_metadata",
     "phage_trna_tmrna_metadata", 
     "phage_anti_crispr_metadata", 
     "phage_virulent_factor_metadata", 
@@ -15,10 +16,22 @@ protein_fasta_urls = config["protein_fasta_urls"]
 compressed_dir = config["protein_fasta_compressed_output"]
 output_protein_fasta_dir = config["protein_fasta_output"]
 
+
 # Génération de la liste des dossiers extraits attendus pour les fichiers fasta (protéines)
-extracted_dirs = [
+extracted_dirs_prot = [
     os.path.join(output_protein_fasta_dir, name)
     for name in protein_fasta_urls.keys()
+]
+
+# Récupération des paramètres de config pour les fichiers fasta de phages
+phage_fasta_urls = config["phage_fasta_urls"]
+compressed_phage_dir = config["phage_fasta_compressed_output"]
+output_phage_fasta_dir = config["phage_fasta_output"]
+
+# Génération de la liste des dossiers extraits attendus pour les fichiers fasta de phages
+extracted_dirs_phages = [
+    os.path.join(output_phage_fasta_dir, name)
+    for name in phage_fasta_urls.keys()
 ]
 
 #print(f"Extracted directories: {extracted_dirs}") # Remove for DAG generation
@@ -41,14 +54,11 @@ import os
 rule all:
     input:
         expand(
-            "data/merged/merged_{feature}.csv",
-            feature=FEATURES
-        ),
-        expand(
             "reports/{feature}_report.html",
             feature=FEATURES
         ),
-        extracted_dirs
+        extracted_dirs_prot,
+        extracted_dirs_phages
 
 # ----------------------------------------
 # ✅ RULE DOWNLOAD (UNIQUE)
@@ -77,9 +87,22 @@ rule download_tsv:
     shell:
         """
         mkdir -p data/intermediate_csv/{wildcards.feature}
-        wget -O {output} {params.url}
+        wget -O {output} {params.url} || echo "Failed download for {wildcards.feature}/{wildcards.source}"
         """
 
+# ----------------------------------------
+# ✅ RULE MERGE TRANSCRIPTION TERMINATOR METADATA
+# ----------------------------------------
+rule merge_transcription_terminator_metadata_tsvs:
+    input:
+        expand(
+            "data/intermediate_csv/transcription_terminator_metadata/{source}.tsv",
+            source=list(config["transcription_terminator_metadata_urls"].keys())
+        )
+    output:
+        config["transcription_terminator_metadata_merged_output"]
+    script:
+        "scripts/merge_transcription_terminator_metadata.py"
 
 # ----------------------------------------
 # ✅ RULE MERGE PHAGE METADATA
@@ -206,5 +229,34 @@ rule extract_protein_fasta:
         tar -xzf {input} -C {output}
         """
 
+# Phage fasta files
 
+rule download_phage_fasta:
+    """
+    Télécharge un fichier .tar.gz à partir de son URL.
+    L'input est dynamique et dépend du nom.
+    """
+    output:
+        os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
+    params:
+        url = lambda wildcards: phage_fasta_urls[wildcards.dataset]
+    shell:
+        """
+        wget -O {output} {params.url}
+        """
+
+rule extract_phage_fasta:
+    """
+    Extrait le contenu d'une archive .tar.gz dans un dossier dédié par dataset.
+    Dépend du téléchargement de l'archive correspondante.
+    """
+    input:
+        os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
+    output:
+        directory(os.path.join(output_phage_fasta_dir, "{dataset}"))
+    shell:
+        """
+        mkdir -p {output}
+        tar -xzf {input} -C {output}
+        """
 
