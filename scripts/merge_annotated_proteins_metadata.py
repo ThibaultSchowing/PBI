@@ -18,13 +18,13 @@ dfs = []
 for infile in inputs:
     df = pd.read_csv(infile, sep="\t")
     print(f"[INFO] Processing file: {infile} with shape {df.shape}")
-    print(f"Head of {infile}:\n{df.head()}")
+    #print(f"Head of {infile}:\n{df.head()}")
     
     # Ajoute la colonne 'Phage_source' si elle n'existe pas
     if 'Phage_source' not in df.columns:
         source_name = os.path.basename(infile).split("_")[0]
         # Log info the source_name
-        logging.info(f"Processing {infile} with source name '{source_name}'")
+        #logging.info(f"Processing {infile} with source name '{source_name}'")
         df['Phage_source'] = source_name
         logging.info(f"Added 'Phage_source' column to {infile} with value '{source_name}'")
     

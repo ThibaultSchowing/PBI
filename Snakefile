@@ -53,6 +53,11 @@ extracted_dirs_phages = [
 
 # expand fonctionne avec des templates de chemins, pas directement avec des clés formatées à évaluer dynamiquement dans le dictionnaire config.
 
+rule check_python:
+    output: "check_python.txt"
+    shell: "which python > {output}"
+
+
 # ----------------------------------------
 # RULE ALL (tous les rapports)
 # Demander de générer les csv merged est redondant
@@ -64,11 +69,20 @@ rule all:
             "reports/{feature}_report.html",
             feature=FEATURES
         ),
-        extracted_dirs_prot,
-        extracted_dirs_phages,
+        expand(
+            os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done"),
+            dataset=list(protein_fasta_urls.keys())
+        ),
+        expand(
+            os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done"),
+            dataset=list(phage_fasta_urls.keys())
+        ),
         expand(
             "data/protein_fasta_merged/{dataset}.fasta",
             dataset=list(protein_fasta_urls.keys())
+        ),
+        expand("data/phage_fasta_merged/{dataset}.fasta",
+            dataset=list(phage_fasta_urls.keys())
         )
 
 # ----------------------------------------
@@ -112,6 +126,8 @@ rule merge_transcription_terminator_metadata_tsvs:
         )
     output:
         config["transcription_terminator_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_transcription_terminator_metadata.py"
 
@@ -126,6 +142,8 @@ rule merge_phage_metadata_tsvs:
         )
     output:
         config["phage_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_phage_metadata.py"
 
@@ -140,6 +158,8 @@ rule merge_annotated_proteins_metadata_tsvs:
         )
     output:
         config["annotated_proteins_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_annotated_proteins_metadata.py"
 
@@ -154,6 +174,8 @@ rule merge_phage_trna_tmrna_metadata_tsvs:
         )
     output:
         config["phage_trna_tmrna_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_phage_trna_tmrna_metadata.py"
 
@@ -168,6 +190,8 @@ rule merge_phage_anti_crispr_metadata_tsvs:
         )
     output:
         config["phage_anti_crispr_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_phage_anti_crispr_metadata.py"
 
@@ -182,6 +206,9 @@ rule merge_phage_virulent_factor_metadata_tsvs:
         )
     output:
         config["phage_virulent_factor_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
+    
     script:
         "scripts/merge_phage_virulent_factor_metadata.py"
 
@@ -196,8 +223,11 @@ rule merge_phage_transmembrane_protein_metadata_tsvs:
         )
     output:
         config["phage_transmembrane_protein_metadata_merged_output"]
+    conda:
+        "envs/pixi_base_env.yaml"
     script:
         "scripts/merge_phage_transmembrane_protein_metadata.py"
+
 
 rule generate_report:
     input:
@@ -220,6 +250,7 @@ rule download_protein_fasta:
         os.path.join(compressed_dir, "{dataset}.tar.gz")
     params:
         url = lambda wildcards: protein_fasta_urls[wildcards.dataset]
+    cache: True 
     shell:
         """
         wget -O {output} {params.url}
@@ -233,12 +264,17 @@ rule extract_protein_fasta:
     input:
         os.path.join(compressed_dir, "{dataset}.tar.gz")
     output:
-        directory(os.path.join(output_protein_fasta_dir, "{dataset}"))
+        done_flag = os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done")
+        #directory(os.path.join(output_protein_fasta_dir, "{dataset}"))
     shell:
         """
-        mkdir -p {output}
-        tar -xzf {input} -C {output}
+        mkdir -p $(dirname {output.done_flag})
+        tar -xzf {input} -C $(dirname {output.done_flag})
+        touch {output.done_flag}
         """
+        
+        #mkdir -p {output}
+        #tar -xzf {input} -C {output}
 
 # Phage fasta files
 
@@ -251,6 +287,7 @@ rule download_phage_fasta:
         os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
     params:
         url = lambda wildcards: phage_fasta_urls[wildcards.dataset]
+    cache: True 
     shell:
         """
         wget -O {output} {params.url}
@@ -264,12 +301,16 @@ rule extract_phage_fasta:
     input:
         os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
     output:
-        directory(os.path.join(output_phage_fasta_dir, "{dataset}"))
+        #directory(os.path.join(output_phage_fasta_dir, "{dataset}"))
+        done_flag = os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done")
     shell:
         """
-        mkdir -p {output}
-        tar -xzf {input} -C {output}
+        mkdir -p $(dirname {output.done_flag})
+        tar -xzf {input} -C $(dirname {output.done_flag})
+        touch {output.done_flag}
         """
+        #mkdir -p {output}
+        #tar -xzf {input} -C {output}
 
 rule merge_protein_fasta_by_source:
     input:
@@ -288,5 +329,25 @@ rule merge_protein_fasta_by_source:
             cp "$fasta_files" {output.merged_fasta}
         else
             pixi run -e base python scripts/merge_protein_fasta.py "{input.source_dir}" "{output.merged_fasta}"
+        fi
+        '''
+    
+rule merge_phage_fasta_by_source:
+    input:
+        source_dir = os.path.join(output_phage_fasta_dir, "{dataset}")
+    output:
+        merged_fasta = os.path.join("data/phage_fasta_merged", "{dataset}.fasta")
+    params:
+        dataset = lambda wildcards: wildcards.dataset
+    shell:
+        # If only one fasta is present, just copy and rename. Otherwise, run the Python merge script.
+        # This ensures we don’t waste time unnecessarily merging a single file.
+        r'''
+        mkdir -p data/phage_fasta_merged
+        fasta_files=("$(find {input.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
+        if [ $(echo "$fasta_files" | wc -l) -eq 1 ]; then
+            cp "$fasta_files" {output.merged_fasta}
+        else
+            pixi run -e base python scripts/merge_phage_fasta.py "{input.source_dir}" "{output.merged_fasta}"
         fi
         '''
