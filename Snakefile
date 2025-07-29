@@ -1,6 +1,14 @@
-
+# Snakefile for the PhageScope data download and processing pipeline
+# This Snakefile orchestrates the downloading, merging, and reporting of various phage-related metadata
+# and protein fasta files from PhageScope (for now). 
+# Each merging is unique and is handled by a dedicated script.
 configfile: "config.yaml"
+import os
 
+
+# List here the features for which reports will be generated.
+# These features correspond to the keys in the config file that contain URLs for metadata.
+# Note that the name are directly used, so they must match the keys names (read the rule download_all_tsvs)
 FEATURES = [
     "phage_metadata", 
     "annotated_proteins_metadata", 
@@ -10,6 +18,9 @@ FEATURES = [
     "phage_virulent_factor_metadata", 
     "phage_transmembrane_protein_metadata"
 ]
+
+# For the fasta files, the snakemake rules simply check that the directories are created but cannot check 
+# the content of the directories, as files are too numerous and not named in a predictable way.
 
 # Récupération des paramètres de config
 protein_fasta_urls = config["protein_fasta_urls"]
@@ -40,14 +51,10 @@ extracted_dirs_phages = [
 # 'data/protein_fasta/PhagesDB', 'data/protein_fasta/GPD', 'data/protein_fasta/GVD', 'data/protein_fasta/MGV', 'data/protein_fasta/TemPhD',
 # 'data/protein_fasta/CHVD', 'data/protein_fasta/IGVD', 'data/protein_fasta/GOV2', 'data/protein_fasta/STV']
 
-
-
-import os
-
 # expand fonctionne avec des templates de chemins, pas directement avec des clés formatées à évaluer dynamiquement dans le dictionnaire config.
 
 # ----------------------------------------
-# ✅ RULE ALL (tous les rapports)
+# RULE ALL (tous les rapports)
 # Demander de générer les csv merged est redondant
 # ----------------------------------------
 
@@ -58,10 +65,14 @@ rule all:
             feature=FEATURES
         ),
         extracted_dirs_prot,
-        extracted_dirs_phages
+        extracted_dirs_phages,
+        expand(
+            "data/protein_fasta_merged/{dataset}.fasta",
+            dataset=list(protein_fasta_urls.keys())
+        )
 
 # ----------------------------------------
-# ✅ RULE DOWNLOAD (UNIQUE)
+# RULE DOWNLOAD (UNIQUE)
 #     download_all_tsvs -> lists explicit filenames
 #     download_tsv -> downloads each file
 # ----------------------------------------
@@ -91,7 +102,7 @@ rule download_tsv:
         """
 
 # ----------------------------------------
-# ✅ RULE MERGE TRANSCRIPTION TERMINATOR METADATA
+# RULE MERGE TRANSCRIPTION TERMINATOR METADATA
 # ----------------------------------------
 rule merge_transcription_terminator_metadata_tsvs:
     input:
@@ -105,7 +116,7 @@ rule merge_transcription_terminator_metadata_tsvs:
         "scripts/merge_transcription_terminator_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE PHAGE METADATA
+# RULE MERGE PHAGE METADATA
 # ----------------------------------------
 rule merge_phage_metadata_tsvs:
     input:
@@ -119,7 +130,7 @@ rule merge_phage_metadata_tsvs:
         "scripts/merge_phage_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE ANNOTATED PROTEINS METADATA
+# RULE MERGE ANNOTATED PROTEINS METADATA
 # ----------------------------------------
 rule merge_annotated_proteins_metadata_tsvs:
     input:
@@ -133,7 +144,7 @@ rule merge_annotated_proteins_metadata_tsvs:
         "scripts/merge_annotated_proteins_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE PHAGE tRNA/tmRNA METADATA
+# RULE MERGE PHAGE tRNA/tmRNA METADATA
 # ----------------------------------------
 rule merge_phage_trna_tmrna_metadata_tsvs:
     input:
@@ -147,7 +158,7 @@ rule merge_phage_trna_tmrna_metadata_tsvs:
         "scripts/merge_phage_trna_tmrna_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE PHAGE ANTI-CRISPR METADATA
+# RULE MERGE PHAGE ANTI-CRISPR METADATA
 # ----------------------------------------
 rule merge_phage_anti_crispr_metadata_tsvs:
     input:
@@ -161,7 +172,7 @@ rule merge_phage_anti_crispr_metadata_tsvs:
         "scripts/merge_phage_anti_crispr_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE PHAGE VIRULENT FACTOR METADATA
+# RULE MERGE PHAGE VIRULENT FACTOR METADATA
 # ----------------------------------------
 rule merge_phage_virulent_factor_metadata_tsvs:
     input:
@@ -175,7 +186,7 @@ rule merge_phage_virulent_factor_metadata_tsvs:
         "scripts/merge_phage_virulent_factor_metadata.py"
 
 # ----------------------------------------
-# ✅ RULE MERGE PHAGE TRANSMEMBRANE PROTEIN METADATA
+# RULE MERGE PHAGE TRANSMEMBRANE PROTEIN METADATA
 # ----------------------------------------
 rule merge_phage_transmembrane_protein_metadata_tsvs:
     input:
@@ -260,3 +271,22 @@ rule extract_phage_fasta:
         tar -xzf {input} -C {output}
         """
 
+rule merge_protein_fasta_by_source:
+    input:
+        source_dir = os.path.join(output_protein_fasta_dir, "{dataset}")
+    output:
+        merged_fasta = os.path.join("data/protein_fasta_merged", "{dataset}.fasta")
+    params:
+        dataset = lambda wildcards: wildcards.dataset
+    shell:
+        # If only one fasta is present, just copy and rename. Otherwise, run the Python merge script.
+        # This ensures we don’t waste time unnecessarily merging a single file.
+        r'''
+        mkdir -p data/protein_fasta_merged
+        fasta_files=("$(find {input.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
+        if [ $(echo "$fasta_files" | wc -l) -eq 1 ]; then
+            cp "$fasta_files" {output.merged_fasta}
+        else
+            pixi run -e base python scripts/merge_protein_fasta.py "{input.source_dir}" "{output.merged_fasta}"
+        fi
+        '''
