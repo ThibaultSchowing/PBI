@@ -70,14 +70,6 @@ rule all:
             feature=FEATURES
         ),
         expand(
-            os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done"),
-            dataset=list(protein_fasta_urls.keys())
-        ),
-        expand(
-            os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done"),
-            dataset=list(phage_fasta_urls.keys())
-        ),
-        expand(
             "data/protein_fasta_merged/{dataset}.fasta",
             dataset=list(protein_fasta_urls.keys())
         ),
@@ -106,9 +98,10 @@ rule download_all_tsvs:
 
 rule download_tsv:
     output:
-        "data/intermediate_csv/{feature}/{source}.tsv"
+        temp("data/intermediate_csv/{feature}/{source}.tsv")
     params: 
         url = lambda wildcards: config[f"{wildcards.feature}_urls"][wildcards.source]
+    threads: 8
     shell:
         """
         mkdir -p data/intermediate_csv/{wildcards.feature}
@@ -247,7 +240,7 @@ rule download_protein_fasta:
     L'input est dynamique et dépend du nom.
     """
     output:
-        os.path.join(compressed_dir, "{dataset}.tar.gz")
+        temp(os.path.join(compressed_dir, "{dataset}.tar.gz"))
     params:
         url = lambda wildcards: protein_fasta_urls[wildcards.dataset]
     cache: True 
@@ -264,17 +257,19 @@ rule extract_protein_fasta:
     input:
         os.path.join(compressed_dir, "{dataset}.tar.gz")
     output:
-        done_flag = os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done")
-        #directory(os.path.join(output_protein_fasta_dir, "{dataset}"))
+        #done_flag = temp(os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done"))
+        extracted_dir = temp(directory(os.path.join(output_protein_fasta_dir, "{dataset}")))
     shell:
         """
-        mkdir -p $(dirname {output.done_flag})
-        tar -xzf {input} -C $(dirname {output.done_flag})
-        touch {output.done_flag}
-        """
+        mkdir -p {output.extracted_dir}
+        tar -xzf {input} -C {output.extracted_dir}
         
-        #mkdir -p {output}
-        #tar -xzf {input} -C {output}
+        """
+
+        #mkdir -p $(dirname {output.done_flag})
+        #tar -xzf {input} -C $(dirname {output.done_flag})
+        #touch {output.done_flag}
+        
 
 # Phage fasta files
 
@@ -284,10 +279,11 @@ rule download_phage_fasta:
     L'input est dynamique et dépend du nom.
     """
     output:
-        os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
+        temp(os.path.join(compressed_phage_dir, "{dataset}.tar.gz"))
     params:
         url = lambda wildcards: phage_fasta_urls[wildcards.dataset]
     cache: True 
+    threads: 8
     shell:
         """
         wget -O {output} {params.url}
@@ -301,53 +297,74 @@ rule extract_phage_fasta:
     input:
         os.path.join(compressed_phage_dir, "{dataset}.tar.gz")
     output:
-        #directory(os.path.join(output_phage_fasta_dir, "{dataset}"))
-        done_flag = os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done")
+        #done_flag = temp(os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done"))
+        extracted_dir = temp(directory(os.path.join(output_phage_fasta_dir, "{dataset}")))
     shell:
         """
-        mkdir -p $(dirname {output.done_flag})
-        tar -xzf {input} -C $(dirname {output.done_flag})
-        touch {output.done_flag}
+        mkdir -p {output.extracted_dir}
+        tar -xzf {input} -C {output.extracted_dir}
+        
         """
-        #mkdir -p {output}
-        #tar -xzf {input} -C {output}
+        #mkdir -p $(dirname {output.done_flag})
+        #tar -xzf {input} -C $(dirname {output.done_flag})
+        #touch {output.done_flag}
 
 rule merge_protein_fasta_by_source:
     input:
+        #done_flag = os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done"),
         source_dir = os.path.join(output_protein_fasta_dir, "{dataset}")
     output:
         merged_fasta = os.path.join("data/protein_fasta_merged", "{dataset}.fasta")
     params:
-        dataset = lambda wildcards: wildcards.dataset
+        source_dir = lambda wildcards: os.path.join(output_protein_fasta_dir, wildcards.dataset),
+        #dataset = lambda wildcards: wildcards.dataset
     shell:
         # If only one fasta is present, just copy and rename. Otherwise, run the Python merge script.
         # This ensures we don’t waste time unnecessarily merging a single file.
         r'''
         mkdir -p data/protein_fasta_merged
-        fasta_files=("$(find {input.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
+        fasta_files=("$(find {params.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
         if [ $(echo "$fasta_files" | wc -l) -eq 1 ]; then
             cp "$fasta_files" {output.merged_fasta}
         else
-            pixi run -e base python scripts/merge_protein_fasta.py "{input.source_dir}" "{output.merged_fasta}"
+            pixi run -e base python scripts/merge_protein_fasta.py "{params.source_dir}" "{output.merged_fasta}"
         fi
         '''
     
 rule merge_phage_fasta_by_source:
     input:
+        #done_flag = os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done"),
         source_dir = os.path.join(output_phage_fasta_dir, "{dataset}")
     output:
         merged_fasta = os.path.join("data/phage_fasta_merged", "{dataset}.fasta")
     params:
-        dataset = lambda wildcards: wildcards.dataset
+        source_dir = lambda wildcards: os.path.join(output_phage_fasta_dir, wildcards.dataset),
+        #dataset = lambda wildcards: wildcards.dataset
     shell:
         # If only one fasta is present, just copy and rename. Otherwise, run the Python merge script.
         # This ensures we don’t waste time unnecessarily merging a single file.
         r'''
         mkdir -p data/phage_fasta_merged
-        fasta_files=("$(find {input.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
+        fasta_files=("$(find {params.source_dir} -type f \( -name "*.fasta" -o -name "*.fa" \))")
         if [ $(echo "$fasta_files" | wc -l) -eq 1 ]; then
             cp "$fasta_files" {output.merged_fasta}
         else
-            pixi run -e base python scripts/merge_phage_fasta.py "{input.source_dir}" "{output.merged_fasta}"
+            pixi run -e base python scripts/merge_phage_fasta.py "{params.source_dir}" "{output.merged_fasta}"
         fi
         '''
+
+rule cleanup_extracted_phage_fasta:
+    input:
+        flag = os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done")
+    shell:
+        """
+        rm -rf $(dirname {input.flag})
+        """
+
+rule cleanup_extracted_protein_fasta:
+    input:
+        flag = os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done")
+    shell:
+        """
+        rm -rf $(dirname {input.flag})
+        """
