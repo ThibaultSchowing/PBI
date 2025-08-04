@@ -47,10 +47,17 @@ TODO: show .toml file here
 - Don't forget to run  `pixi install --environment <envname>`
 - Add Pixi and Snakemake files to .gitignore
 
+# TODO: 
+
+- Adapt current files for new workflow structure (everything moved within the workflow dir)
+
 
 ### How to 
 
 Snakemake is launched from Pixi with `pixi run`. 
+
+Input, output, log, and benchmark files are considered to be relative to the working directory (**either the directory in which you have invoked Snakemake** or whatever was specified for --directory or the workdir: directive). -> from the workflow directory !
+
 
 The Pixi environment needs to be exported first with `pixi workspace export conda-environment -e base envs/pixi_base_enf.yaml`
 
@@ -64,7 +71,10 @@ The Conda environment to use is specified within each rule (if needed) with
 Cache: to use caching, it is first needed to export snakemake cache with `export SNAKEMAKE_OUTPUT_CACHE=/mnt/snakemake-cache/` (create the destination directory first). 
 
 - pixi run snakemake all --cache --use-conda --printshellcmds --cores 2
-    - optionally to generate the DAT you can add: --dag | dot -Tsvg > dag.svg
+    - optionally to generate the DAG you can add: --dag | dot -Tsvg > dag.svg
+
+- **Current command:** `pixi run snakemake --directory workflow --snakefile workflow/Snakefile --cache --use-conda --printshellcmds --cores 4 `
+    - **DAG Option (path relative to bash location)**`--dag | dot -Tsvg > workflow/dag/dag_rerun.svg`
 
 To remove the temporary files after execution, use --delete-temp-output. Has to be done separately  (to be verified):
 - pixi run snakemake --delete-temp-output

@@ -1,81 +1,4 @@
-# Snakefile for the PhageScope data download and processing pipeline
-# This Snakefile orchestrates the downloading, merging, and reporting of various phage-related metadata
-# and protein fasta files from PhageScope (for now). 
-# Each merging is unique and is handled by a dedicated script.
-configfile: "config.yaml"
-import os
 
-
-# List here the features for which reports will be generated.
-# These features correspond to the keys in the config file that contain URLs for metadata.
-# Note that the name are directly used, so they must match the keys names (read the rule download_all_tsvs)
-FEATURES = [
-    "phage_metadata", 
-    "annotated_proteins_metadata", 
-    "transcription_terminator_metadata",
-    "phage_trna_tmrna_metadata", 
-    "phage_anti_crispr_metadata", 
-    "phage_virulent_factor_metadata", 
-    "phage_transmembrane_protein_metadata"
-]
-
-# For the fasta files, the snakemake rules simply check that the directories are created but cannot check 
-# the content of the directories, as files are too numerous and not named in a predictable way.
-
-# Récupération des paramètres de config
-protein_fasta_urls = config["protein_fasta_urls"]
-compressed_dir = config["protein_fasta_compressed_output"]
-output_protein_fasta_dir = config["protein_fasta_output"]
-
-
-# Génération de la liste des dossiers extraits attendus pour les fichiers fasta (protéines)
-extracted_dirs_prot = [
-    os.path.join(output_protein_fasta_dir, name)
-    for name in protein_fasta_urls.keys()
-]
-
-# Récupération des paramètres de config pour les fichiers fasta de phages
-phage_fasta_urls = config["phage_fasta_urls"]
-compressed_phage_dir = config["phage_fasta_compressed_output"]
-output_phage_fasta_dir = config["phage_fasta_output"]
-
-# Génération de la liste des dossiers extraits attendus pour les fichiers fasta de phages
-extracted_dirs_phages = [
-    os.path.join(output_phage_fasta_dir, name)
-    for name in phage_fasta_urls.keys()
-]
-
-#print(f"Extracted directories: {extracted_dirs}") # Remove for DAG generation
-
-# ['data/protein_fasta/Genbank', 'data/protein_fasta/RefSeq', 'data/protein_fasta/DDBJ', 'data/protein_fasta/EMBL', 
-# 'data/protein_fasta/PhagesDB', 'data/protein_fasta/GPD', 'data/protein_fasta/GVD', 'data/protein_fasta/MGV', 'data/protein_fasta/TemPhD',
-# 'data/protein_fasta/CHVD', 'data/protein_fasta/IGVD', 'data/protein_fasta/GOV2', 'data/protein_fasta/STV']
-
-# expand fonctionne avec des templates de chemins, pas directement avec des clés formatées à évaluer dynamiquement dans le dictionnaire config.
-
-rule check_python:
-    output: "check_python.txt"
-    shell: "which python > {output}"
-
-
-# ----------------------------------------
-# RULE ALL (tous les rapports)
-# Demander de générer les csv merged est redondant
-# ----------------------------------------
-
-rule all:
-    input:
-        expand(
-            "reports/{feature}_report.html",
-            feature=FEATURES
-        ),
-        expand(
-            "data/protein_fasta_merged/{dataset}.fasta",
-            dataset=list(protein_fasta_urls.keys())
-        ),
-        expand("data/phage_fasta_merged/{dataset}.fasta",
-            dataset=list(phage_fasta_urls.keys())
-        )
 
 # ----------------------------------------
 # RULE DOWNLOAD (UNIQUE)
@@ -87,7 +10,7 @@ rule download_all_tsvs:
         sum(
             [
                 [
-                    f"data/intermediate_csv/{feature}/{source}.tsv"
+                    f"../data/intermediate_csv/{feature}/{source}.tsv"
                     for source in config[f"{feature}_urls"].keys()
                 ]
                 for feature in FEATURES
@@ -98,7 +21,7 @@ rule download_all_tsvs:
 
 rule download_tsv:
     output:
-        temp("data/intermediate_csv/{feature}/{source}.tsv")
+        temp("../data/intermediate_csv/{feature}/{source}.tsv")
     params: 
         url = lambda wildcards: config[f"{wildcards.feature}_urls"][wildcards.source]
     threads: 8
@@ -114,15 +37,15 @@ rule download_tsv:
 rule merge_transcription_terminator_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/transcription_terminator_metadata/{source}.tsv",
+            "../data/intermediate_csv/transcription_terminator_metadata/{source}.tsv",
             source=list(config["transcription_terminator_metadata_urls"].keys())
         )
     output:
         config["transcription_terminator_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_transcription_terminator_metadata.py"
+        "../scripts/merge_transcription_terminator_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE METADATA
@@ -130,15 +53,15 @@ rule merge_transcription_terminator_metadata_tsvs:
 rule merge_phage_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/phage_metadata/{source}.tsv",
+            "../data/intermediate_csv/phage_metadata/{source}.tsv",
             source=list(config["phage_metadata_urls"].keys())
         )
     output:
         config["phage_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_phage_metadata.py"
+        "../scripts/merge_phage_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE ANNOTATED PROTEINS METADATA
@@ -146,15 +69,15 @@ rule merge_phage_metadata_tsvs:
 rule merge_annotated_proteins_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/annotated_proteins_metadata/{source}.tsv",
+            "../data/intermediate_csv/annotated_proteins_metadata/{source}.tsv",
             source=list(config["annotated_proteins_metadata_urls"].keys())
         )
     output:
         config["annotated_proteins_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_annotated_proteins_metadata.py"
+        "../scripts/merge_annotated_proteins_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE tRNA/tmRNA METADATA
@@ -162,15 +85,15 @@ rule merge_annotated_proteins_metadata_tsvs:
 rule merge_phage_trna_tmrna_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/phage_trna_tmrna_metadata/{source}.tsv",
+            "../data/intermediate_csv/phage_trna_tmrna_metadata/{source}.tsv",
             source=list(config["phage_trna_tmrna_metadata_urls"].keys())
         )
     output:
         config["phage_trna_tmrna_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_phage_trna_tmrna_metadata.py"
+        "../scripts/merge_phage_trna_tmrna_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE ANTI-CRISPR METADATA
@@ -178,15 +101,15 @@ rule merge_phage_trna_tmrna_metadata_tsvs:
 rule merge_phage_anti_crispr_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/phage_anti_crispr_metadata/{source}.tsv",
+            "../data/intermediate_csv/phage_anti_crispr_metadata/{source}.tsv",
             source=list(config["phage_anti_crispr_metadata_urls"].keys())
         )
     output:
         config["phage_anti_crispr_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_phage_anti_crispr_metadata.py"
+        "../scripts/merge_phage_anti_crispr_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE VIRULENT FACTOR METADATA
@@ -194,16 +117,16 @@ rule merge_phage_anti_crispr_metadata_tsvs:
 rule merge_phage_virulent_factor_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/phage_virulent_factor_metadata/{source}.tsv",
+            "../data/intermediate_csv/phage_virulent_factor_metadata/{source}.tsv",
             source=list(config["phage_virulent_factor_metadata_urls"].keys())
         )
     output:
         config["phage_virulent_factor_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     
     script:
-        "scripts/merge_phage_virulent_factor_metadata.py"
+        "../scripts/merge_phage_virulent_factor_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE TRANSMEMBRANE PROTEIN METADATA
@@ -211,20 +134,20 @@ rule merge_phage_virulent_factor_metadata_tsvs:
 rule merge_phage_transmembrane_protein_metadata_tsvs:
     input:
         expand(
-            "data/intermediate_csv/phage_transmembrane_protein_metadata/{source}.tsv",
+            "../data/intermediate_csv/phage_transmembrane_protein_metadata/{source}.tsv",
             source=list(config["phage_transmembrane_protein_metadata_urls"].keys()) # e.g. STV_Phage_Metadata_URL
         )
     output:
         config["phage_transmembrane_protein_metadata_merged_output"]
     conda:
-        "envs/pixi_base_env.yaml"
+        "../envs/pixi_base_env.yaml"
     script:
-        "scripts/merge_phage_transmembrane_protein_metadata.py"
+        "../scripts/merge_phage_transmembrane_protein_metadata.py"
 
 
 rule generate_report:
     input:
-        "data/merged/merged_{feature}.csv"
+        "../data/merged/merged_{feature}.csv"
     output:
         "reports/{feature}_report.html"
     shell:
@@ -314,7 +237,7 @@ rule merge_protein_fasta_by_source:
         #done_flag = os.path.join(output_protein_fasta_dir, "{dataset}", ".extraction_done"),
         source_dir = os.path.join(output_protein_fasta_dir, "{dataset}")
     output:
-        merged_fasta = os.path.join("data/protein_fasta_merged", "{dataset}.fasta")
+        merged_fasta = os.path.join("../data/protein_fasta_merged", "{dataset}.fasta")
     params:
         source_dir = lambda wildcards: os.path.join(output_protein_fasta_dir, wildcards.dataset),
         #dataset = lambda wildcards: wildcards.dataset
@@ -336,7 +259,7 @@ rule merge_phage_fasta_by_source:
         #done_flag = os.path.join(output_phage_fasta_dir, "{dataset}", ".extraction_done"),
         source_dir = os.path.join(output_phage_fasta_dir, "{dataset}")
     output:
-        merged_fasta = os.path.join("data/phage_fasta_merged", "{dataset}.fasta")
+        merged_fasta = os.path.join("../data/phage_fasta_merged", "{dataset}.fasta")
     params:
         source_dir = lambda wildcards: os.path.join(output_phage_fasta_dir, wildcards.dataset),
         #dataset = lambda wildcards: wildcards.dataset
