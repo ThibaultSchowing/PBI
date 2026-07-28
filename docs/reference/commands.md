@@ -2,101 +2,6 @@
 
 Quick reference for common PBI-Scope operations and useful commands.
 
-## Pipeline Execution
-
-### Basic Execution
-
-```bash
-# Run full pipeline (first run: use 2-4 cores due to I/O)
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda --printshellcmds
-
-# Run with caching (recommended for development)
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cache --cores 4 --use-conda --printshellcmds
-
-# Keep temporary files (useful for debugging)
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --notemp --cores 4 --use-conda --printshellcmds
-
-# Dry run (see what would execute)
-snakemake --directory workflow --snakefile workflow/Snakefile -n
-
-# Use all available cores
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores all --use-conda
-```
-
-### Specific Targets
-
-```bash
-# Create database only
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  ../data/databases/phage_database.duckdb
-
-# Create optimized database
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  ../data/databases/phage_database_optimized.duckdb
-
-# Generate validation reports only
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  reports/database_validation.html
-```
-
-### Force Re-run (Snakemake)
-
-```bash
-# Force host resolution/download rule
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  --forcerun download_host_genomes
-
-# Force host resolution and ignore persisted token cache for this run
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  --forcerun download_host_genomes \
-  --config reuse_host_resolution_cache=false
-
-# Force CSV download + merge rule examples
-snakemake --directory workflow --snakefile workflow/Snakefile \
-  --cores 4 --use-conda \
-  --forcerun download_all_tsvs merge_phage_metadata_tsvs
-```
-
-### Workflow Visualization
-
-```bash
-# Generate DAG (Directed Acyclic Graph) visualization
-cd workflow
-snakemake --dag | dot -Tsvg > dag/workflow.svg
-
-# Generate rulegraph (simplified)
-snakemake --rulegraph | dot -Tsvg > dag/rulegraph.svg
-
-# View in browser
-xdg-open dag/workflow.svg  # Linux
-open dag/workflow.svg      # macOS
-```
-
-### Cleanup
-
-```bash
-# Remove temporary files after execution
-snakemake --delete-temp-output
-
-# Clean all generated files (CAREFUL!)
-snakemake --directory workflow --snakefile workflow/Snakefile --delete-all-output
-
-# Remove conda environments
-rm -rf workflow/.snakemake/conda/
-
-# Remove Snakemake metadata
-rm -rf workflow/.snakemake/
-```
-
 ## Docker Commands
 
 ### Pipeline
@@ -212,7 +117,106 @@ docker compose build --no-cache pipeline
 docker compose build --no-cache api
 ```
 
+## Pipeline Execution
+
+The basic pipeline execution is executed from the pipeline docker container ('/workflow/Dockerfile') and (re)execute all required tasks. Should you need to force or re-execute specific tasks, you can run specific pipeline tasks within the pipeline container. 
+
+### Basic Execution
+
+```bash
+# Run full pipeline (first run: use 2-4 cores due to I/O)
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda --printshellcmds
+
+# Run with caching (recommended for development)
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cache --cores 4 --use-conda --printshellcmds
+
+# Keep temporary files (useful for debugging)
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --notemp --cores 4 --use-conda --printshellcmds
+
+# Dry run (see what would execute)
+snakemake --directory workflow --snakefile workflow/Snakefile -n
+
+# Use all available cores
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores all --use-conda
+```
+
+### Specific Targets
+
+```bash
+# Create database only
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  ../data/databases/phage_database.duckdb
+
+# Create optimized database
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  ../data/databases/phage_database_optimized.duckdb
+
+# Generate validation reports only
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  reports/database_validation.html
+```
+
+### Force Re-run (Snakemake)
+
+```bash
+# Force host resolution/download rule
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  --forcerun download_host_genomes
+
+# Force host resolution and ignore persisted token cache for this run
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  --forcerun download_host_genomes \
+  --config reuse_host_resolution_cache=false
+
+# Force CSV download + merge rule examples
+snakemake --directory workflow --snakefile workflow/Snakefile \
+  --cores 4 --use-conda \
+  --forcerun download_all_tsvs merge_phage_metadata_tsvs
+```
+
+### Workflow Visualization
+
+```bash
+# Generate DAG (Directed Acyclic Graph) visualization
+cd workflow
+snakemake --dag | dot -Tsvg > dag/workflow.svg
+
+# Generate rulegraph (simplified)
+snakemake --rulegraph | dot -Tsvg > dag/rulegraph.svg
+
+# View in browser
+xdg-open dag/workflow.svg  # Linux
+open dag/workflow.svg      # macOS
+```
+
+### Cleanup
+
+```bash
+# Remove temporary files after execution
+snakemake --delete-temp-output
+
+# Clean all generated files (CAREFUL!)
+snakemake --directory workflow --snakefile workflow/Snakefile --delete-all-output
+
+# Remove conda environments
+rm -rf workflow/.snakemake/conda/
+
+# Remove Snakemake metadata
+rm -rf workflow/.snakemake/
+```
+
 ## Database Operations
+
+Similarly as for the Snakemake workflow, the DuckDB is created by the pipeline itself. The Python 'pbi' package or the API can then access it in read-only. 
 
 ### DuckDB CLI
 
@@ -364,6 +368,8 @@ echo $SNAKEMAKE_OUTPUT_CACHE
 
 ## API Operations
 
+Here as well, the normal usecase is to start the docker container but you can still start the API locally. 
+
 ### Starting API
 
 ```bash
@@ -376,7 +382,7 @@ cd api
 uvicorn app:app --host 0.0.0.0 --port 8000 --workers 4
 
 # Docker
-docker compose up -d api
+docker compose up api
 ```
 
 ### Testing API
@@ -574,11 +580,11 @@ python -m pstats output.prof
 
 ## Quick Workflows
 
-### Complete Fresh Installation
+### Complete Fresh Installation without Docker (not a good idea unless you know what you are doing)
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/ThibaultSchowing/PBI.git
+git clone https://github.com/ThibaultSchowing/PBI-Scope.git
 cd PBI
 
 # 2. Create conda environment
@@ -606,7 +612,7 @@ docker compose build
 # 2. Run pipeline
 docker compose run --rm pipeline
 
-# 3. Start API
+# 3. Start API (-d flags runs the container **detached** which will bring up the container in the background)
 docker compose up -d api
 
 # 4. Test
@@ -632,4 +638,4 @@ curl http://localhost:8000/stats
 
 ---
 
-**Tip**: Bookmark this page for quick reference when working with PBI!
+**Tip**: Bookmark this page for quick reference when working with PBI-Scope!

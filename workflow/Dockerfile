@@ -65,5 +65,5 @@ RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
-# Default command to run the pipeline #TODO change cores to all 
+# Default command to run the pipeline 
 CMD ["snakemake", "--cores", "all", "--use-conda", "--printshellcmds", "--cache", "--conda-prefix", "/cache/conda", "--directory", "/app/workflow", "--snakefile", "/app/workflow/Snakefile"]
