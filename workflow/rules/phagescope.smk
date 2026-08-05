@@ -63,7 +63,7 @@ rule merge_transcription_terminator_metadata_tsvs:
     output:
         config["transcription_terminator_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "transcription_terminator_metadata_merged.yaml")
+        schema_file="transcription_terminator_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -97,7 +97,7 @@ rule merge_annotated_proteins_metadata_tsvs:
     output:
         config["annotated_proteins_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "annotated_proteins_metadata_merged.yaml")
+        schema_file="annotated_proteins_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -115,7 +115,7 @@ rule merge_phage_trna_tmrna_metadata_tsvs:
     output:
         config["phage_trna_tmrna_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "trna_tmrna_metadata_merged.yaml")
+        schema_file="trna_tmrna_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -133,7 +133,7 @@ rule merge_phage_anti_crispr_metadata_tsvs:
     output:
         config["phage_anti_crispr_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "anti_crispr_metadata_merged.yaml")
+        schema_file="anti_crispr_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -151,7 +151,7 @@ rule merge_phage_virulent_factor_metadata_tsvs:
     output:
         config["phage_virulent_factor_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "virulent_factor_metadata_merged.yaml")
+        schema_file="virulent_factor_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -169,7 +169,7 @@ rule merge_phage_transmembrane_protein_metadata_tsvs:
     output:
         config["phage_transmembrane_protein_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "transmembrane_protein_metadata_merged.yaml")
+        schema_file="transmembrane_protein_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -187,7 +187,7 @@ rule merge_antimicrobial_resistance_gene_metadata_tsvs:
     output:
         config["antimicrobial_resistance_gene_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "antimicrobial_resistance_gene_metadata_merged.yaml")
+        schema_file="antimicrobial_resistance_gene_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
@@ -205,7 +205,7 @@ rule merge_crispr_array_metadata_tsvs:
     output:
         config["crispr_array_metadata_merged_output"]
     params:
-        schema_path=str(Path(workflow.basedir).parent / "schemas" / "crispr_array_metadata_merged.yaml")
+        schema_file="crispr_array_metadata_merged.yaml"
     conda:
         "../envs/base_env.yaml"
     script:
