@@ -1,0 +1,55 @@
+name: CI Pipeline Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  IMAGE_NAME: pbiscope-ci
+
+jobs:
+  pipeline-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ${{ env.IMAGE_NAME }} -f workflow/Dockerfile .
+
+      - name: Run pipeline (CI subset)
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/data:/data \
+            -v ${{ github.workspace }}/pipeline_logs:/pipeline-logs \
+            -v ${{ github.workspace }}/private_data:/private-data \
+            -e NCBI_EMAIL="ci@example.com" \
+            ${{ env.IMAGE_NAME }} \
+            snakemake \
+              --cores 2 \
+              --use-conda \
+              --printshellcmds \
+              --cache \
+              --conda-prefix /cache/conda \
+              --directory /app/workflow \
+              --snakefile /app/workflow/Snakefile \
+              --configfile /app/workflow/config/config.ci.yaml
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pipeline-logs
+          path: pipeline_logs/
+          retention-days: 7
+
+      - name: Upload merged outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: merged-data
+          path: data/intermediate/csv/merged/
+          retention-days: 7
