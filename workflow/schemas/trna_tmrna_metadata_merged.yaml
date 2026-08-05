@@ -11,6 +11,10 @@ optional:
   - Length
   - Permuted
   - Sequence
+numerical_columns:
+  - Start
+  - Stop
+  - Length
 aliases:
   Phage_id: Phage_ID
   source_db: Source_DB

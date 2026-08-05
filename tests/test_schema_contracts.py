@@ -74,3 +74,29 @@ def test_deterministic_column_ordering(tmp_path):
     normalized, _ = normalize_df_schema(df, contract)
 
     assert list(normalized.columns) == ["id", "value", "alpha", "zeta"]
+
+
+def test_numerical_columns_loaded(tmp_path):
+    """Verify that the numerical_columns key is read from the schema YAML."""
+    contract_path = tmp_path / "contract.yaml"
+    contract_path.write_text(
+        """
+required:
+  - id
+optional:
+  - value
+  - count
+numerical_columns:
+  - count
+aliases: {}
+defaults: {}
+""".strip()
+    )
+    contract = load_contract(contract_path)
+    assert contract["numerical_columns"] == ["count"]
+
+
+def test_numerical_columns_defaults_to_empty(tmp_path):
+    """Verify that a missing numerical_columns key defaults to an empty list."""
+    contract = _write_contract(tmp_path)
+    assert contract["numerical_columns"] == []

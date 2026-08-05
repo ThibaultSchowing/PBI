@@ -26,6 +26,25 @@ optional:
   - Ratio_Repeat/mean_Spacers_Length
   - CRISPR_found_in_DB (if sequence IDs are similar)
   - Evidence_Level
+numerical_columns:
+  - Duplicated_Spacers
+  - CRISPR_Start
+  - CRISPR_End
+  - CRISPR_Length
+  - Repeat_Length
+  - Spacers_Nb
+  - Mean_size_Spacers
+  - Standard_Deviation_Spacers
+  - Nb_Repeats_matching_Consensus
+  - Ratio_Repeats_match/TotalRepeat
+  - Conservation_Repeats (% identity)
+  - EBcons_Repeats
+  - Conservation_Spacers (% identity)
+  - EBcons_Spacers
+  - Repeat_Length_plus_mean_size_Spacers
+  - Ratio_Repeat/mean_Spacers_Length
+  - CRISPR_found_in_DB (if sequence IDs are similar)
+  - Evidence_Level
 aliases:
   Phage_id: Phage_ID
   source_db: Source_DB

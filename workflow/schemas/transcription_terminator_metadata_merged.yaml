@@ -8,6 +8,10 @@ optional:
   - Sense
   - Loc
   - Confidence
+numerical_columns:
+  - Start
+  - Stop
+  - Confidence
 aliases:
   Phage_id: Phage_ID
   source_db: Source_DB

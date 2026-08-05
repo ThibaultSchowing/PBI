@@ -4,6 +4,7 @@ required:
   - Source_DB
 optional:
   - Source
+numerical_columns: []
 aliases:
   Phage_id: Phage_ID
   Protein_id: Protein_ID
