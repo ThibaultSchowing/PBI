@@ -49,19 +49,15 @@ WORKDIR /app/workflow
 # When docker-compose runs as host UID that has no entry in /etc/passwd,
 # getpass.getuser() (called by Snakemake) raises OSError.
 # This wrapper adds a temporary passwd entry before exec-ing Snakemake.
-RUN cat > /entrypoint.sh << 'ENTRYPOINT_EOF'
-#!/bin/sh
-CURRENT_UID=$(id -u)
-CURRENT_GID=$(id -g)
-export USER="${USER:-pipeline}"
-export LOGNAME="${LOGNAME:-${USER}}"
-if ! getent passwd "${CURRENT_UID}" > /dev/null 2>&1 && [ -w /etc/passwd ]; then
-    echo "pipeline:x:${CURRENT_UID}:${CURRENT_GID}:Pipeline user:${HOME:-/app}:/bin/sh" >> /etc/passwd 2>/dev/null || true
-fi
-exec "$@"
-ENTRYPOINT_EOF
-
-RUN chmod +x /entrypoint.sh
+RUN printf '#!/bin/sh\n\
+CURRENT_UID=$(id -u)\n\
+CURRENT_GID=$(id -g)\n\
+export USER="${USER:-pipeline}"\n\
+export LOGNAME="${LOGNAME:-${USER}}"\n\
+if ! getent passwd "${CURRENT_UID}" > /dev/null 2>&1 && [ -w /etc/passwd ]; then\n\
+    echo "pipeline:x:${CURRENT_UID}:${CURRENT_GID}:Pipeline user:${HOME:-/app}:/bin/sh" >> /etc/passwd 2>/dev/null || true\n\
+fi\n\
+exec "$@"\n' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
