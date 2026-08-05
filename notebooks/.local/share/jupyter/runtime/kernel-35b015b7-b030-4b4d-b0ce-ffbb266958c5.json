@@ -1,0 +1,13 @@
+{
+  "shell_port": 42757,
+  "iopub_port": 45397,
+  "stdin_port": 51369,
+  "control_port": 41351,
+  "hb_port": 39017,
+  "ip": "127.0.0.1",
+  "key": "d174ba49-5bc82338a91a11307bec4ab1",
+  "transport": "tcp",
+  "signature_scheme": "hmac-sha256",
+  "kernel_name": "python3",
+  "jupyter_session": "/workspace/02_sequence_retrieval.ipynb"
+}
