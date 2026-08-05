@@ -14,7 +14,7 @@ from pathlib import Path
 def extract_unique_hosts_from_csv(csv_path):
     """
     Extract unique host species from phage metadata CSV
-    This mirrors the logic in download_host_genomes.py
+    This mirrors the logic in download_host_genomes_robust.py
     """
     df = pd.read_csv(csv_path)
     

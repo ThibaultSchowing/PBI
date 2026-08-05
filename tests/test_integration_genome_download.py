@@ -50,23 +50,9 @@ def test_genome_download_config_required_sections():
 
 def test_download_scripts_exist():
     for script in (
-        "workflow/scripts/sequences/download_host_genomes_optimized.py",
-        "workflow/scripts/sequences/download_host_genomes.py",
+        "workflow/scripts/sequences/download_host_genomes_robust.py",
     ):
         assert (BASE_DIR / script).is_file(), f"Missing script: {script}"
-
-
-def test_fasta_2line_format_used():
-    """Both downloader scripts should use fasta-2line format for genome output."""
-    for script_path in (
-        "workflow/scripts/sequences/download_host_genomes.py",
-        "workflow/scripts/sequences/download_host_genomes_optimized.py",
-    ):
-        full = BASE_DIR / script_path
-        if not full.exists():
-            continue  # skip missing scripts rather than failing
-        content = full.read_text()
-        assert "fasta-2line" in content, f"{script_path} does not use fasta-2line format"
 
 
 # ---------------------------------------------------------------------------

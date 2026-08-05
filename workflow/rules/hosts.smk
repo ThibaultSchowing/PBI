@@ -12,9 +12,7 @@ rule download_host_genomes:
     Download host bacterial genomes from NCBI RefSeq
     
     This rule extracts unique host species from the phage metadata CSV and downloads
-    reference genomes for each using either:
-    - Robust downloader (recommended): assembly_resolver.py + download_host_genomes_robust.py
-    - Legacy downloader: download_host_genomes.py or download_host_genomes_optimized.py
+    reference genomes for each using assembly_resolver.py + download_host_genomes_robust.py.
     
     The robust downloader:
     - Uses NCBI Assembly database as authoritative source
@@ -47,15 +45,13 @@ rule download_host_genomes:
         metadata_only = config.get("metadata_only_mode", False),
         skip_existing = config.get("skip_existing_downloads", True),
         validate_checksums = config.get("validate_file_checksums", True),
-        reuse_resolution_cache = config.get("reuse_host_resolution_cache", True),
-        use_robust_downloader = config.get("use_robust_downloader", True)  # Use new robust downloader by default
+        reuse_resolution_cache = config.get("reuse_host_resolution_cache", True)
     log:
         config["host_download_log"]
     conda:
         "../envs/sequences.yaml"
     script:
-        # Use robust downloader if enabled, otherwise use legacy downloader
-        "../scripts/sequences/download_host_genomes_robust.py" if params.use_robust_downloader else "../scripts/sequences/download_host_genomes.py"
+        "../scripts/sequences/download_host_genomes_robust.py"
 
 
 rule create_host_mapping:
