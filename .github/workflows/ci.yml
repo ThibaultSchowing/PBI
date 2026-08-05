@@ -32,7 +32,6 @@ jobs:
               --cores 2 \
               --use-conda \
               --printshellcmds \
-              --cache \
               --conda-prefix /cache/conda \
               --directory /app/workflow \
               --snakefile /app/workflow/Snakefile \
