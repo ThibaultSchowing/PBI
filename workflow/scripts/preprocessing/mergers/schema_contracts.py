@@ -7,7 +7,11 @@ import yaml
 
 
 def load_contract(path):
-    """Load a schema contract YAML file."""
+    """Load a schema contract YAML file.
+
+    The contract defines the expected column structure for a dataset and
+    includes the list of columns that should be coerced to numeric types.
+    """
     contract_path = Path(path)
     with contract_path.open("r", encoding="utf-8") as handle:
         contract = yaml.safe_load(handle) or {}
@@ -17,6 +21,7 @@ def load_contract(path):
         "optional": list(contract.get("optional", [])),
         "aliases": dict(contract.get("aliases", {})),
         "defaults": dict(contract.get("defaults", {})),
+        "numerical_columns": list(contract.get("numerical_columns", [])),
     }
 
 

@@ -90,13 +90,14 @@ print(refseq.head())
 
 ### Notebooks
 
-Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/main/notebooks) for detailed workflows:
+Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/main/notebooks) for detailed workflows. These notebooks include for instance the following:
 
 | Notebook | Description |
 |----------|-------------|
 | `01_database_exploration.ipynb` | Database statistics and quality control |
 | `02_sequence_retrieval.ipynb` | Retrieving phage and protein sequences |
 | `03_ml_streaming.ipynb` | ML dataset preparation with streaming |
+|`05_end_to_end_walkthrough.ipynb`| Verify execution and explore functionnalities |
 | `08_api_client.ipynb` | Using the REST API client |
 
 ## Pipeline overview

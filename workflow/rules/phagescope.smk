@@ -62,10 +62,12 @@ rule merge_transcription_terminator_metadata_tsvs:
         )
     output:
         config["transcription_terminator_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "transcription_terminator_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_transcription_terminator_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE METADATA
@@ -94,10 +96,12 @@ rule merge_annotated_proteins_metadata_tsvs:
         )
     output:
         config["annotated_proteins_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "annotated_proteins_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_annotated_proteins_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE tRNA/tmRNA METADATA
@@ -110,10 +114,12 @@ rule merge_phage_trna_tmrna_metadata_tsvs:
         )
     output:
         config["phage_trna_tmrna_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "trna_tmrna_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_phage_trna_tmrna_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE ANTI-CRISPR METADATA
@@ -126,10 +132,12 @@ rule merge_phage_anti_crispr_metadata_tsvs:
         )
     output:
         config["phage_anti_crispr_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "anti_crispr_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_phage_anti_crispr_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE VIRULENT FACTOR METADATA
@@ -142,11 +150,12 @@ rule merge_phage_virulent_factor_metadata_tsvs:
         )
     output:
         config["phage_virulent_factor_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "virulent_factor_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
-    
     script:
-        "../scripts/preprocessing/mergers/merge_phage_virulent_factor_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE PHAGE TRANSMEMBRANE PROTEIN METADATA
@@ -155,14 +164,16 @@ rule merge_phage_transmembrane_protein_metadata_tsvs:
     input:
         expand(
             config["phage_transmembrane_protein_metadata_intermediate_output"] + "/{source}.tsv",
-            source=list(config["phage_transmembrane_protein_metadata_urls"].keys()) # e.g. STV_Phage_Metadata_URL
+            source=list(config["phage_transmembrane_protein_metadata_urls"].keys())
         )
     output:
         config["phage_transmembrane_protein_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "transmembrane_protein_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_phage_transmembrane_protein_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE ANTIMICROBIAL RESISTANCE GENE METADATA
@@ -171,14 +182,16 @@ rule merge_antimicrobial_resistance_gene_metadata_tsvs:
     input:
         expand(
             config["antimicrobial_resistance_gene_metadata_intermediate_output"] + "/{source}.tsv",
-            source=list(config["antimicrobial_resistance_gene_metadata_urls"].keys()) # e.g. RefSeq_Antimicrobial_Resistance_Gene_Metadata_URL
+            source=list(config["antimicrobial_resistance_gene_metadata_urls"].keys())
         )
     output:
         config["antimicrobial_resistance_gene_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "antimicrobial_resistance_gene_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_antimicrobial_resistance_gene_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 # ----------------------------------------
 # RULE MERGE CRISPR ARRAY METADATA
@@ -191,10 +204,12 @@ rule merge_crispr_array_metadata_tsvs:
         )
     output:
         config["crispr_array_metadata_merged_output"]
+    params:
+        schema_path=str(Path(__file__).resolve().parent.parent / "schemas" / "crispr_array_metadata_merged.yaml")
     conda:
         "../envs/base_env.yaml"
     script:
-        "../scripts/preprocessing/mergers/merge_crispr_array_metadata.py"
+        "../scripts/preprocessing/mergers/merge_metadata.py"
 
 rule generate_report:
     input:

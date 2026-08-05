@@ -4,6 +4,7 @@ required:
   - Source_DB
 optional:
   - Aligned_Protein_in_CARD
+numerical_columns: []
 aliases:
   Phage_id: Phage_ID
   Protein_id: Protein_ID

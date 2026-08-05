@@ -19,6 +19,18 @@ optional:
   - Sheet_fraction
   - Reduced_coefficient
   - Oxidized_coefficient
+numerical_columns:
+  - Start
+  - Stop
+  - Molecular_weight
+  - Aromaticity
+  - Instability_index
+  - Isoelectric_point
+  - Helix_fraction
+  - Turn_fraction
+  - Sheet_fraction
+  - Reduced_coefficient
+  - Oxidized_coefficient
 aliases:
   Phage_id: Phage_ID
   Protein_id: Protein_ID
