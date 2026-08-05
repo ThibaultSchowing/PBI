@@ -33,8 +33,7 @@ jobs:
               --use-conda \
               --conda-prefix /cache/conda \
               --directory /app/workflow \
-              --snakefile /app/workflow/Snakefile \
-              --configfile /app/workflow/config/config.ci.yaml
+              --snakefile /app/workflow/Snakefile.ci
 
       - name: Upload logs
         if: always()

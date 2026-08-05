@@ -1,0 +1,130 @@
+# CI-only Snakefile for reduced, deterministic GitHub Actions runs.
+#
+# This wrapper keeps production/local behavior untouched by:
+# - loading the full default config first,
+# - then applying config.ci.yaml with full-key replacement semantics
+#   (instead of Snakemake's recursive dict merge).
+
+configfile: "config/config.yaml"
+
+import os
+import yaml
+
+
+def _load_ci_overrides(path):
+    with open(path, "r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle) or {}
+    if not isinstance(data, dict):
+        raise ValueError(f"CI override file must contain a mapping at top-level: {path}")
+    return data
+
+
+for _key, _value in _load_ci_overrides("config/config.ci.yaml").items():
+    # Replace per top-level key to avoid recursive merge surprises for URL maps.
+    config[_key] = _value
+
+
+# Get base data directory from environment or default to relative path
+BASE_DATA_DIR = os.getenv('PBI_DATA_DIR', 'data')
+BASE_PRIVATE_DATA_DIR = os.getenv('PBI_PRIVATE_DATA_DIR', 'private_data')
+
+# Get base logs/reports directory. Defaults to the same place as data when running locally
+# without Docker (so reports land under data/). The Docker container sets this to /pipeline-logs
+# which is bind-mounted to ./pipeline_logs/ at the repository root.
+BASE_LOGS_DIR = os.getenv('PBI_LOGS_DIR', BASE_DATA_DIR)
+
+
+def _rewrite_path_prefix(value):
+    if isinstance(value, str):
+        if value.startswith('/pipeline-logs'):
+            return value.replace('/pipeline-logs', BASE_LOGS_DIR, 1)
+        if value.startswith('/private-data'):
+            return value.replace('/private-data', BASE_PRIVATE_DATA_DIR, 1)
+        if value.startswith('/data'):
+            return value.replace('/data', BASE_DATA_DIR, 1)
+        return value
+    if isinstance(value, dict):
+        return {k: _rewrite_path_prefix(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_rewrite_path_prefix(v) for v in value]
+    return value
+
+
+# Replace config paths with environment-aware equivalents
+config = _rewrite_path_prefix(config)
+
+
+# List here the features for which reports will be generated.
+# In CI, keep only features with at least one configured source.
+FEATURES = [
+    feature
+    for feature in [
+        "phage_metadata",
+        "annotated_proteins_metadata",
+        "transcription_terminator_metadata",
+        "phage_trna_tmrna_metadata",
+        "phage_anti_crispr_metadata",
+        "phage_virulent_factor_metadata",
+        "phage_transmembrane_protein_metadata",
+        "antimicrobial_resistance_gene_metadata",
+        "crispr_array_metadata",
+    ]
+    if config.get(f"{feature}_urls")
+]
+
+
+# For the fasta files, the snakemake rules simply check that the directories are created but cannot check
+# the content of the directories, as files are too numerous and not named in a predictable way.
+
+
+# Generation of expected extracted folder list for protein fasta files
+extracted_dirs_prot = [
+    os.path.join(config["protein_fasta_merged_output"], name)
+    for name in config["protein_fasta_urls"].keys()
+]
+
+
+# Generation of expected extracted folder list for phage fasta files
+extracted_dirs_phages = [
+    os.path.join(config["phage_fasta_merged_output"], name)
+    for name in config["phage_fasta_urls"].keys()
+]
+
+
+rule all:
+    input:
+        # Generated metadata reports -> triggering the downloading and merging of metadata tsvs
+        expand(
+            config["reports_output"] + "{feature}_report.html",
+            feature=FEATURES
+        ),
+        # Merging the protein fasta files -> triggering the downloading of protein fasta files
+        expand(
+            config["protein_fasta_merged_output"] + "{dataset}.fasta",
+            dataset=list(config["protein_fasta_urls"].keys())
+        ),
+        # Merging the phage fasta files -> triggering the downloading of phage fasta files
+        expand(
+            config["phage_fasta_merged_output"] + "{dataset}.fasta",
+            dataset=list(config["phage_fasta_urls"].keys())
+        ),
+        # GFF3 index (triggers GFF3 download + index build)
+        config["phage_gff3_index_output"],
+        # DuckDB database and validation report
+        config["optimized_duckdb_output"],
+        config["database_validation_report_output"],
+        # Sequence indexing files
+        config["all_phages_fasta"] + ".fai",
+        config["all_proteins_fasta"] + ".fai",
+        # Host genome files
+        config["host_index_complete_flag"],
+        config["host_fasta_mapping"],
+        config["host_metadata_output"],
+        config["host_status_report"]
+
+
+include: "rules/phagescope.smk"
+include: "rules/gff3.smk"
+include: "rules/database.smk"
+include: "rules/sequences.smk"
+include: "rules/hosts.smk"
