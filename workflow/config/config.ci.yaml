@@ -4,10 +4,10 @@
 #   snakemake --configfile workflow/config/config.ci.yaml --cores 2 -p
 #
 # What this does:
-#   - Reduces 26 PhageScope data sources to 2 (RefSeq + Genbank)
+#   - Reduces 26 PhageScope data sources to 2 (RefSeq + PhagesDB)
 #   - Reduces 9 metadata features to 3 (phage_metadata, annotated_proteins, transcription_terminator)
 #   - Includes FASTA and GFF3 for the same 2 sources (required by merge rules)
-#   - Skips host genome downloads (metadata_only_mode: true)
+#   - Enables host genome downloads (metadata_only_mode: false)
 #
 # Expected runtime: 15-30 minutes on a GitHub-hosted runner.
 
@@ -15,15 +15,15 @@
 
 phage_metadata_urls:
   "RefSeq_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/refseq_phage_meta_data.tsv"
-  "Genbank_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/genbank_phage_meta_data.tsv"
+  "PhagesDB_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/phagesdb_phage_meta_data.tsv"
 
 annotated_proteins_metadata_urls:
   "RefSeq_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/refseq_phage_annotated_protein_meta_data.tsv"
-  "Genbank_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/genbank_phage_annotated_protein_meta_data.tsv"
+  "PhagesDB_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/phagesdb_phage_annotated_protein_meta_data.tsv"
 
 transcription_terminator_metadata_urls:
   "RefSeq_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/refseq_phage_transcription_terminator_meta_data.tsv"
-  "Genbank_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/genbank_phage_transcription_terminator_meta_data.tsv"
+  "PhagesDB_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/phagesdb_phage_transcription_terminator_meta_data.tsv"
 
 # ── Remaining features: empty (rules produce no files) ───────────
 
@@ -38,19 +38,19 @@ crispr_array_metadata_urls: {}
 # Required: merge_phage_fasta / merge_protein_fasta raise ValueError on empty input.
 
 protein_fasta_urls:
-  "Genbank": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/Genbank.tar.gz"
+  "PhagesDB": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/PhagesDB.tar.gz"
   "RefSeq": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/RefSeq.tar.gz"
 
 phage_fasta_urls:
-  "Genbank": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=Genbank"
+  "PhagesDB": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=PhagesDB"
   "RefSeq": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=RefSeq"
 
 # ── GFF3 downloads (same 2 sources) ─────────────────────────────
 
 phage_GFF3_urls:
-  "Genbank": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/Genbank.gff3"
+  "PhagesDB": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/PhagesDB.gff3"
   "RefSeq": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/RefSeq.gff3"
 
-# ── Skip host genome downloads (most expensive step) ────────────
+# ── Host genome download mode ───────────────────────────────────
 
-metadata_only_mode: true
+metadata_only_mode: false

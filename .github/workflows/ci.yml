@@ -27,6 +27,9 @@ jobs:
             -v ${{ github.workspace }}/pipeline_logs:/pipeline-logs \
             -v ${{ github.workspace }}/private_data:/private-data \
             -e NCBI_EMAIL="ci@example.com" \
+            -e PBI_DATA_DIR="/data" \
+            -e PBI_LOGS_DIR="/pipeline-logs" \
+            -e PBI_PRIVATE_DATA_DIR="/private-data" \
             ${{ env.IMAGE_NAME }} \
             snakemake \
               --cores 2 \

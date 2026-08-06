@@ -72,6 +72,16 @@ FEATURES = [
     if config.get(f"{feature}_urls")
 ]
 
+# Host targets differ between full runs and metadata-only CI runs.
+HOST_TARGETS = [config["host_metadata_output"]]
+
+if not config.get("metadata_only_mode", False):
+    HOST_TARGETS.extend([
+        config["host_index_complete_flag"],
+        config["host_fasta_mapping"],
+        config["host_status_report"],
+    ])
+
 
 # For the fasta files, the snakemake rules simply check that the directories are created but cannot check
 # the content of the directories, as files are too numerous and not named in a predictable way.
@@ -116,11 +126,8 @@ rule all:
         # Sequence indexing files
         config["all_phages_fasta"] + ".fai",
         config["all_proteins_fasta"] + ".fai",
-        # Host genome files
-        config["host_index_complete_flag"],
-        config["host_fasta_mapping"],
-        config["host_metadata_output"],
-        config["host_status_report"]
+        # Host outputs (metadata-only CI skips FASTA-dependent targets)
+        HOST_TARGETS
 
 
 include: "rules/phagescope.smk"
