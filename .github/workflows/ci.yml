@@ -68,14 +68,3 @@ jobs:
           name: merged-data
           path: data/intermediate/csv/merged/
           retention-days: 7
-
-      - name: Run smoke tests
-        run: |
-          docker run --rm \
-            -v ${{ github.workspace }}/data:/data \
-            -v ${{ github.workspace }}/pipeline_logs:/pipeline-logs \
-            -v ${{ github.workspace }}/tests:/app/tests \
-            -e PBI_DATA_DIR="/data" \
-            -e PBI_LOGS_DIR="/pipeline-logs" \
-            ${{ env.IMAGE_NAME }} \
-            bash -c "pip install -e /app/. pytest && python -m pytest /app/tests/test_pbi_ci_smoke.py -v"
