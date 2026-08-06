@@ -12,7 +12,7 @@ env:
 jobs:
   pipeline-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 120
 
     steps:
       - uses: actions/checkout@v4
@@ -37,6 +37,21 @@ jobs:
               --conda-prefix /cache/conda \
               --directory /app/workflow \
               --snakefile /app/workflow/Snakefile.ci
+
+      - name: Install pbi and run smoke tests
+        if: always()
+        run: |
+          docker run --rm \
+            -v ${{ github.workspace }}/data:/data \
+            -v ${{ github.workspace }}/pipeline_logs:/pipeline-logs \
+            -v ${{ github.workspace }}/private_data:/private-data \
+            -v ${{ github.workspace }}/tests:/app/tests \
+            -e DATA_PATH="/data/processed" \
+            ${{ env.IMAGE_NAME }} \
+            bash -c "
+              pip install -e /app/. pytest && \
+              python -m pytest /app/tests/test_pbi_ci_smoke.py -v
+            "
 
       - name: Upload logs
         if: always()
