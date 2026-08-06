@@ -25,14 +25,30 @@ transcription_terminator_metadata_urls:
   "RefSeq_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/refseq_phage_transcription_terminator_meta_data.tsv"
   "PhagesDB_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/phagesdb_phage_transcription_terminator_meta_data.tsv"
 
-# ── Remaining features: empty (rules produce no files) ───────────
+# ── Remaining features: include PhagesDB where available ────────────────────
+# Note: virulent factor and AMR currently have no PhagesDB endpoint.
 
-phage_trna_tmrna_metadata_urls: {}
-phage_anti_crispr_metadata_urls: {}
-phage_virulent_factor_metadata_urls: {}
-phage_transmembrane_protein_metadata_urls: {}
-antimicrobial_resistance_gene_metadata_urls: {}
-crispr_array_metadata_urls: {}
+phage_trna_tmrna_metadata_urls:
+  "RefSeq_Phage_tRNA_tmRNA_Metadata_URL": "https://phageapi.deepomics.org/files/Download/tRNA_tmRNA_gene_meta_data_v2/refseq_phage_trna_gene_meta_data.tsv"
+  "PhagesDB_Phage_tRNA_tmRNA_Metadata_URL": "https://phageapi.deepomics.org/files/Download/tRNA_tmRNA_gene_meta_data_v2/phagesdb_phage_trna_gene_meta_data.tsv"
+
+phage_anti_crispr_metadata_urls:
+  "RefSeq_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/refseq_phage_anticrispr_protein_meta_data.tsv"
+  "PhagesDB_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/phagesdb_phage_anticrispr_protein_meta_data.tsv"
+
+phage_virulent_factor_metadata_urls:
+  "RefSeq_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/RefSeq_virulent_factor_data.tsv"
+
+phage_transmembrane_protein_metadata_urls:
+  "RefSeq_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/refseq_phage_transmembrane_protein_meta_data.tsv"
+  "PhagesDB_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/phagesdb_phage_transmembrane_protein_meta_data.tsv"
+
+antimicrobial_resistance_gene_metadata_urls:
+  "RefSeq_Antimicrobial_Resistance_Gene_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Antimicrobial_resistance_gene_meta_data_v2/RefSeq_antimicrobial_resistance_gene_data.tsv"
+
+crispr_array_metadata_urls:
+  "RefSeq_Crispr_Array_Metadata_URL": "https://phageapi.deepomics.org/files/Download/CRISPR_array_meta_data/refseq_phage_crispr_array_meta_data.tsv"
+  "PhagesDB_Crispr_Array_Metadata_URL": "https://phageapi.deepomics.org/files/Download/CRISPR_array_meta_data/phagesdb_phage_crispr_array_meta_data.tsv"
 
 # ── FASTA downloads (same 2 sources) ────────────────────────────
 # Required: merge_phage_fasta / merge_protein_fasta raise ValueError on empty input.
