@@ -78,7 +78,7 @@ class TestMetadataQueries:
         df = retriever.get_phage_host_pairs(limit=10)
         # Phage-host pairs may be empty if host genomes were not downloaded
         # (metadata_only_mode), so we just verify the query runs.
-        assert isinstance(df, object)  # DataFrame or empty
+        assert isinstance(df, object)
 
     def test_structured_filter(self, retriever):
         df = retriever.query_phage_host_pairs(
@@ -104,7 +104,6 @@ class TestFastaAccess:
     def test_get_phage_sequence(self, retriever, paths):
         if not paths["phage_fasta"].exists():
             pytest.skip("Phage FASTA not present")
-        # Pick the first phage ID from the database.
         first_phage = retriever.conn.execute(
             "SELECT Phage_ID FROM fact_phages LIMIT 1"
         ).fetchone()
@@ -113,6 +112,174 @@ class TestFastaAccess:
         seq = retriever.get_phage_sequence(first_phage[0])
         assert isinstance(seq, str)
         assert len(seq) > 0
+
+
+# ---------------------------------------------------------------------------
+# Phage genome streaming tests
+# ---------------------------------------------------------------------------
+
+class TestPhageGenomeStreaming:
+    def _get_any_phage_id(self, retriever):
+        row = retriever.conn.execute(
+            "SELECT Phage_ID FROM fact_phages LIMIT 1"
+        ).fetchone()
+        return row[0] if row else None
+
+    def test_get_phage_genome_concat(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        seq = retriever.get_phage_genome(phage_id, mode="concat")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_phage_genome_first(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        seq = retriever.get_phage_genome(phage_id, mode="first")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_phage_genome_list(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        result = retriever.get_phage_genome(phage_id, mode="list")
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert all(isinstance(s, str) for s in result)
+
+    def test_get_phage_genome_dict(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        result = retriever.get_phage_genome(phage_id, mode="dict")
+        assert isinstance(result, dict)
+        assert len(result) > 0
+        assert all(isinstance(k, str) and isinstance(v, str) for k, v in result.items())
+
+    def test_get_phage_genome_concat_with_gap(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        seq_no_gap = retriever.get_phage_genome(phage_id, mode="concat", gap=0)
+        seq_with_gap = retriever.get_phage_genome(phage_id, mode="concat", gap=100)
+        # For single-contig phages, gap has no effect; lengths should be equal.
+        # For multi-contig, gap version should be longer.
+        assert len(seq_with_gap) >= len(seq_no_gap)
+
+    def test_nonexistent_phage_raises_key_error(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        with pytest.raises(KeyError):
+            retriever.get_phage_genome("NONEXISTENT_PHAGE_999999")
+
+
+# ---------------------------------------------------------------------------
+# Host genome streaming tests (skipped if host data not available)
+# ---------------------------------------------------------------------------
+
+class TestHostGenomeStreaming:
+    def _get_any_host_id(self, retriever):
+        if not retriever._has_host_data:
+            return None
+        row = retriever.conn.execute(
+            "SELECT Host_ID FROM dim_hosts LIMIT 1"
+        ).fetchone()
+        return row[0] if row else None
+
+    def test_has_host_data(self, retriever):
+        # Just verify the flag is accessible; skip if no host data.
+        if not retriever._has_host_data:
+            pytest.skip("Host FASTA not configured (metadata_only_mode or no host genomes)")
+
+    def test_get_host_genome_concat(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        seq = retriever.get_host_genome(host_id, mode="concat")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_host_genome_first(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        seq = retriever.get_host_genome(host_id, mode="first")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_host_genome_list(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        result = retriever.get_host_genome(host_id, mode="list")
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert all(isinstance(s, str) for s in result)
+
+    def test_get_host_genome_dict(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        result = retriever.get_host_genome(host_id, mode="dict")
+        assert isinstance(result, dict)
+        assert len(result) > 0
+
+    def test_get_host_genome_stats(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        stats = retriever.get_host_genome_stats(host_id)
+        assert isinstance(stats, dict)
+        assert "contig_count" in stats
+        assert "total_length" in stats
+        assert "lengths" in stats
+        assert stats["contig_count"] > 0
+        assert stats["total_length"] > 0
+        assert len(stats["lengths"]) == stats["contig_count"]
+
+    def test_get_host_genome_concat_with_gap(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        seq_no_gap = retriever.get_host_genome(host_id, mode="concat", gap=0)
+        seq_with_gap = retriever.get_host_genome(host_id, mode="concat", gap=100)
+        assert len(seq_with_gap) >= len(seq_no_gap)
+
+    def test_nonexistent_host_raises_key_error(self, retriever):
+        if not retriever._has_host_data:
+            pytest.skip("Host FASTA not configured")
+        with pytest.raises(KeyError):
+            retriever.get_host_genome("NONEXISTENT_HOST_999999")
+
+
+# ---------------------------------------------------------------------------
+# Phage-host pair streaming tests (with sequences)
+# ---------------------------------------------------------------------------
+
+class TestPhageHostPairStreaming:
+    def test_get_phage_host_pairs_with_sequences(self, retriever):
+        df = retriever.get_phage_host_pairs(limit=5)
+        if len(df) == 0:
+            pytest.skip("No phage-host pairs (host genomes may not be downloaded)")
+        assert "Phage_Sequence" in df.columns or "Host_Sequence" in df.columns
+
+    def test_get_phage_host_pairs_concat_mode(self, retriever):
+        df = retriever.get_phage_host_pairs(limit=5, host_contig_mode="concat")
+        if len(df) == 0:
+            pytest.skip("No phage-host pairs")
 
 
 # ---------------------------------------------------------------------------
