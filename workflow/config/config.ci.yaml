@@ -1,0 +1,72 @@
+# CI configuration — overrides for fast pipeline testing.
+#
+# Usage:
+#   snakemake --configfile workflow/config/config.ci.yaml --cores 2 -p
+#
+# What this does:
+#   - Reduces 26 PhageScope data sources to 2 (RefSeq + PhagesDB)
+#   - Reduces 9 metadata features to 3 (phage_metadata, annotated_proteins, transcription_terminator)
+#   - Includes FASTA and GFF3 for the same 2 sources (required by merge rules)
+#   - Enables host genome downloads (metadata_only_mode: false)
+#
+# Expected runtime: 15-30 minutes on a GitHub-hosted runner.
+
+# ── Metadata sources (2 of 26) ──────────────────────────────────
+
+phage_metadata_urls:
+  "RefSeq_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/refseq_phage_meta_data.tsv"
+  "PhagesDB_Phage_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Phage_meta_data/phagesdb_phage_meta_data.tsv"
+
+annotated_proteins_metadata_urls:
+  "RefSeq_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/refseq_phage_annotated_protein_meta_data.tsv"
+  "PhagesDB_Annotated_Proteins_metadata_URL": "https://phageapi.deepomics.org/files/Download/Annotated_protein_meta_data_v2/phagesdb_phage_annotated_protein_meta_data.tsv"
+
+transcription_terminator_metadata_urls:
+  "RefSeq_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/refseq_phage_transcription_terminator_meta_data.tsv"
+  "PhagesDB_Phage_Transcription_Terminator_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transcription_terminators_meta_data/phagesdb_phage_transcription_terminator_meta_data.tsv"
+
+# ── Remaining features: include PhagesDB where available ────────────────────
+# Note: virulent factor and AMR currently have no PhagesDB endpoint.
+
+phage_trna_tmrna_metadata_urls:
+  "RefSeq_Phage_tRNA_tmRNA_Metadata_URL": "https://phageapi.deepomics.org/files/Download/tRNA_tmRNA_gene_meta_data_v2/refseq_phage_trna_gene_meta_data.tsv"
+  "PhagesDB_Phage_tRNA_tmRNA_Metadata_URL": "https://phageapi.deepomics.org/files/Download/tRNA_tmRNA_gene_meta_data_v2/phagesdb_phage_trna_gene_meta_data.tsv"
+
+phage_anti_crispr_metadata_urls:
+  "RefSeq_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/refseq_phage_anticrispr_protein_meta_data.tsv"
+  "PhagesDB_Phage_AntiCRISPR_Metadata_URL": "https://phageapi.deepomics.org/files/Download/AntiCRISPR_protein_meta_data_v2/phagesdb_phage_anticrispr_protein_meta_data.tsv"
+
+phage_virulent_factor_metadata_urls:
+  "RefSeq_Phage_Virulent_Factor_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Virulent_factor_meta_data_v2/RefSeq_virulent_factor_data.tsv"
+
+phage_transmembrane_protein_metadata_urls:
+  "RefSeq_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/refseq_phage_transmembrane_protein_meta_data.tsv"
+  "PhagesDB_Phage_Transmembrane_Protein_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Transmembrane_protein_meta_data/phagesdb_phage_transmembrane_protein_meta_data.tsv"
+
+antimicrobial_resistance_gene_metadata_urls:
+  "RefSeq_Antimicrobial_Resistance_Gene_Metadata_URL": "https://phageapi.deepomics.org/files/Download/Antimicrobial_resistance_gene_meta_data_v2/RefSeq_antimicrobial_resistance_gene_data.tsv"
+
+crispr_array_metadata_urls:
+  "RefSeq_Crispr_Array_Metadata_URL": "https://phageapi.deepomics.org/files/Download/CRISPR_array_meta_data/refseq_phage_crispr_array_meta_data.tsv"
+  "PhagesDB_Crispr_Array_Metadata_URL": "https://phageapi.deepomics.org/files/Download/CRISPR_array_meta_data/phagesdb_phage_crispr_array_meta_data.tsv"
+
+# ── FASTA downloads (same 2 sources) ────────────────────────────
+# Required: merge_phage_fasta / merge_protein_fasta raise ValueError on empty input.
+
+protein_fasta_urls:
+  "PhagesDB": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/PhagesDB.tar.gz"
+  "RefSeq": "https://phageapi.deepomics.org/fasta/phage_sequence/proteins/RefSeq.tar.gz"
+
+phage_fasta_urls:
+  "PhagesDB": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=PhagesDB"
+  "RefSeq": "https://phageapi.deepomics.org/download/phage/fasta/?datasource=RefSeq"
+
+# ── GFF3 downloads (same 2 sources) ─────────────────────────────
+
+phage_GFF3_urls:
+  "PhagesDB": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/PhagesDB.gff3"
+  "RefSeq": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/RefSeq.gff3"
+
+# ── Host genome download mode ───────────────────────────────────
+
+metadata_only_mode: false
