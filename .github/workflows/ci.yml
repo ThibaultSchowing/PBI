@@ -1,10 +1,14 @@
 name: CI Pipeline Test
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: [main]
+    branches: 
+    - main
+    - add_ci_tests
 
 env:
   IMAGE_NAME: pbiscope-ci
