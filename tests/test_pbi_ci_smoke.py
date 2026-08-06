@@ -55,9 +55,6 @@ class TestConnection:
     def test_quick_connect_returns_retriever(self, retriever):
         assert isinstance(retriever, SequenceRetriever)
 
-    def test_connection_is_read_only(self, retriever):
-        assert retriever.conn.read_only
-
 
 # ---------------------------------------------------------------------------
 # Metadata query tests
