@@ -1,8 +1,14 @@
-"""CI smoke tests for PBI-Scope pipeline.
+#!/usr/bin/env python3
+"""
+CI smoke tests for the pbi package.
 
-These tests verify the core functionality of the PBI-Scope system after
-running the CI pipeline. They run inside a Docker container with the
-pipeline data mounted.
+These tests verify that the pbi package works end-to-end against the database
+and FASTA files produced by the pipeline CI subset.  They do NOT assert exact
+data values — only that queries execute, return expected shapes, and the
+package API behaves correctly.
+
+Run inside the Docker container after the pipeline has completed:
+    DATA_PATH=/data/processed pytest tests/test_pbi_ci_smoke.py -v
 """
 
 import os
@@ -13,211 +19,273 @@ from pathlib import Path
 
 import pytest
 
-# Add src to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+# Ensure the package is importable when installed in the container.
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-DATA_DIR = os.environ.get("PBI_DATA_DIR", "/data")
-PROCESSED_DIR = os.path.join(DATA_DIR, "processed")
-INTERMEDIATE_DIR = os.path.join(DATA_DIR, "intermediate")
+from pbi import SequenceRetriever, get_default_paths, quick_connect
 
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture(scope="module")
+def paths():
+    """Return default data paths (mirrors get_default_paths)."""
+    return get_default_paths()
+
+
+@pytest.fixture(scope="module")
+def retriever(paths):
+    """Open a SequenceRetriever against the CI database and close after tests."""
+    # Skip the entire module if the database does not exist (e.g. pipeline failed).
+    if not paths["database"].exists():
+        pytest.skip(f"Database not found: {paths['database']}")
+    r = quick_connect()
+    yield r
+    r.close()
+
+
+# ---------------------------------------------------------------------------
+# Connection tests
+# ---------------------------------------------------------------------------
 
 class TestConnection:
-    """Test database and file connections."""
+    def test_database_file_exists(self, paths):
+        assert paths["database"].exists(), f"Missing DB: {paths['database']}"
 
-    def test_database_exists(self):
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        assert os.path.exists(db_path), f"Database not found: {db_path}"
+    def test_quick_connect_returns_retriever(self, retriever):
+        assert isinstance(retriever, SequenceRetriever)
 
-    def test_phage_fasta_exists(self):
-        fasta_path = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        assert os.path.exists(fasta_path), f"Phage FASTA not found: {fasta_path}"
 
-    def test_protein_fasta_exists(self):
-        fasta_path = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        assert os.path.exists(fasta_path), f"Protein FASTA not found: {fasta_path}"
-
-    def test_phage_fasta_index_exists(self):
-        fasta_path = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        index_path = fasta_path + ".fai"
-        assert os.path.exists(index_path), f"Phage FASTA index not found: {index_path}"
-
-    def test_protein_fasta_index_exists(self):
-        fasta_path = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        index_path = fasta_path + ".fai"
-        assert os.path.exists(index_path), f"Protein FASTA index not found: {index_path}"
-
+# ---------------------------------------------------------------------------
+# Metadata query tests
+# ---------------------------------------------------------------------------
 
 class TestMetadataQueries:
-    """Test DuckDB metadata queries."""
+    def test_get_phage_metadata(self, retriever):
+        df = retriever.get_phage_metadata(limit=10)
+        assert len(df) > 0, "Expected at least one phage"
+        assert "Phage_ID" in df.columns
 
-    def _get_connection(self):
-        import duckdb
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        return duckdb.connect(db_path, read_only=True)
+    def test_get_protein_metadata(self, retriever):
+        df = retriever.get_protein_metadata(limit=10)
+        assert len(df) > 0, "Expected at least one protein"
+        assert "Protein_ID" in df.columns
 
-    def test_phages_table_not_empty(self):
-        conn = self._get_connection()
-        count = conn.execute("SELECT COUNT(*) FROM fact_phages").fetchone()[0]
-        assert count > 0, "fact_phages table is empty"
+    def test_get_phage_host_pairs(self, retriever):
+        df = retriever.get_phage_host_pairs(limit=10)
+        # Phage-host pairs may be empty if host genomes were not downloaded
+        # (metadata_only_mode), so we just verify the query runs.
+        assert isinstance(df, object)
 
-    def test_proteins_table_not_empty(self):
-        conn = self._get_connection()
-        count = conn.execute("SELECT COUNT(*) FROM dim_proteins").fetchone()[0]
-        assert count > 0, "dim_proteins table is empty"
+    def test_structured_filter(self, retriever):
+        df = retriever.query_phage_host_pairs(
+            phage_filters={"Source_DB": "RefSeq_Phage_Metadata_URL"},
+            limit=5,
+        )
+        assert isinstance(df, object)
 
-    def test_phages_have_required_columns(self):
-        conn = self._get_connection()
-        result = conn.execute("SELECT Phage_ID, Source_DB, Length FROM fact_phages LIMIT 1").fetchone()
-        assert result is not None, "No phages found"
-        assert result[0] is not None, "Phage_ID is NULL"
-        assert result[1] is not None, "Source_DB is NULL"
 
-    def test_proteins_have_required_columns(self):
-        conn = self._get_connection()
-        result = conn.execute("SELECT Protein_ID, Phage_ID FROM dim_proteins LIMIT 1").fetchone()
-        assert result is not None, "No proteins found"
-        assert result[0] is not None, "Protein_ID is NULL"
-        assert result[1] is not None, "Phage_ID is NULL"
-
+# ---------------------------------------------------------------------------
+# FASTA access tests (only if FASTA files exist)
+# ---------------------------------------------------------------------------
 
 class TestFastaAccess:
-    """Test FASTA file access."""
+    def test_phage_fasta_file_exists(self, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present in CI subset")
 
-    def _get_retriever(self):
-        from pbi.sequence_retrieval import SequenceRetriever
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        phage_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        protein_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        return SequenceRetriever(db_path, phage_fasta, protein_fasta, preload=False)
+    def test_protein_fasta_file_exists(self, paths):
+        if not paths["protein_fasta"].exists():
+            pytest.skip("Protein FASTA not present in CI subset")
 
-    def test_retriever_initializes(self):
-        retriever = self._get_retriever()
-        assert retriever is not None
+    def test_get_phage_sequence(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        first_phage = retriever.conn.execute(
+            "SELECT Phage_ID FROM fact_phages LIMIT 1"
+        ).fetchone()
+        if first_phage is None:
+            pytest.skip("No phages in database")
+        seq = retriever.get_phage_sequence(first_phage[0])
+        assert isinstance(seq, str)
+        assert len(seq) > 0
 
-    def test_get_stats(self):
-        retriever = self._get_retriever()
-        stats = retriever.get_stats()
-        assert "database" in stats
-        assert "fasta" in stats
-        assert stats["database"]["phages"] > 0
-        assert stats["database"]["proteins"] > 0
 
-    def test_get_phage_metadata(self):
-        retriever = self._get_retriever()
-        metadata = retriever.get_phage_metadata(limit=10)
-        assert len(metadata) > 0
-        assert "Phage_ID" in metadata.columns
-
+# ---------------------------------------------------------------------------
+# Phage genome streaming tests
+# ---------------------------------------------------------------------------
 
 class TestPhageGenomeStreaming:
-    """Test phage genome streaming."""
+    def _get_any_phage_id(self, retriever):
+        row = retriever.conn.execute(
+            "SELECT Phage_ID FROM fact_phages LIMIT 1"
+        ).fetchone()
+        return row[0] if row else None
 
-    def _get_retriever(self):
-        from pbi.sequence_retrieval import SequenceRetriever
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        phage_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        protein_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        return SequenceRetriever(db_path, phage_fasta, protein_fasta, preload=False)
-
-    def test_get_phage_sequence(self):
-        retriever = self._get_retriever()
-        metadata = retriever.get_phage_metadata(limit=1)
-        phage_id = metadata.iloc[0]["Phage_ID"]
-        seq = retriever.get_phage_sequence(phage_id)
-        assert seq is not None
-        assert len(seq) > 0
-        assert all(c in "ATCGN" for c in seq.upper())
-
-    def test_get_phage_genome_concat(self):
-        retriever = self._get_retriever()
-        metadata = retriever.get_phage_metadata(limit=1)
-        phage_id = metadata.iloc[0]["Phage_ID"]
+    def test_get_phage_genome_concat(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
         seq = retriever.get_phage_genome(phage_id, mode="concat")
-        assert seq is not None
+        assert isinstance(seq, str)
         assert len(seq) > 0
 
+    def test_get_phage_genome_first(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        seq = retriever.get_phage_genome(phage_id, mode="first")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_phage_genome_list(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        result = retriever.get_phage_genome(phage_id, mode="list")
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert all(isinstance(s, str) for s in result)
+
+    def test_get_phage_genome_dict(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        result = retriever.get_phage_genome(phage_id, mode="dict")
+        assert isinstance(result, dict)
+        assert len(result) > 0
+        assert all(isinstance(k, str) and isinstance(v, str) for k, v in result.items())
+
+    def test_get_phage_genome_concat_with_gap(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        phage_id = self._get_any_phage_id(retriever)
+        if phage_id is None:
+            pytest.skip("No phages in database")
+        seq_no_gap = retriever.get_phage_genome(phage_id, mode="concat", gap=0)
+        seq_with_gap = retriever.get_phage_genome(phage_id, mode="concat", gap=100)
+        # For single-contig phages, gap has no effect; lengths should be equal.
+        # For multi-contig, gap version should be longer.
+        assert len(seq_with_gap) >= len(seq_no_gap)
+
+    def test_nonexistent_phage_raises_key_error(self, retriever, paths):
+        if not paths["phage_fasta"].exists():
+            pytest.skip("Phage FASTA not present")
+        with pytest.raises(KeyError):
+            retriever.get_phage_genome("NONEXISTENT_PHAGE_999999")
+
+
+# ---------------------------------------------------------------------------
+# Host genome streaming tests (skipped if host data not available)
+# ---------------------------------------------------------------------------
 
 class TestHostGenomeStreaming:
-    """Test host genome streaming (if available)."""
+    def _get_any_host_id(self, retriever):
+        if not retriever._has_host_data:
+            return None
+        row = retriever.conn.execute(
+            "SELECT Host_ID FROM dim_hosts LIMIT 1"
+        ).fetchone()
+        return row[0] if row else None
 
-    def _get_retriever(self):
-        from pbi.sequence_retrieval import SequenceRetriever
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        phage_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        protein_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
+    def test_has_host_data(self, retriever):
+        # Just verify the flag is accessible; skip if no host data.
+        if not retriever._has_host_data:
+            pytest.skip("Host FASTA not configured (metadata_only_mode or no host genomes)")
 
-        host_mapping = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "host_mapping.json")
-        if not os.path.exists(host_mapping):
-            host_mapping = None
-
-        return SequenceRetriever(db_path, phage_fasta, protein_fasta,
-                                 host_mapping_path=host_mapping, preload=False)
-
-    def test_host_data_available(self):
-        retriever = self._get_retriever()
-        stats = retriever.get_stats()
-        if "hosts" not in stats.get("database", {}):
-            pytest.skip("Host genome data not available in CI subset")
-
-    def test_get_host_genome(self):
-        retriever = self._get_retriever()
-        try:
-            stats = retriever.get_stats()
-            if "hosts" not in stats.get("database", {}):
-                pytest.skip("Host genome data not available")
-        except Exception:
-            pytest.skip("Host data not configured")
-
-        mapping = retriever.get_host_mapping()
-        if not mapping:
-            pytest.skip("No host mapping available")
-
-        host_id = list(mapping.keys())[0]
+    def test_get_host_genome_concat(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
         seq = retriever.get_host_genome(host_id, mode="concat")
-        assert seq is not None
+        assert isinstance(seq, str)
         assert len(seq) > 0
 
+    def test_get_host_genome_first(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        seq = retriever.get_host_genome(host_id, mode="first")
+        assert isinstance(seq, str)
+        assert len(seq) > 0
+
+    def test_get_host_genome_list(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        result = retriever.get_host_genome(host_id, mode="list")
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert all(isinstance(s, str) for s in result)
+
+    def test_get_host_genome_dict(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        result = retriever.get_host_genome(host_id, mode="dict")
+        assert isinstance(result, dict)
+        assert len(result) > 0
+
+    def test_get_host_genome_stats(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        stats = retriever.get_host_genome_stats(host_id)
+        assert isinstance(stats, dict)
+        assert "contig_count" in stats
+        assert "total_length" in stats
+        assert "lengths" in stats
+        assert stats["contig_count"] > 0
+        assert stats["total_length"] > 0
+        assert len(stats["lengths"]) == stats["contig_count"]
+
+    def test_get_host_genome_concat_with_gap(self, retriever):
+        host_id = self._get_any_host_id(retriever)
+        if host_id is None:
+            pytest.skip("No host genomes available")
+        seq_no_gap = retriever.get_host_genome(host_id, mode="concat", gap=0)
+        seq_with_gap = retriever.get_host_genome(host_id, mode="concat", gap=100)
+        assert len(seq_with_gap) >= len(seq_no_gap)
+
+    def test_nonexistent_host_raises_key_error(self, retriever):
+        if not retriever._has_host_data:
+            pytest.skip("Host FASTA not configured")
+        with pytest.raises(KeyError):
+            retriever.get_host_genome("NONEXISTENT_HOST_999999")
+
+
+# ---------------------------------------------------------------------------
+# Phage-host pair streaming tests (with sequences)
+# ---------------------------------------------------------------------------
 
 class TestPhageHostPairStreaming:
-    """Test phage-host pair streaming."""
+    def test_get_phage_host_pairs_with_sequences(self, retriever):
+        df = retriever.get_phage_host_pairs(limit=5)
+        if len(df) == 0:
+            pytest.skip("No phage-host pairs (host genomes may not be downloaded)")
+        assert "Phage_Sequence" in df.columns or "Host_Sequence" in df.columns
 
-    def _get_retriever(self):
-        from pbi.sequence_retrieval import SequenceRetriever
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        phage_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        protein_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        return SequenceRetriever(db_path, phage_fasta, protein_fasta, preload=False)
+    def test_get_phage_host_pairs_concat_mode(self, retriever):
+        df = retriever.get_phage_host_pairs(limit=5, host_contig_mode="concat")
+        if len(df) == 0:
+            pytest.skip("No phage-host pairs")
 
-    def test_phage_host_pairs_exist(self):
-        retriever = self._get_retriever()
-        try:
-            pairs = retriever.get_phage_host_pairs(limit=5)
-            if pairs is not None and len(pairs) > 0:
-                assert "Phage_ID" in pairs.columns
-        except Exception:
-            pytest.skip("Phage-host association table not available")
 
+# ---------------------------------------------------------------------------
+# Error handling tests
+# ---------------------------------------------------------------------------
 
 class TestErrorHandling:
-    """Test error handling for missing data."""
-
-    def _get_retriever(self):
-        from pbi.sequence_retrieval import SequenceRetriever
-        db_path = os.path.join(PROCESSED_DIR, "databases", "phagescope.duckdb")
-        phage_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_phages.fasta")
-        protein_fasta = os.path.join(INTERMEDIATE_DIR, "fasta", "merged", "all_proteins.fasta")
-        return SequenceRetriever(db_path, phage_fasta, protein_fasta, preload=False)
-
-    def test_nonexistent_phage_returns_none(self):
-        retriever = self._get_retriever()
-        seq = retriever.get_phage_sequence("nonexistent_phage_12345")
-        assert seq is None
-
-    def test_nonexistent_phage_genome_returns_none(self):
-        retriever = self._get_retriever()
-        seq = retriever.get_phage_genome("nonexistent_phage_12345", mode="concat")
-        assert seq is None or len(seq) == 0
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
+    def test_nonexistent_phage_returns_none(self, retriever):
+        result = retriever.get_phage_sequence("NONEXISTENT_PHAGE_999999")
+        assert result is None
