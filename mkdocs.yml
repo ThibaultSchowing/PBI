@@ -51,6 +51,7 @@ nav:
       - Host Resolution: database/host-resolution.md
   - Developer:
       - Code Structure: developer/code-structure.md
+      - CI Tests: developer/ci-tests.md
   - Future Steps: future-steps.md
   - Changelog: changelog.md
 
