@@ -13,6 +13,8 @@ Run inside the Docker container after the pipeline has completed:
 
 import os
 import sys
+import tempfile
+import shutil
 from pathlib import Path
 
 import pytest
