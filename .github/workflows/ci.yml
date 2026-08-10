@@ -6,9 +6,9 @@ on:
     branches: [main]
     types: [opened, synchronize, reopened, ready_for_review]
   push:
-    branches: 
-    - main
-    - add_ci_tests
+    branches:
+      - main
+      - add_ci_tests
 
 env:
   IMAGE_NAME: pbiscope-ci
@@ -21,8 +21,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }} -f workflow/Dockerfile .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: workflow/Dockerfile
+          tags: ${{ env.IMAGE_NAME }}:latest
+          load: true
+          cache-from: type=gha,scope=pbiscope-pipeline
+          cache-to: type=gha,mode=max,scope=pbiscope-pipeline
 
       - name: Run pipeline (CI subset)
         run: |
@@ -51,7 +61,7 @@ jobs:
             -v ${{ github.workspace }}/private_data:/private-data \
             -v ${{ github.workspace }}/tests:/app/tests \
             -e DATA_PATH="/data/processed" \
-            ${{ env.IMAGE_NAME }} \
+            ${{ env.IMAGE_NAME }}:latest \
             bash -c "
               pip install -e /app/. pytest && \
               python -m pytest /app/tests/test_pbi_ci_smoke.py -v

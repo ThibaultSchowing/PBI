@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # Dockerfile for running the PBI Snakemake pipeline
 FROM condaforge/mambaforge:latest
 
@@ -11,15 +13,6 @@ RUN apt-get update && apt-get install -y \
 # Set working directory
 WORKDIR /app
 
-# Copy workflow files
-COPY workflow /app/workflow
-COPY src /app/src
-COPY setup.py /app/
-
-# Normalize source permissions in image to avoid host-umask-dependent failures
-# when running container as a non-root UID/GID from docker-compose.
-RUN chmod -R a+rX /app/workflow /app/src && chmod a+r /app/setup.py
-
 # Copy environment file and create conda environment
 COPY workflow/envs/base_environment.yaml /tmp/base_environment.yaml
 
@@ -28,10 +21,20 @@ COPY workflow/envs/base_environment.yaml /tmp/base_environment.yaml
 # the GitHub Actions CI environment. In production, ensure proper CA certificates are
 # configured or use a trusted mirror. Re-enable with: conda config --set ssl_verify true
 # Update the base environment instead of creating a new one
-RUN conda config --set ssl_verify false && \
+RUN --mount=type=cache,target=/opt/conda/pkgs \
+    conda config --set ssl_verify false && \
     conda env update -n base -f /tmp/base_environment.yaml && \
-    conda clean -a -y && \
     conda config --set ssl_verify true
+
+# Copy workflow files after dependency installation so source changes do not
+# invalidate the cached conda environment layer.
+COPY workflow /app/workflow
+COPY src /app/src
+COPY setup.py /app/
+
+# Normalize source permissions in image to avoid host-umask-dependent failures
+# when running container as a non-root UID/GID from docker-compose.
+RUN chmod -R a+rX /app/workflow /app/src && chmod a+r /app/setup.py
 
 # Create data directory structure.
 # chmod 777 ensures that when Docker seeds the named volumes from these image
@@ -50,14 +53,14 @@ WORKDIR /app/workflow
 # getpass.getuser() (called by Snakemake) raises OSError.
 # This wrapper adds a temporary passwd entry before exec-ing Snakemake.
 RUN printf '#!/bin/sh\n\
-CURRENT_UID=$(id -u)\n\
-CURRENT_GID=$(id -g)\n\
-export USER="${USER:-pipeline}"\n\
-export LOGNAME="${LOGNAME:-${USER}}"\n\
-if ! getent passwd "${CURRENT_UID}" > /dev/null 2>&1 && [ -w /etc/passwd ]; then\n\
+    CURRENT_UID=$(id -u)\n\
+    CURRENT_GID=$(id -g)\n\
+    export USER="${USER:-pipeline}"\n\
+    export LOGNAME="${LOGNAME:-${USER}}"\n\
+    if ! getent passwd "${CURRENT_UID}" > /dev/null 2>&1 && [ -w /etc/passwd ]; then\n\
     echo "pipeline:x:${CURRENT_UID}:${CURRENT_GID}:Pipeline user:${HOME:-/app}:/bin/sh" >> /etc/passwd 2>/dev/null || true\n\
-fi\n\
-exec "$@"\n' > /entrypoint.sh && chmod +x /entrypoint.sh
+    fi\n\
+    exec "$@"\n' > /entrypoint.sh && chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
 
