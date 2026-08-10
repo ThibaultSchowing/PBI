@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://ThibaultSchowing.github.io/PBI-Scope/developer/code-structure/">
+        <link rel="canonical" href="https://ThibaultSchowing.github.io/PBI-Scope/developer/ci-tests/">
       
       
-        <link rel="prev" href="../../database/host-resolution/">
+        <link rel="prev" href="../code-structure/">
       
       
-        <link rel="next" href="../ci-tests/">
+        <link rel="next" href="../../future-steps/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Code Structure - PBI-Scope Documentation</title>
+        <title>CI Tests - PBI-Scope Documentation</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#pbi-scope-code-structure" class="md-skip">
+        <a href="#ci-pipeline-tests" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Code Structure
+              CI Tests
             
           </span>
         </div>
@@ -312,7 +312,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+        <a href="../code-structure/" class="md-tabs__link">
           
   
   
@@ -1042,6 +1042,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../code-structure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Code Structure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1061,7 +1089,7 @@
   <span class="md-ellipsis">
     
   
-    Code Structure
+    CI Tests
   
 
     
@@ -1079,7 +1107,7 @@
   <span class="md-ellipsis">
     
   
-    Code Structure
+    CI Tests
   
 
     
@@ -1105,10 +1133,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project Layout
+        Overview
       
     </span>
   </a>
@@ -1116,22 +1144,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-components" class="md-nav__link">
+  <a href="#workflow-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Components
+        Workflow Steps
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Key Components">
+    <nav class="md-nav" aria-label="Workflow Steps">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#snakemake-pipeline" class="md-nav__link">
+  <a href="#1-checkout-and-buildx-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Snakemake Pipeline
+        1. Checkout and Buildx Setup
       
     </span>
   </a>
@@ -1139,10 +1167,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#python-package" class="md-nav__link">
+  <a href="#2-build-docker-image" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python Package
+        2. Build Docker Image
       
     </span>
   </a>
@@ -1150,10 +1178,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rest-api" class="md-nav__link">
+  <a href="#3-run-pipeline-ci-subset" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REST API
+        3. Run Pipeline (CI Subset)
       
     </span>
   </a>
@@ -1161,10 +1189,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
+  <a href="#4-run-smoke-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation
+        4. Run Smoke Tests
       
     </span>
   </a>
@@ -1177,10 +1205,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#data-flow" class="md-nav__link">
+  <a href="#ci-subset-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Flow
+        CI Subset Configuration
       
     </span>
   </a>
@@ -1188,88 +1216,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#development-workflow" class="md-nav__link">
+  <a href="#smoke-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Development Workflow
+        Smoke Tests
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tests
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#schema-contracts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Schema Contracts
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Schema Contracts">
+    <nav class="md-nav" aria-label="Smoke Tests">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#contract-sections" class="md-nav__link">
+  <a href="#running-smoke-tests-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Contract sections
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#processing-order" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processing order
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#schema-drift-report" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Schema drift report
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#change-procedure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Change procedure
+        Running Smoke Tests Locally
       
     </span>
   </a>
@@ -1282,10 +1244,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#resources" class="md-nav__link">
+  <a href="#docker-buildx-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resources
+        Docker Buildx Caching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Buildx Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-buildx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is Buildx?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-cache-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the Cache Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-it-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why It Matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
       
     </span>
   </a>
@@ -1296,34 +1319,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../ci-tests/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    CI Tests
-  
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -1417,10 +1412,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Project Layout
+        Overview
       
     </span>
   </a>
@@ -1428,22 +1423,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#key-components" class="md-nav__link">
+  <a href="#workflow-steps" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Key Components
+        Workflow Steps
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Key Components">
+    <nav class="md-nav" aria-label="Workflow Steps">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#snakemake-pipeline" class="md-nav__link">
+  <a href="#1-checkout-and-buildx-setup" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Snakemake Pipeline
+        1. Checkout and Buildx Setup
       
     </span>
   </a>
@@ -1451,10 +1446,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#python-package" class="md-nav__link">
+  <a href="#2-build-docker-image" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Python Package
+        2. Build Docker Image
       
     </span>
   </a>
@@ -1462,10 +1457,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rest-api" class="md-nav__link">
+  <a href="#3-run-pipeline-ci-subset" class="md-nav__link">
     <span class="md-ellipsis">
       
-        REST API
+        3. Run Pipeline (CI Subset)
       
     </span>
   </a>
@@ -1473,10 +1468,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#documentation" class="md-nav__link">
+  <a href="#4-run-smoke-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Documentation
+        4. Run Smoke Tests
       
     </span>
   </a>
@@ -1489,10 +1484,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#data-flow" class="md-nav__link">
+  <a href="#ci-subset-configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Data Flow
+        CI Subset Configuration
       
     </span>
   </a>
@@ -1500,88 +1495,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#development-workflow" class="md-nav__link">
+  <a href="#smoke-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Development Workflow
+        Smoke Tests
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#configuration-files" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Configuration Files
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tests" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tests
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#schema-contracts" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Schema Contracts
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Schema Contracts">
+    <nav class="md-nav" aria-label="Smoke Tests">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#contract-sections" class="md-nav__link">
+  <a href="#running-smoke-tests-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Contract sections
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#processing-order" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Processing order
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#schema-drift-report" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Schema drift report
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#change-procedure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Change procedure
+        Running Smoke Tests Locally
       
     </span>
   </a>
@@ -1594,10 +1523,71 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#resources" class="md-nav__link">
+  <a href="#docker-buildx-caching" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Resources
+        Docker Buildx Caching
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Docker Buildx Caching">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#what-is-buildx" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is Buildx?
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-the-cache-works" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How the Cache Works
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#why-it-matters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Why It Matters
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artifacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See Also
       
     </span>
   </a>
@@ -1624,305 +1614,230 @@
   
 
 
-<h1 id="pbi-scope-code-structure">PBI-Scope Code Structure<a class="headerlink" href="#pbi-scope-code-structure" title="Permanent link">&para;</a></h1>
-<p>Overview of the PBI-Scope project architecture and code organization.</p>
-<h2 id="project-layout">Project Layout<a class="headerlink" href="#project-layout" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>PBI-Scope/
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── workflow/              # Snakemake pipeline
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>│   ├── Snakefile          # Main pipeline definition
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>│   ├── rules/             # Modular pipeline rules
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>│   │   ├── phagescope.smk   # Download phage data from PhageScope
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>│   │   ├── database.smk     # Database creation and optimization
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>│   │   ├── sequences.smk    # FASTA merging and indexing
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>│   │   └── hosts.smk        # Host genome resolution and download
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>│   ├── scripts/           # Processing scripts
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>│   │   ├── database/        # DuckDB creation, optimization, validation
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>│   │   ├── preprocessing/
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>│   │   │   └── mergers/     # Per-feature CSV merger scripts
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>│   │   ├── sequences/       # FASTA handling + host genome download
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>│   │   │   ├── download_host_genomes_robust.py  # Multi-host parser + NCBI downloader
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>│   │   │   ├── assembly_resolver.py             # NCBI assembly lookup
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>│   │   │   ├── index_sequences.py               # pyfaidx indexing
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>│   │   │   └── index_individual_hosts.py        # Build host_fasta_mapping.json
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>│   │   └── utils/           # Report generation utilities
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>│   ├── config/            # Pipeline configuration
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>│   │   └── config.yaml      # Main config (NCBI credentials, paths, etc.)
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>│   ├── envs/              # Conda environment specifications
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>│   └── dag/               # Workflow DAG visualizations
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>│
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>├── src/pbi/               # Python package
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>│   ├── __init__.py          # Package init + quick_connect(), get_default_paths()
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>│   ├── sequence_retrieval.py  # SequenceRetriever class
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>│   ├── api_client.py        # APIClient class (REST API wrapper)
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>│   ├── negative_examples.py   # NegativeExampleGenerator class
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>│   └── streaming_dataset.py   # PhageHostStreamingDataset, PhageHostIndexedDataset
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>│
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>├── api/                   # REST API
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>│   ├── app.py               # FastAPI application with endpoints
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>│   └── __init__.py          # Package init
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>│
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>├── notebooks/             # Jupyter notebooks
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>│   ├── 01_database_exploration.ipynb  # DB stats, quality control
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>│   ├── 02_sequence_retrieval.ipynb    # Sequence retrieval with pbi package
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>│   ├── 03_ml_streaming.ipynb          # ML dataset preparation
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>│   ├── README.md
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>│   ├── bin/               # Previous versions (kept for reference)
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>│   └── exploration/       # Development notebooks
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>│
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>├── docs/                  # Documentation (MkDocs)
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>│   ├── index.md
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>│   ├── guides/            # Installation and usage guides
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>│   ├── database/          # Database documentation
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>│   ├── api/               # API reference
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>│   ├── reference/         # Command reference
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>│   ├── developer/         # This page
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>│   └── archive/           # Historical documentation
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>│
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>├── tests/                 # Unit tests
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>│   └── test_multi_host_parsing.py  # Host parsing and resolution tests
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>│
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>├── docker-compose.yml     # Docker orchestration (pipeline, analysis, api)
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>├── Dockerfile.analysis    # Analysis container (Jupyter Lab + pbi package)
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>├── Dockerfile.api         # API container (FastAPI)
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>├── setup.py               # Package configuration
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>└── mkdocs.yml             # Documentation configuration
-</code></pre></div>
-<h2 id="key-components">Key Components<a class="headerlink" href="#key-components" title="Permanent link">&para;</a></h2>
-<h3 id="snakemake-pipeline">Snakemake Pipeline<a class="headerlink" href="#snakemake-pipeline" title="Permanent link">&para;</a></h3>
-<p><strong>Location</strong>: <code>workflow/</code></p>
-<p>The pipeline orchestrates data download, processing, and database creation:</p>
-<ul>
-<li><strong><code>Snakefile</code></strong>: Main workflow definition, includes all rule files</li>
-<li><strong><code>rules/phagescope.smk</code></strong>: Downloads phage metadata (CSV) and FASTA archives from PhageScope API for each of 14+ databases</li>
-<li><strong><code>rules/database.smk</code></strong>: Merges CSV files, creates and optimizes DuckDB database, generates HTML validation reports</li>
-<li><strong><code>rules/sequences.smk</code></strong>: Merges per-database FASTA files, creates pyfaidx indexes</li>
-<li><strong><code>rules/hosts.smk</code></strong>: Parses host fields → resolves to NCBI assemblies → downloads host FASTA files → builds <code>host_fasta_mapping.json</code></li>
-</ul>
-<p><strong>Key scripts:</strong></p>
+<h1 id="ci-pipeline-tests">CI Pipeline Tests<a class="headerlink" href="#ci-pipeline-tests" title="Permanent link">&para;</a></h1>
+<p>PBI-Scope uses GitHub Actions to automatically build the full Snakemake pipeline and validate the <code>pbi</code> Python package against real data on every pull request and push to <code>main</code>.</p>
+<hr />
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Script</th>
-<th>Purpose</th>
+<th>Property</th>
+<th>Value</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>scripts/preprocessing/mergers/merge_phage_metadata.py</code></td>
-<td>Merge per-database phage CSV files</td>
+<td>Runner</td>
+<td><code>ubuntu-latest</code></td>
 </tr>
 <tr>
-<td><code>scripts/preprocessing/mergers/merge_annotated_proteins_metadata.py</code></td>
-<td>Merge protein annotation CSVs</td>
+<td>Timeout</td>
+<td>120 minutes</td>
 </tr>
 <tr>
-<td><code>scripts/database/create_duckdb.py</code></td>
-<td>Create star-schema DuckDB from merged CSVs</td>
+<td>Triggers</td>
+<td>Pull requests to <code>main</code>, pushes to <code>main</code>, manual dispatch</td>
 </tr>
 <tr>
-<td><code>scripts/database/optimize_db.py</code></td>
-<td>Add indexes and views for performance</td>
-</tr>
-<tr>
-<td><code>scripts/database/validate_db.py</code></td>
-<td>Generate HTML validation/quality reports</td>
-</tr>
-<tr>
-<td><code>scripts/sequences/download_host_genomes_robust.py</code></td>
-<td>Multi-host parsing + NCBI download</td>
-</tr>
-<tr>
-<td><code>scripts/sequences/assembly_resolver.py</code></td>
-<td>NCBI Taxonomy + Assembly API lookups</td>
-</tr>
-<tr>
-<td><code>scripts/sequences/index_individual_hosts.py</code></td>
-<td>Build <code>host_fasta_mapping.json</code></td>
+<td>Expected runtime</td>
+<td>20-40 minutes (with Buildx cache)</td>
 </tr>
 </tbody>
 </table>
-<h3 id="python-package">Python Package<a class="headerlink" href="#python-package" title="Permanent link">&para;</a></h3>
-<p><strong>Location</strong>: <code>src/pbi/</code></p>
-<p>The PBI-Scope package provides the primary interface for data access and ML dataset preparation:</p>
-<ul>
-<li><strong><code>__init__.py</code></strong>: Exports main classes, defines <code>quick_connect()</code> and <code>get_default_paths()</code> (reads <code>DATA_PATH</code> env var)</li>
-<li><strong><code>sequence_retrieval.py</code></strong>: <code>SequenceRetriever</code> — connects to DuckDB and FASTA files, provides metadata query methods, sequence retrieval, and phage-host pair retrieval</li>
-<li><strong><code>negative_examples.py</code></strong>: <code>NegativeExampleGenerator</code> — generates non-interacting phage-host pairs for ML training (multiple strategies: random, taxonomy-aware, etc.)</li>
-<li><strong><code>streaming_dataset.py</code></strong>: <code>PhageHostStreamingDataset</code>, <code>PhageHostIndexedDataset</code>, <code>phage_host_collate_fn</code> — PyTorch-compatible dataset classes for memory-efficient streaming</li>
-</ul>
-<h3 id="rest-api">REST API<a class="headerlink" href="#rest-api" title="Permanent link">&para;</a></h3>
-<p><strong>Location</strong>: <code>api/</code></p>
-<p>FastAPI-based REST interface for metadata queries, sequence retrieval, and SQL exploration:</p>
-<ul>
-<li><strong><code>app.py</code></strong>: Main API application with endpoints for health check, stats, metadata queries, sequence retrieval, and SQL queries</li>
-</ul>
-<h3 id="documentation">Documentation<a class="headerlink" href="#documentation" title="Permanent link">&para;</a></h3>
-<p><strong>Location</strong>: <code>docs/</code></p>
-<p>MkDocs-based documentation (this site):</p>
-<ul>
-<li><strong><code>guides/</code></strong>: Installation, how-it-works, analysis usage, pipeline execution</li>
-<li><strong><code>database/</code></strong>: Database schema and host resolution details</li>
-<li><strong><code>api/</code></strong>: API reference</li>
-<li><strong><code>reference/</code></strong>: Command reference</li>
-<li><strong><code>developer/</code></strong>: This page</li>
-<li><strong><code>archive/</code></strong>: Historical/development documentation</li>
-</ul>
-<h2 id="data-flow">Data Flow<a class="headerlink" href="#data-flow" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>PhageScope API (14+ databases)
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>      │
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>      ▼ [phagescope.smk]
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>Raw CSVs + compressed FASTA archives → /data/raw/
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>      │
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>      ▼ [preprocessing/mergers/]
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>Merged metadata CSVs + merged FASTA files → /data/intermediate/
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>      │
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>      ├──▶ [database.smk] → phage_database_optimized.duckdb → /data/processed/databases/
-<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>      └──▶ [sequences.smk] → all_phages.fasta + all_proteins.fasta → /data/processed/sequences/
-<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>NCBI RefSeq
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>      │
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>      ▼ [hosts.smk]
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>Individual host FASTA files → /data/processed/sequences/hosts/
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>host_fasta_mapping.json → /data/processed/sequences/
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>All outputs → pbi-data Docker volume
-<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>      │
-<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>      ├──▶ Analysis container (Jupyter Lab, port 8888) via pbi package
-<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>      └──▶ API container (FastAPI, port 8000) for exploration
-</code></pre></div>
-<h2 id="development-workflow">Development Workflow<a class="headerlink" href="#development-workflow" title="Permanent link">&para;</a></h2>
+<p>The CI pipeline performs two jobs in sequence:</p>
 <ol>
-<li><strong>Data Pipeline</strong>: Modify <code>workflow/rules/</code> and <code>workflow/scripts/</code> for data processing changes</li>
-<li><strong>Python Package</strong>: Update <code>src/pbi/</code> for new utilities or ML features</li>
-<li><strong>API</strong>: Extend <code>api/app.py</code> for new endpoints (test after adding)</li>
-<li><strong>Documentation</strong>: Update <code>docs/</code> for user-facing changes</li>
-<li><strong>Testing</strong>: Add tests to <code>tests/</code></li>
+<li><strong>Run the Snakemake pipeline</strong> against a reduced subset of PhageScope data (2 of 26 sources).</li>
+<li><strong>Run smoke tests</strong> that exercise the <code>pbi</code> Python package against the database and FASTA files produced by the pipeline.</li>
 </ol>
-<h2 id="configuration-files">Configuration Files<a class="headerlink" href="#configuration-files" title="Permanent link">&para;</a></h2>
-<ul>
-<li><strong><code>workflow/config/config.yaml</code></strong>: Pipeline configuration (NCBI credentials, paths, PhageScope DBs)</li>
-<li><strong><code>workflow/envs/*.yaml</code></strong>: Conda environment specifications</li>
-<li><strong><code>setup.py</code></strong>: Python package metadata and dependencies</li>
-<li><strong><code>mkdocs.yml</code></strong>: Documentation configuration</li>
-<li><strong><code>docker-compose.yml</code></strong>: Container orchestration (pipeline, analysis, api services)</li>
-<li><strong><code>.gitignore</code></strong>: Excludes <code>data/</code> directory (too large for git)</li>
-</ul>
-<h2 id="tests">Tests<a class="headerlink" href="#tests" title="Permanent link">&para;</a></h2>
-<p><strong>Location</strong>: <code>tests/</code></p>
-<ul>
-<li><strong><code>test_multi_host_parsing.py</code></strong>: 31 unit tests for host field parsing and resolution logic</li>
-</ul>
-<p>Run with:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/
+<p>If the pipeline step fails, the smoke tests still run (they use <code>if: always()</code>), so you can see whether the package works even when upstream data sources are temporarily unavailable.</p>
+<hr />
+<h2 id="workflow-steps">Workflow Steps<a class="headerlink" href="#workflow-steps" title="Permanent link">&para;</a></h2>
+<h3 id="1-checkout-and-buildx-setup">1. Checkout and Buildx Setup<a class="headerlink" href="#1-checkout-and-buildx-setup" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">actions/checkout@v4</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker/setup-buildx-action@v3</span>
+</code></pre></div>
+<p>The repository is checked out and Docker Buildx is initialized. Buildx enables advanced build features, most importantly <strong>layer caching</strong> (see <a href="#docker-buildx-caching">Docker Buildx Caching</a> below).</p>
+<h3 id="2-build-docker-image">2. Build Docker Image<a class="headerlink" href="#2-build-docker-image" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">docker/build-push-action@v6</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">    </span><span class="nt">context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">file</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">workflow/Dockerfile</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">tags</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">pbiscope-ci:latest</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">    </span><span class="nt">load</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">    </span><span class="nt">cache-from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,scope=pbiscope-pipeline</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">    </span><span class="nt">cache-to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,mode=max,scope=pbiscope-pipeline</span>
+</code></pre></div>
+<p>The Docker image is built from <code>workflow/Dockerfile</code>. It installs Snakemake, DuckDB, pyfaidx, and all other dependencies via conda. The image is tagged <code>pbiscope-ci:latest</code> and loaded into the local Docker daemon so subsequent steps can use it.</p>
+<h3 id="3-run-pipeline-ci-subset">3. Run Pipeline (CI Subset)<a class="headerlink" href="#3-run-pipeline-ci-subset" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="si">${</span><span class="p">{ github.workspace </span><span class="si">}</span><span class="o">}</span>/data:/data<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span>snakemake<span class="w"> </span>--cores<span class="w"> </span><span class="m">2</span><span class="w"> </span>--use-conda<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span>--snakefile<span class="w"> </span>/app/workflow/Snakefile.ci
+</code></pre></div>
+<p>The Snakemake pipeline runs inside the built container using <code>Snakefile.ci</code>, which loads the full default config and then overrides it with <code>config.ci.yaml</code>. This produces a DuckDB database, indexed FASTA files, and merged CSV outputs under <code>/data/processed/</code>.</p>
+<h3 id="4-run-smoke-tests">4. Run Smoke Tests<a class="headerlink" href="#4-run-smoke-tests" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="si">${</span><span class="p">{ github.workspace </span><span class="si">}</span><span class="o">}</span>/tests:/app/tests<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">DATA_PATH</span><span class="o">=</span><span class="s2">&quot;/data/processed&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;pip install -e /app/. pytest &amp;&amp; \</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="s2">           python -m pytest /app/tests/test_pbi_ci_smoke.py -v&quot;</span>
+</code></pre></div>
+<p>A second container mounts the <code>tests/</code> directory and the pipeline output, installs the <code>pbi</code> package in editable mode, then runs the smoke test suite with pytest.</p>
+<hr />
+<h2 id="ci-subset-configuration">CI Subset Configuration<a class="headerlink" href="#ci-subset-configuration" title="Permanent link">&para;</a></h2>
+<p>The CI pipeline uses a reduced configuration to keep runtime under 40 minutes. The full production pipeline downloads from 26 sources; CI uses only 2.</p>
+<table>
+<thead>
+<tr>
+<th>Setting</th>
+<th>Production</th>
+<th>CI</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Phage metadata sources</td>
+<td>26</td>
+<td>2 (RefSeq, PhagesDB)</td>
+</tr>
+<tr>
+<td>Metadata features</td>
+<td>9</td>
+<td>All 9 included</td>
+</tr>
+<tr>
+<td>FASTA sources</td>
+<td>26</td>
+<td>2 (RefSeq, PhagesDB)</td>
+</tr>
+<tr>
+<td>GFF3 sources</td>
+<td>26</td>
+<td>2 (RefSeq, PhagesDB)</td>
+</tr>
+<tr>
+<td>Host genome downloads</td>
+<td>Configurable</td>
+<td>Enabled (<code>metadata_only_mode: false</code>)</td>
+</tr>
+</tbody>
+</table>
+<p>The CI config lives at <code>workflow/config/config.ci.yaml</code>. The CI Snakefile (<code>workflow/Snakefile.ci</code>) loads the full default config first, then replaces top-level keys with CI overrides.</p>
+<hr />
+<h2 id="smoke-tests">Smoke Tests<a class="headerlink" href="#smoke-tests" title="Permanent link">&para;</a></h2>
+<p>The smoke tests live in <code>tests/test_pbi_ci_smoke.py</code> and run inside the Docker container against the real pipeline output. They verify that the <code>pbi</code> package works end-to-end without asserting exact data values.</p>
+<table>
+<thead>
+<tr>
+<th>Test Class</th>
+<th>Tests</th>
+<th>What It Validates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>TestConnection</td>
+<td>2</td>
+<td>Database file exists, <code>quick_connect()</code> returns a <code>SequenceRetriever</code></td>
+</tr>
+<tr>
+<td>TestMetadataQueries</td>
+<td>4</td>
+<td>Phage metadata, protein metadata, phage-host pairs, structured filters all return results</td>
+</tr>
+<tr>
+<td>TestFastaAccess</td>
+<td>3</td>
+<td>FASTA files exist, <code>get_phage_sequence()</code> returns a valid string</td>
+</tr>
+<tr>
+<td>TestPhageGenomeStreaming</td>
+<td>6</td>
+<td>Genome retrieval in all modes (concat, first, list, dict), gap handling, missing phage error</td>
+</tr>
+<tr>
+<td>TestHostGenomeStreaming</td>
+<td>8</td>
+<td>Host genome retrieval in all modes, genome stats, gap handling, graceful skip when host data unavailable</td>
+</tr>
+<tr>
+<td>TestPhageHostPairStreaming</td>
+<td>2</td>
+<td>Phage-host pairs with sequences, concat mode</td>
+</tr>
+<tr>
+<td>TestErrorHandling</td>
+<td>1</td>
+<td>Nonexistent phage ID returns <code>None</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Total: 26 tests</strong></p>
+<p>Tests that depend on host genomes use <code>pytest.skip()</code> when host data is not available, so they pass gracefully in both host-enabled and host-disabled CI configurations.</p>
+<h3 id="running-smoke-tests-locally">Running Smoke Tests Locally<a class="headerlink" href="#running-smoke-tests-locally" title="Permanent link">&para;</a></h3>
+<p>After a local pipeline run:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/data:/data<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/tests:/app/tests<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">DATA_PATH</span><span class="o">=</span><span class="s2">&quot;/data/processed&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>pbiscope-ci:latest<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;pip install -e /app/. pytest &amp;&amp; \</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s2">           python -m pytest /app/tests/test_pbi_ci_smoke.py -v&quot;</span>
 </code></pre></div>
 <hr />
-<h2 id="schema-contracts">Schema Contracts<a class="headerlink" href="#schema-contracts" title="Permanent link">&para;</a></h2>
-<p>PBI uses YAML-based schema contracts to keep metadata preprocessing resilient to upstream changes. Each contract (<code>workflow/schemas/*.yaml</code>) declares required/optional columns, aliases, and defaults.</p>
-<h3 id="contract-sections">Contract sections<a class="headerlink" href="#contract-sections" title="Permanent link">&para;</a></h3>
-<table>
-<thead>
-<tr>
-<th>Section</th>
-<th>Meaning</th>
-<th>Behavior if absent</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>required</code></td>
-<td>Column must exist</td>
-<td>Pipeline fails with <code>ValueError</code></td>
-</tr>
-<tr>
-<td><code>optional</code></td>
-<td>Column may be absent</td>
-<td>Added with <code>pd.NA</code> or configured default</td>
-</tr>
-<tr>
-<td><code>aliases</code></td>
-<td>Alternate names → canonical name</td>
-<td>Applied silently before validation</td>
-</tr>
-<tr>
-<td><code>defaults</code></td>
-<td>Default value for optional columns</td>
-<td>Falls back to <code>pd.NA</code></td>
-</tr>
-</tbody>
-</table>
-<h3 id="processing-order">Processing order<a class="headerlink" href="#processing-order" title="Permanent link">&para;</a></h3>
-<ol>
-<li>Strip whitespace from column names</li>
-<li>Apply aliases (canonical wins on collision)</li>
-<li>Check required columns</li>
-<li>Add missing optional columns</li>
-<li>Preserve unknown columns (not dropped)</li>
-<li>Reorder: <code>required + optional + sorted(unknown)</code></li>
-</ol>
-<h3 id="schema-drift-report">Schema drift report<a class="headerlink" href="#schema-drift-report" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>python<span class="w"> </span>workflow/scripts/preprocessing/report_schema_drift.py<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span>--contract<span class="w"> </span>workflow/schemas/phage_metadata_merged.yaml<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>--input<span class="w"> </span>path/to/source_file.tsv<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span>--dataset-name<span class="w"> </span>phage_metadata
+<h2 id="docker-buildx-caching">Docker Buildx Caching<a class="headerlink" href="#docker-buildx-caching" title="Permanent link">&para;</a></h2>
+<p>The CI workflow uses Docker Buildx with GitHub Actions cache to speed up image builds.</p>
+<h3 id="what-is-buildx">What is Buildx?<a class="headerlink" href="#what-is-buildx" title="Permanent link">&para;</a></h3>
+<p>Buildx is an extended build backend for Docker that supports advanced features like multi-platform builds, build secrets, and <strong>build cache backends</strong>. The <code>docker/setup-buildx-action</code> GitHub Action installs and configures it automatically.</p>
+<h3 id="how-the-cache-works">How the Cache Works<a class="headerlink" href="#how-the-cache-works" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">cache-from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,scope=pbiscope-pipeline</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">cache-to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,mode=max,scope=pbiscope-pipeline</span>
 </code></pre></div>
-<h3 id="change-procedure">Change procedure<a class="headerlink" href="#change-procedure" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>type=gha</code></strong>: Uses the GitHub Actions cache backend. Cache layers are stored as GitHub Actions cache entries, scoped to the repository.</li>
+<li><strong><code>scope=pbiscope-pipeline</code></strong>: Isolates this workflow's cache from other workflows in the same repository.</li>
+<li><strong><code>mode=max</code></strong>: Exports all layers (not just the final image layers) to the cache. This maximizes cache hits for intermediate layers.</li>
+</ul>
+<h3 id="why-it-matters">Why It Matters<a class="headerlink" href="#why-it-matters" title="Permanent link">&para;</a></h3>
+<p>The Docker image installs conda environments, which can take 5-10 minutes to resolve and download. With Buildx caching:</p>
+<ul>
+<li><strong>First run</strong>: Full build, layers are pushed to cache (~10-15 min).</li>
+<li><strong>Subsequent runs</strong> (when only code changes): Docker reuses cached layers for unchanged steps (conda install, system packages). Only the <code>COPY</code> layers for modified files are rebuilt (~1-3 min).</li>
+</ul>
+<p>The cache is automatically evicted by GitHub after 7 days of inactivity.</p>
+<hr />
+<h2 id="artifacts">Artifacts<a class="headerlink" href="#artifacts" title="Permanent link">&para;</a></h2>
+<p>After each CI run, two artifacts are uploaded:</p>
 <table>
 <thead>
 <tr>
-<th>Change</th>
-<th>Contract</th>
-<th><code>create_duckdb.py</code></th>
-<th><code>pbi</code> package</th>
+<th>Artifact</th>
+<th>Contents</th>
+<th>Retention</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Column renamed</td>
-<td>Add alias</td>
-<td>No change</td>
-<td>No change</td>
+<td><code>pipeline-logs</code></td>
+<td>Snakemake logs, reports, and run metadata from <code>/pipeline-logs/</code></td>
+<td>7 days</td>
 </tr>
 <tr>
-<td>New column — preserve only</td>
-<td>No change</td>
-<td>No change</td>
-<td>No change</td>
-</tr>
-<tr>
-<td>New column — add to DuckDB</td>
-<td>Add to <code>optional:</code></td>
-<td>Add to <code>SELECT</code></td>
-<td>No change</td>
-</tr>
-<tr>
-<td>New column — expose via <code>pbi</code></td>
-<td>Add to <code>optional:</code></td>
-<td>Add to <code>SELECT</code></td>
-<td>Add to query</td>
-</tr>
-<tr>
-<td>Optional → required</td>
-<td>Move in contract</td>
-<td>No change</td>
-<td>No change</td>
-</tr>
-<tr>
-<td>Required column removed</td>
-<td>Move to <code>optional:</code></td>
-<td>Handle <code>NULL</code></td>
-<td>Handle <code>None</code></td>
+<td><code>merged-data</code></td>
+<td>Merged CSV outputs from <code>data/intermediate/csv/merged/</code></td>
+<td>7 days</td>
 </tr>
 </tbody>
 </table>
-<h2 id="resources">Resources<a class="headerlink" href="#resources" title="Permanent link">&para;</a></h2>
-<ul>
-<li><a href="https://snakemake.readthedocs.io/">Snakemake Documentation</a></li>
-<li><a href="https://duckdb.org/docs/">DuckDB Documentation</a></li>
-<li><a href="https://fastapi.tiangolo.com/">FastAPI Documentation</a></li>
-<li><a href="https://www.mkdocs.org/">MkDocs Documentation</a></li>
-</ul>
+<p>These are available for download from the GitHub Actions run summary page.</p>
 <hr />
-<p>For contributing guidelines, see the project README or open an issue on GitHub.</p>
+<h2 id="see-also">See Also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../code-structure/">Code Structure</a> — project layout and test overview</li>
+<li><code>workflow/config/config.ci.yaml</code> — CI subset configuration</li>
+<li><code>tests/test_pbi_ci_smoke.py</code> — smoke test source code</li>
+<li><code>workflow/Snakefile.ci</code> — CI Snakefile with config override logic</li>
+</ul>
 
 
 
