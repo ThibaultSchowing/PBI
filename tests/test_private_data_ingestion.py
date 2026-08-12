@@ -109,7 +109,7 @@ def test_validate_private_source_missing_required_column(tmp_path):
     assert any("missing required columns" in e for e in result.errors)
 
 
-def test_validate_private_source_invalid_interaction(tmp_path):
+def test_validate_private_source_empty_interaction(tmp_path):
     source = _create_private_source(
         tmp_path,
         "Project_A",
@@ -119,7 +119,7 @@ def test_validate_private_source_invalid_interaction(tmp_path):
                 "Host_ID": "H1",
                 "Host_name": "Host One",
                 "Source_DB": "Project_A",
-                "interaction": "latent",
+                "interaction": "",
             }
         ],
         ["P1"],
@@ -127,7 +127,61 @@ def test_validate_private_source_invalid_interaction(tmp_path):
     )
     result = validate_private_source(source)
     assert not result.is_valid
-    assert any("Invalid interaction values" in e for e in result.errors)
+    assert any("empty values" in e for e in result.errors)
+
+
+def test_validate_private_source_custom_interaction_types(tmp_path):
+    """Custom interaction types (e.g. 'interaction', 'no interaction') should be accepted."""
+    source = _create_private_source(
+        tmp_path,
+        "Project_Custom",
+        [
+            {
+                "Phage_ID": "P1",
+                "Host_ID": "H1",
+                "Host_name": "Host One",
+                "Source_DB": "Project_Custom",
+                "interaction": "interaction",
+            },
+            {
+                "Phage_ID": "P2",
+                "Host_ID": "H2",
+                "Host_name": "Host Two",
+                "Source_DB": "Project_Custom",
+                "interaction": "no interaction",
+            },
+        ],
+        ["P1", "P2"],
+        ["H1", "H2"],
+    )
+    result = validate_private_source(source, include_dataframe=True)
+    assert result.is_valid
+    assert result.stats["rows"] == 2
+    # Values should be normalized to lowercase
+    assert list(result.metadata_df["interaction"]) == ["interaction", "no interaction"]
+
+
+def test_validate_private_source_any_interaction_value(tmp_path):
+    """Any non-empty interaction string should be accepted."""
+    source = _create_private_source(
+        tmp_path,
+        "Project_Any",
+        [
+            {
+                "Phage_ID": "P1",
+                "Host_ID": "H1",
+                "Host_name": "Host One",
+                "Source_DB": "Project_Any",
+                "interaction": "Latent",
+            }
+        ],
+        ["P1"],
+        ["H1"],
+    )
+    result = validate_private_source(source, include_dataframe=True)
+    assert result.is_valid
+    # Should be normalized to lowercase
+    assert result.metadata_df.iloc[0]["interaction"] == "latent"
 
 
 def test_validate_private_source_id_mismatch(tmp_path):
