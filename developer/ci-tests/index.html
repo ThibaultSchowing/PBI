@@ -1228,10 +1228,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#running-smoke-tests-locally" class="md-nav__link">
+  <a href="#running-tests-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running Smoke Tests Locally
+        Running Tests Locally
       
     </span>
   </a>
@@ -1507,10 +1507,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#running-smoke-tests-locally" class="md-nav__link">
+  <a href="#running-tests-locally" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Running Smoke Tests Locally
+        Running Tests Locally
       
     </span>
   </a>
@@ -1729,7 +1729,7 @@
 <table>
 <thead>
 <tr>
-<th>Test Class</th>
+<th>TestClass</th>
 <th>Tests</th>
 <th>What It Validates</th>
 </tr>
@@ -1772,17 +1772,20 @@
 </tr>
 </tbody>
 </table>
-<p><strong>Total: 26 tests</strong></p>
-<p>Tests that depend on host genomes use <code>pytest.skip()</code> when host data is not available, so they pass gracefully in both host-enabled and host-disabled CI configurations.</p>
-<h3 id="running-smoke-tests-locally">Running Smoke Tests Locally<a class="headerlink" href="#running-smoke-tests-locally" title="Permanent link">&para;</a></h3>
-<p>After a local pipeline run:</p>
+<p><strong>Total: 26 smoke tests</strong></p>
+<p>The CI also runs <code>test_private_data_ingestion.py</code> (17 tests) which validates the private data ingestion pipeline independently of the Snakemake output. These tests use temporary fixtures and do not require the pipeline to have completed.</p>
+<h3 id="running-tests-locally">Running Tests Locally<a class="headerlink" href="#running-tests-locally" title="Permanent link">&para;</a></h3>
+<p>After a local pipeline run, you can run both test suites inside the Docker container:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/data:/data<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/tests:/app/tests<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">DATA_PATH</span><span class="o">=</span><span class="s2">&quot;/data/processed&quot;</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span>pbiscope-ci:latest<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">  </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;pip install -e /app/. pytest &amp;&amp; \</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s2">           python -m pytest /app/tests/test_pbi_ci_smoke.py -v&quot;</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="s2">           python -m pytest /app/tests/test_pbi_ci_smoke.py /app/tests/test_private_data_ingestion.py -v&quot;</span>
+</code></pre></div>
+<p>The private data ingestion tests (<code>test_private_data_ingestion.py</code>) can also run without the pipeline, since they use temporary fixtures. Run them directly on your host:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>python<span class="w"> </span>-m<span class="w"> </span>pytest<span class="w"> </span>tests/test_private_data_ingestion.py<span class="w"> </span>-v
 </code></pre></div>
 <hr />
 <h2 id="docker-buildx-caching">Docker Buildx Caching<a class="headerlink" href="#docker-buildx-caching" title="Permanent link">&para;</a></h2>
@@ -1790,8 +1793,8 @@
 <h3 id="what-is-buildx">What is Buildx?<a class="headerlink" href="#what-is-buildx" title="Permanent link">&para;</a></h3>
 <p>Buildx is an extended build backend for Docker that supports advanced features like multi-platform builds, build secrets, and <strong>build cache backends</strong>. The <code>docker/setup-buildx-action</code> GitHub Action installs and configures it automatically.</p>
 <h3 id="how-the-cache-works">How the Cache Works<a class="headerlink" href="#how-the-cache-works" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">cache-from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,scope=pbiscope-pipeline</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">cache-to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,mode=max,scope=pbiscope-pipeline</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">cache-from</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,scope=pbiscope-pipeline</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="nt">cache-to</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">type=gha,mode=max,scope=pbiscope-pipeline</span>
 </code></pre></div>
 <ul>
 <li><strong><code>type=gha</code></strong>: Uses the GitHub Actions cache backend. Cache layers are stored as GitHub Actions cache entries, scoped to the repository.</li>
