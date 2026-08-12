@@ -40,7 +40,9 @@ RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pyth
     biopython>=1.80 \
     pyarrow>=14.0.0 \
     torch>=2.0.0 \
-    scikit-learn>=1.3.0
+    scikit-learn>=1.3.0 \
+    keras>=2.15.0 \
+    tensorflow>=2.15.0
 
 # Expose Jupyter Lab port
 EXPOSE 8888
