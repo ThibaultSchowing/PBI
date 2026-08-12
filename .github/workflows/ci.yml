@@ -64,7 +64,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:latest \
             bash -c "
               pip install -e /app/. pytest && \
-              python -m pytest /app/tests/test_pbi_ci_smoke.py -v
+              python -m pytest /app/tests/test_pbi_ci_smoke.py /app/tests/test_private_data_ingestion.py -v
             "
 
       - name: Upload logs
