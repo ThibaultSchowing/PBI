@@ -93,7 +93,7 @@ The CI config lives at `workflow/config/config.ci.yaml`. The CI Snakefile (`work
 
 The smoke tests live in `tests/test_pbi_ci_smoke.py` and run inside the Docker container against the real pipeline output. They verify that the `pbi` package works end-to-end without asserting exact data values.
 
-| Test Class | Tests | What It Validates |
+| TestClass | Tests | What It Validates |
 |------------|-------|-------------------|
 | TestConnection | 2 | Database file exists, `quick_connect()` returns a `SequenceRetriever` |
 | TestMetadataQueries | 4 | Phage metadata, protein metadata, phage-host pairs, structured filters all return results |
@@ -103,13 +103,13 @@ The smoke tests live in `tests/test_pbi_ci_smoke.py` and run inside the Docker c
 | TestPhageHostPairStreaming | 2 | Phage-host pairs with sequences, concat mode |
 | TestErrorHandling | 1 | Nonexistent phage ID returns `None` |
 
-**Total: 26 tests**
+**Total: 26 smoke tests**
 
-Tests that depend on host genomes use `pytest.skip()` when host data is not available, so they pass gracefully in both host-enabled and host-disabled CI configurations.
+The CI also runs `test_private_data_ingestion.py` (17 tests) which validates the private data ingestion pipeline independently of the Snakemake output. These tests use temporary fixtures and do not require the pipeline to have completed.
 
-### Running Smoke Tests Locally
+### Running Tests Locally
 
-After a local pipeline run:
+After a local pipeline run, you can run both test suites inside the Docker container:
 
 ```bash
 docker run --rm \
@@ -118,7 +118,13 @@ docker run --rm \
   -e DATA_PATH="/data/processed" \
   pbiscope-ci:latest \
   bash -c "pip install -e /app/. pytest && \
-           python -m pytest /app/tests/test_pbi_ci_smoke.py -v"
+           python -m pytest /app/tests/test_pbi_ci_smoke.py /app/tests/test_private_data_ingestion.py -v"
+```
+
+The private data ingestion tests (`test_private_data_ingestion.py`) can also run without the pipeline, since they use temporary fixtures. Run them directly on your host:
+
+```bash
+python -m pytest tests/test_private_data_ingestion.py -v
 ```
 
 ---

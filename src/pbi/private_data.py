@@ -14,9 +14,6 @@ if TYPE_CHECKING:
 
 
 MANDATORY_COLUMNS = ["Phage_ID", "Host_ID", "Host_name", "Source_DB", "interaction"]
-# Canonical private interaction categories accepted by the ingestion contract.
-# Values are normalized to lowercase before validation.
-ALLOWED_INTERACTIONS = {"temperate", "virulent"}
 MAX_ERROR_EXAMPLES = 20
 # Extension precedence for per-host files. ``.fna`` comes first because it is
 # the canonical extension emitted by the host-download workflow; when multiple
@@ -143,15 +140,6 @@ def validate_private_source(source_dir: Path, include_dataframe: bool = False) -
         )
 
     normalized_interactions = df["interaction"].astype(str).str.lower()
-    invalid_interaction_mask = ~normalized_interactions.isin(ALLOWED_INTERACTIONS)
-    if invalid_interaction_mask.any():
-        invalid_rows = (df.index[invalid_interaction_mask] + 2).tolist()
-        invalid_values = sorted(set(df.loc[invalid_interaction_mask, "interaction"].tolist()))
-        errors.append(
-            "Invalid interaction values "
-            f"{invalid_values}. Allowed values: {sorted(ALLOWED_INTERACTIONS)}. "
-            f"Rows: {invalid_rows[:MAX_ERROR_EXAMPLES]}"
-        )
     df["interaction"] = normalized_interactions
 
     phage_ids, phage_duplicates = parse_fasta_ids(required["phage.fasta"])
