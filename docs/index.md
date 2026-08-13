@@ -88,16 +88,33 @@ refseq = client.get_phage_metadata(
 print(refseq.head())
 ```
 
+### Quick debug: inspect the data volume
+
+You can inspect the raw pipeline outputs (database, sequences, GFF3 files) by running a temporary container with the data volume mounted:
+
+```bash
+docker run --rm -it -v pbi-scope_pbi-data:/data alpine sh
+ls /data/processed/
+# databases/  gff3/  sequences/
+```
+
+!!! note "Volume name"
+    The volume is named `pbi-scope_pbi-data` (project directory + underscore + volume name). Adjust if your project directory name differs.
+
 ### Notebooks
 
-Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/main/notebooks) for detailed workflows. These notebooks include for instance the following:
+Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/main/notebooks) for detailed workflows:
 
 | Notebook | Description |
 |----------|-------------|
+| `00_pipeline_logs.ipynb` | Pipeline execution logs and reports |
 | `01_database_exploration.ipynb` | Database statistics and quality control |
 | `02_sequence_retrieval.ipynb` | Retrieving phage and protein sequences |
 | `03_ml_streaming.ipynb` | ML dataset preparation with streaming |
-|`05_end_to_end_walkthrough.ipynb`| Verify execution and explore functionnalities |
+| `04_data_release_exploration.ipynb` | Data release exploration |
+| `05_end_to_end_walkthrough.ipynb` | Verify execution and explore functionalities |
+| `06_reproducibility.ipynb` | Reproducibility and provenance tracking |
+| `07_gff3_annotations.ipynb` | GFF3 gene annotation retrieval and analysis |
 | `08_api_client.ipynb` | Using the REST API client |
 
 ## Pipeline overview
@@ -107,29 +124,30 @@ Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/mai
 | public phage data    |------->| Stage 1: download + merge  |
 | (PhageScope)         |        | public phage metadata/FASTA|
 +----------------------+        +--------------+-------------+
-                                              |
+                                               |
 +----------------------+        +-------------v--------------+
 | private_data/*       |------->| Stage 2: validate private  |
 | (optional sources)   |        | metadata/phage/host files  |
 +----------------------+        +--------------+-------------+
-                                              |
+                                               |
 +----------------------+        +-------------v--------------+
 | NCBI RefSeq          |------->| Stage 3: resolve/download  |
 | (host genomes)       |        | host assemblies            |
 +----------------------+        +--------------+-------------+
-                                              |
-                                  +-----------v-----------+
-                                  | Stage 4: build outputs|
-                                  | DuckDB + indexed FASTA|
-                                  | reports + logs         |
-                                  +-----------+-----------+
-                                              |
-                    +-------------------------+-------------------------+
-                    |                                                   |
-          +---------v---------+                               +---------v---------+
-          | analysis container|                               | api container      |
-          | pbi package (main)|                               | REST API           |
-          +-------------------+                               +-------------------+
+                                               |
+                                   +-----------v-----------+
+                                   | Stage 4: build outputs|
+                                   | DuckDB + indexed FASTA|
+                                   | GFF3 annotations      |
+                                   | reports + logs         |
+                                   +-----------+-----------+
+                                               |
+                     +-------------------------+-------------------------+
+                     |                                                   |
+           +---------v---------+                               +---------v---------+
+           | analysis container|                               | api container      |
+           | pbi package (main)|                               | REST API           |
+           +-------------------+                               +-------------------+
 ```
 
 ## Current status
@@ -141,7 +159,7 @@ Explore the [example notebooks](https://github.com/ThibaultSchowing/PBI/tree/mai
 | Private data handling | ✅ Stable | Dedicated ingestion/validation path; see [Private Data Ingestion](guides/private-data-ingestion.md) |
 | Host genome resolution | ✅ Stable | Multi-token host parsing + NCBI assembly resolution |
 | Analysis workflow | ✅ Stable | Analysis container is the main interface |
-| REST API | ✅ Supported | Metadata queries, sequence retrieval, SQL exploration; see [API Reference](api/overview.md) |
+| REST API | ✅ Supported | Metadata queries, sequence retrieval, GFF3 annotations, SQL exploration; see [API Reference](api/overview.md) |
 | Documentation | 🔄 Updated for v0.4.0 | Structure simplified and aligned with current infrastructure |
 
 ## Work in Progress
