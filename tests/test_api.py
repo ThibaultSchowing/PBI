@@ -135,6 +135,10 @@ class TestRootEndpoint:
         data = resp.json()
         assert data["name"] == "PBI Database API"
         assert "endpoints" in data
+        # Check GFF3 endpoints are listed
+        assert "phage_gff3" in data["endpoints"]
+        assert "gff3_stats" in data["endpoints"]
+        assert "gff3_sources" in data["endpoints"]
 
 
 class TestHealthEndpoint:
@@ -300,3 +304,152 @@ class TestHostGenomeStatsEndpoint:
         resp = client.get("/host/host_001/genome-stats")
         # May 500 if host FASTA index is missing
         assert resp.status_code in (200, 500)
+
+
+# ---------------------------------------------------------------------------
+# GFF3 endpoint tests
+# ---------------------------------------------------------------------------
+
+class TestPhageGFF3Endpoint:
+    def test_returns_gff3_content(self, gff3_index):
+        """Test that /phage/{phage_id}/gff3 returns raw GFF3 content."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+        from pbi.gff3_retrieval import GFF3Retriever
+
+        gff3_retriever = GFF3Retriever(
+            str(gff3_index["gff3_dir"]),
+            str(gff3_index["index_path"])
+        )
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = gff3_retriever
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/phage/phage_001/gff3")
+            assert resp.status_code == 200
+            assert "##gff-version 3" in resp.text
+            assert "phage_001" in resp.text
+        finally:
+            app_module.gff3_retriever = original
+
+    def test_missing_phage_returns_404(self, gff3_index):
+        """Test that missing phage returns 404."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+        from pbi.gff3_retrieval import GFF3Retriever
+
+        gff3_retriever = GFF3Retriever(
+            str(gff3_index["gff3_dir"]),
+            str(gff3_index["index_path"])
+        )
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = gff3_retriever
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/phage/NONEXISTENT/gff3")
+            assert resp.status_code == 404
+        finally:
+            app_module.gff3_retriever = original
+
+    def test_no_gff3_index_returns_503(self):
+        """Test that missing GFF3 index returns 503."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = None
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/phage/phage_001/gff3")
+            assert resp.status_code == 503
+        finally:
+            app_module.gff3_retriever = original
+
+
+class TestGFF3StatsEndpoint:
+    def test_returns_stats(self, gff3_index):
+        """Test that /gff3/stats returns index statistics."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+        from pbi.gff3_retrieval import GFF3Retriever
+
+        gff3_retriever = GFF3Retriever(
+            str(gff3_index["gff3_dir"]),
+            str(gff3_index["index_path"])
+        )
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = gff3_retriever
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/gff3/stats")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["success"] is True
+            assert "stats" in data
+            assert "total_phages" in data["stats"]
+        finally:
+            app_module.gff3_retriever = original
+
+    def test_no_gff3_index_returns_503(self):
+        """Test that missing GFF3 index returns 503."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = None
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/gff3/stats")
+            assert resp.status_code == 503
+        finally:
+            app_module.gff3_retriever = original
+
+
+class TestGFF3SourcesEndpoint:
+    def test_returns_sources(self, gff3_index):
+        """Test that /gff3/sources returns list of source databases."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+        from pbi.gff3_retrieval import GFF3Retriever
+
+        gff3_retriever = GFF3Retriever(
+            str(gff3_index["gff3_dir"]),
+            str(gff3_index["index_path"])
+        )
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = gff3_retriever
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/gff3/sources")
+            assert resp.status_code == 200
+            data = resp.json()
+            assert data["success"] is True
+            assert "sources" in data
+            assert isinstance(data["sources"], list)
+        finally:
+            app_module.gff3_retriever = original
+
+    def test_no_gff3_index_returns_503(self):
+        """Test that missing GFF3 index returns 503."""
+        from fastapi.testclient import TestClient
+        import api.app as app_module
+
+        original = app_module.gff3_retriever
+        app_module.gff3_retriever = None
+        try:
+            client = TestClient(app_module.app)
+            resp = client.get("/gff3/sources")
+            assert resp.status_code == 503
+        finally:
+            app_module.gff3_retriever = original
+
+
+class TestGetDataPathsGFF3:
+    def test_gff3_paths_present(self):
+        """Test that get_data_paths includes GFF3 paths."""
+        from api.app import get_data_paths
+        paths = get_data_paths()
+        assert "gff3_dir" in paths
+        assert "gff3_index" in paths
+        assert "gff3" in paths["gff3_dir"]
+        assert "gff3_index.json" in paths["gff3_index"]
