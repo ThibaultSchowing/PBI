@@ -528,6 +528,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#quick-debug-inspect-the-data-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick debug: inspect the data volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#notebooks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1396,6 +1407,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#quick-debug-inspect-the-data-volume" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Quick debug: inspect the data volume
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#notebooks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1552,8 +1574,18 @@
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="p">)</span>
 <a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="nb">print</span><span class="p">(</span><span class="n">refseq</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
 </code></pre></div>
+<h3 id="quick-debug-inspect-the-data-volume">Quick debug: inspect the data volume<a class="headerlink" href="#quick-debug-inspect-the-data-volume" title="Permanent link">&para;</a></h3>
+<p>You can inspect the raw pipeline outputs (database, sequences, GFF3 files) by running a temporary container with the data volume mounted:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span>pbi-scope_pbi-data:/data<span class="w"> </span>alpine<span class="w"> </span>sh
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>ls<span class="w"> </span>/data/processed/
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># databases/  gff3/  sequences/</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Volume name</p>
+<p>The volume is named <code>pbi-scope_pbi-data</code> (project directory + underscore + volume name). Adjust if your project directory name differs.</p>
+</div>
 <h3 id="notebooks">Notebooks<a class="headerlink" href="#notebooks" title="Permanent link">&para;</a></h3>
-<p>Explore the <a href="https://github.com/ThibaultSchowing/PBI/tree/main/notebooks">example notebooks</a> for detailed workflows. These notebooks include for instance the following:</p>
+<p>Explore the <a href="https://github.com/ThibaultSchowing/PBI/tree/main/notebooks">example notebooks</a> for detailed workflows:</p>
 <table>
 <thead>
 <tr>
@@ -1562,6 +1594,10 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><code>00_pipeline_logs.ipynb</code></td>
+<td>Pipeline execution logs and reports</td>
+</tr>
 <tr>
 <td><code>01_database_exploration.ipynb</code></td>
 <td>Database statistics and quality control</td>
@@ -1575,8 +1611,20 @@
 <td>ML dataset preparation with streaming</td>
 </tr>
 <tr>
+<td><code>04_data_release_exploration.ipynb</code></td>
+<td>Data release exploration</td>
+</tr>
+<tr>
 <td><code>05_end_to_end_walkthrough.ipynb</code></td>
-<td>Verify execution and explore functionnalities</td>
+<td>Verify execution and explore functionalities</td>
+</tr>
+<tr>
+<td><code>06_reproducibility.ipynb</code></td>
+<td>Reproducibility and provenance tracking</td>
+</tr>
+<tr>
+<td><code>07_gff3_annotations.ipynb</code></td>
+<td>GFF3 gene annotation retrieval and analysis</td>
 </tr>
 <tr>
 <td><code>08_api_client.ipynb</code></td>
@@ -1585,33 +1633,34 @@
 </tbody>
 </table>
 <h2 id="pipeline-overview">Pipeline overview<a class="headerlink" href="#pipeline-overview" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>+----------------------+        +----------------------------+
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>| public phage data    |-------&gt;| Stage 1: download + merge  |
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>| (PhageScope)         |        | public phage metadata/FASTA|
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>+----------------------+        +--------------+-------------+
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>                                              |
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>+----------------------+        +-------------v--------------+
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>| private_data/*       |-------&gt;| Stage 2: validate private  |
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>| (optional sources)   |        | metadata/phage/host files  |
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>+----------------------+        +--------------+-------------+
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>                                              |
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>+----------------------+        +-------------v--------------+
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>| NCBI RefSeq          |-------&gt;| Stage 3: resolve/download  |
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>| (host genomes)       |        | host assemblies            |
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>+----------------------+        +--------------+-------------+
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>                                              |
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>                                  +-----------v-----------+
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>                                  | Stage 4: build outputs|
-<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>                                  | DuckDB + indexed FASTA|
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>                                  | reports + logs         |
-<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>                                  +-----------+-----------+
-<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>                                              |
-<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a>                    +-------------------------+-------------------------+
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a>                    |                                                   |
-<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a>          +---------v---------+                               +---------v---------+
-<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>          | analysis container|                               | api container      |
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>          | pbi package (main)|                               | REST API           |
-<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>          +-------------------+                               +-------------------+
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>+----------------------+        +----------------------------+
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>| public phage data    |-------&gt;| Stage 1: download + merge  |
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>| (PhageScope)         |        | public phage metadata/FASTA|
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>+----------------------+        +--------------+-------------+
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>                                               |
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>+----------------------+        +-------------v--------------+
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>| private_data/*       |-------&gt;| Stage 2: validate private  |
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>| (optional sources)   |        | metadata/phage/host files  |
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>+----------------------+        +--------------+-------------+
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>                                               |
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>+----------------------+        +-------------v--------------+
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>| NCBI RefSeq          |-------&gt;| Stage 3: resolve/download  |
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>| (host genomes)       |        | host assemblies            |
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>+----------------------+        +--------------+-------------+
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>                                               |
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>                                   +-----------v-----------+
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>                                   | Stage 4: build outputs|
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>                                   | DuckDB + indexed FASTA|
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>                                   | GFF3 annotations      |
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>                                   | reports + logs         |
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>                                   +-----------+-----------+
+<a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>                                               |
+<a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>                     +-------------------------+-------------------------+
+<a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>                     |                                                   |
+<a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>           +---------v---------+                               +---------v---------+
+<a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>           | analysis container|                               | api container      |
+<a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>           | pbi package (main)|                               | REST API           |
+<a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>           +-------------------+                               +-------------------+
 </code></pre></div>
 <h2 id="current-status">Current status<a class="headerlink" href="#current-status" title="Permanent link">&para;</a></h2>
 <table>
@@ -1651,7 +1700,7 @@
 <tr>
 <td>REST API</td>
 <td>✅ Supported</td>
-<td>Metadata queries, sequence retrieval, SQL exploration; see <a href="api/overview/">API Reference</a></td>
+<td>Metadata queries, sequence retrieval, GFF3 annotations, SQL exploration; see <a href="api/overview/">API Reference</a></td>
 </tr>
 <tr>
 <td>Documentation</td>

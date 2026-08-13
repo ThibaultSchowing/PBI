@@ -1027,6 +1027,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#gff3-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GFF3 Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sql-queries" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1623,6 +1634,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#gff3-annotations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GFF3 Annotations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sql-queries" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1952,6 +1974,11 @@
 <td>✅ Works</td>
 </tr>
 <tr>
+<td>GFF3 annotations</td>
+<td>✅ Works</td>
+<td>✅ Recommended</td>
+</tr>
+<tr>
 <td>Bulk downloads</td>
 <td>❌ Not supported</td>
 <td>✅ Recommended</td>
@@ -2077,6 +2104,33 @@
 </tr>
 </tbody>
 </table>
+<h3 id="gff3-annotations">GFF3 Annotations<a class="headerlink" href="#gff3-annotations" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Endpoint</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td><code>/phage/{id}/gff3</code></td>
+<td>Raw GFF3 annotations for a phage</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/gff3/stats</code></td>
+<td>GFF3 index statistics</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/gff3/sources</code></td>
+<td>List source databases in GFF3 index</td>
+</tr>
+</tbody>
+</table>
 <h3 id="sql-queries">SQL Queries<a class="headerlink" href="#sql-queries" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
@@ -2172,10 +2226,16 @@
 <a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="c1"># Host genome stats</span>
 <a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a>curl<span class="w"> </span>http://localhost:8000/host/GCF_000005845/genome-stats
 <a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a>
-<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="c1"># SQL query</span>
-<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/query<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;query&quot;: &quot;SELECT Source_DB, COUNT(*) FROM fact_phages GROUP BY Source_DB&quot;}&#39;</span>
+<a id="__codelineno-6-22" name="__codelineno-6-22" href="#__codelineno-6-22"></a><span class="c1"># GFF3 annotations</span>
+<a id="__codelineno-6-23" name="__codelineno-6-23" href="#__codelineno-6-23"></a>curl<span class="w"> </span>http://localhost:8000/phage/NC_001330.1/gff3
+<a id="__codelineno-6-24" name="__codelineno-6-24" href="#__codelineno-6-24"></a>
+<a id="__codelineno-6-25" name="__codelineno-6-25" href="#__codelineno-6-25"></a><span class="c1"># GFF3 stats</span>
+<a id="__codelineno-6-26" name="__codelineno-6-26" href="#__codelineno-6-26"></a>curl<span class="w"> </span>http://localhost:8000/gff3/stats
+<a id="__codelineno-6-27" name="__codelineno-6-27" href="#__codelineno-6-27"></a>
+<a id="__codelineno-6-28" name="__codelineno-6-28" href="#__codelineno-6-28"></a><span class="c1"># SQL query</span>
+<a id="__codelineno-6-29" name="__codelineno-6-29" href="#__codelineno-6-29"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/query<span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-30" name="__codelineno-6-30" href="#__codelineno-6-30"></a><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-6-31" name="__codelineno-6-31" href="#__codelineno-6-31"></a><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;query&quot;: &quot;SELECT Source_DB, COUNT(*) FROM fact_phages GROUP BY Source_DB&quot;}&#39;</span>
 </code></pre></div>
 <h3 id="python-apiclient">Python (APIClient)<a class="headerlink" href="#python-apiclient" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pbi</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIClient</span>
@@ -2196,10 +2256,14 @@
 <a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="n">genome</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_phage_genome</span><span class="p">(</span><span class="s2">&quot;NC_001330.1&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
 <a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="n">host_genome</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_host_genome</span><span class="p">(</span><span class="s2">&quot;GCF_000005845&quot;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;concat&quot;</span><span class="p">)</span>
 <a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="c1"># SQL query</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="n">df</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;SELECT Source_DB, COUNT(*) as cnt FROM fact_phages GROUP BY Source_DB&quot;</span><span class="p">)</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a><span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="c1"># GFF3 annotations</span>
+<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="n">gff3</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">get_phage_gff3</span><span class="p">(</span><span class="s2">&quot;NC_001330.1&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="nb">print</span><span class="p">(</span><span class="n">gff3</span><span class="p">[:</span><span class="mi">500</span><span class="p">])</span>  <span class="c1"># First 500 chars</span>
+<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
+<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="c1"># SQL query</span>
+<a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a><span class="n">df</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;SELECT Source_DB, COUNT(*) as cnt FROM fact_phages GROUP BY Source_DB&quot;</span><span class="p">)</span>
+<a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>
+<a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a><span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </code></pre></div>
 <hr />
 <h2 id="query-parameters">Query Parameters<a class="headerlink" href="#query-parameters" title="Permanent link">&para;</a></h2>
