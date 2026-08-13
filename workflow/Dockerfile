@@ -40,7 +40,7 @@ RUN chmod -R a+rX /app/workflow /app/src && chmod a+r /app/setup.py
 # chmod 777 ensures that when Docker seeds the named volumes from these image
 # directories on first run, the non-root host UID (set via `user:` in
 # docker-compose.yml) can write inside them without permission errors.
-RUN mkdir -p /data/processed/databases /data/processed/sequences /data/intermediate /data/raw /cache \
+RUN mkdir -p /data/processed/databases /data/processed/sequences /data/processed/gff3 /data/intermediate /data/raw /cache \
     && mkdir -p /pipeline-logs/reports /pipeline-logs/logs \
     && mkdir -p /app/workflow/.snakemake \
     && chmod -R 777 /data /cache /pipeline-logs /app/workflow/.snakemake

@@ -19,6 +19,7 @@ from pydantic import BaseModel
 import duckdb
 
 from pbi.sequence_retrieval import SequenceRetriever
+from pbi.gff3_retrieval import GFF3Retriever
 
 # Configure logging
 logging.basicConfig(
@@ -29,6 +30,7 @@ logger = logging.getLogger('api.app')
 
 # Global retriever instance
 retriever: Optional[SequenceRetriever] = None
+gff3_retriever: Optional[GFF3Retriever] = None
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,6 +80,8 @@ def get_data_paths():
         'protein_fasta': str(base_path / 'sequences' / 'all_proteins.fasta'),
         'host_mapping': str(base_path / 'sequences' / 'host_fasta_mapping.json'),
         'host_fasta': str(base_path / 'sequences' / 'all_hosts.fasta'),
+        'gff3_dir': str(base_path / 'gff3'),
+        'gff3_index': str(base_path / 'gff3' / 'gff3_index.json'),
     }
 
 
@@ -86,7 +90,7 @@ def get_data_paths():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown."""
-    global retriever
+    global retriever, gff3_retriever
 
     try:
         paths = get_data_paths()
@@ -118,6 +122,16 @@ async def lifespan(app: FastAPI):
 
         stats = retriever.get_stats()
         logger.info(f"Database statistics: {stats['database']}")
+
+        # Initialize GFF3 retriever (optional)
+        gff3_index = paths.get('gff3_index')
+        gff3_dir = paths.get('gff3_dir')
+        if gff3_index and Path(gff3_index).exists():
+            gff3_retriever = GFF3Retriever(gff3_dir, gff3_index)
+            gff3_stats = gff3_retriever.stats()
+            logger.info(f"GFF3 index loaded: {gff3_stats['total_phages']:,} phages")
+        else:
+            logger.warning("GFF3 index not found, GFF3 endpoints will be unavailable")
 
     except Exception as e:
         logger.error(f"Failed to connect to database: {e}")
@@ -185,10 +199,14 @@ async def root():
             "phages_fasta": "/phages/fasta (POST)",
             "proteins_fasta": "/proteins/fasta (POST)",
             "phage_sequence": "/phage/{phage_id}/sequence",
-            # Genomes
-            "phage_genome": "/phage/{phage_id}/genome",
-            "host_genome": "/host/{host_id}/genome",
-            "host_genome_stats": "/host/{host_id}/genome-stats",
+             # Genomes
+             "phage_genome": "/phage/{phage_id}/genome",
+             "host_genome": "/host/{host_id}/genome",
+             "host_genome_stats": "/host/{host_id}/genome-stats",
+             # GFF3
+             "phage_gff3": "/phage/{phage_id}/gff3",
+             "gff3_stats": "/gff3/stats",
+             "gff3_sources": "/gff3/sources",
         }
     }
 
@@ -559,6 +577,52 @@ async def get_host_genome_stats(host_id: str):
         raise
     except Exception as e:
         logger.error(f"Error getting host genome stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ── GFF3 endpoints ───────────────────────────────────────────────────────────
+
+@app.get("/phage/{phage_id}/gff3", response_class=PlainTextResponse)
+async def get_phage_gff3(phage_id: str):
+    """Get GFF3 annotations for a single phage."""
+    if gff3_retriever is None:
+        raise HTTPException(status_code=503, detail="GFF3 index not loaded")
+    try:
+        gff3_content = gff3_retriever.get_gff3(phage_id)
+        if not gff3_content:
+            raise HTTPException(status_code=404, detail=f"GFF3 not found for phage: {phage_id}")
+        return gff3_content
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting GFF3 for phage {phage_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/gff3/stats")
+async def get_gff3_stats():
+    """Get GFF3 index statistics."""
+    if gff3_retriever is None:
+        raise HTTPException(status_code=503, detail="GFF3 index not loaded")
+    try:
+        stats = gff3_retriever.stats()
+        return {"success": True, "stats": stats}
+    except Exception as e:
+        logger.error(f"Error getting GFF3 stats: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/gff3/sources")
+async def get_gff3_sources():
+    """Get list of source databases in the GFF3 index."""
+    if gff3_retriever is None:
+        raise HTTPException(status_code=503, detail="GFF3 index not loaded")
+    try:
+        stats = gff3_retriever.stats()
+        sources = sorted(stats['sources'].keys())
+        return {"success": True, "count": len(sources), "sources": sources}
+    except Exception as e:
+        logger.error(f"Error getting GFF3 sources: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

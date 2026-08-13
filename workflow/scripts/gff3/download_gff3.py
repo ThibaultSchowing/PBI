@@ -28,6 +28,7 @@ CHUNK_SIZE = 1024 * 1024  # 1 MB chunks
 
 def download(url: str, output_path: str) -> None:
     tmp_path = f"{output_path}.tmp"
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     last_error = None
     for attempt in range(1, MAX_RETRIES + 1):
