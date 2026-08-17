@@ -79,6 +79,8 @@ services:
       - ./private_data:/private-data:ro
       # Mount notebooks directory for persistent work
       - ./notebooks:/workspace
+      # Mount PERPHECT directory for training code and notebooks
+      - ./PERPHECT:/workspace/PERPHECT
       # Durable notebook outputs (datasets, plots, model artifacts)
       - ./outputs:/results
       # Mount workflow directory (read-only) for script imports.
