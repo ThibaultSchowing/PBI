@@ -7,8 +7,7 @@ import math
 import tensorflow as tf
 import keras
 from keras.models import Model 
-from keras import layers
-from keras import Input
+from keras.layers import Input, Conv1D, MaxPooling1D, Flatten, Dense, Dropout
 from plotting_utils import historic_plots
 from sklearn.utils import class_weight
 from transforms import translate_sequence_onehot
@@ -104,96 +103,84 @@ def main(batch_size, epochs, steps_per_epoch, train_filepath, output_filepath, z
     class_weights = class_weight.compute_class_weight('balanced', classes=np.unique(y_train), y=y_train)
 
 
-    with keras.backend.name_scope('bacterial_convolution'):
+    input1 = Input(shape=(BACTERIUM_THRESHOLD, 4), name="bacterial_input")
 
-        input1 = Input(shape=(BACTERIUM_THRESHOLD, 4), name="bacterial_input")
+    # First convolution layer for bacteria
+    conv1_1 = Conv1D(name="bacterial_conv_1",
+                     activation="relu",
+                     filters=64,
+                     kernel_size=30,
+                     strides=10,
+                     )(input1)
 
-        # First convolution layer for input 1
-        conv1_1 = layers.Conv1D(name="bacterial_conv_1",
-                         # input_shape=(BACTERIA_THRESHOLD, 4),
-                         activation="relu",
-                         filters=64,
-                         kernel_size=30,
-                         strides=10,
-                         # padding="causal"
-                         # kernel_initializer=keras.initializers.Constant(value=0.25)
-                         )(input1)
+    maxpooling1_1 = MaxPooling1D(name="bacterial_maxpool_1",
+                                 pool_size=15,
+                                 strides=5
+                                 )(conv1_1)
 
-        maxpooling1_1 = layers.MaxPooling1D(name="bacterial_maxpool_1",
-                                     pool_size=15,
-                                     strides=5
-                                     )(conv1_1)
+    # Second convolution layer for bacteria
+    conv1_2 = Conv1D(name="bacterial_conv_2",
+                     activation="relu",
+                     filters=32,
+                     kernel_size=25,
+                     strides=10,
+                     )(maxpooling1_1)
 
-        # Second convolution layer for input 1
-        conv1_2 = layers.Conv1D(name="bacterial_conv_2",
-                         activation="relu",
-                         filters=32,
-                         kernel_size=25,
-                         strides=10,
-                         # padding="causal"
-                         )(maxpooling1_1)
+    maxpooling1_2 = MaxPooling1D(name="bacterial_maxpool_2",
+                                 pool_size=10,
+                                 strides=5)(conv1_2)
 
-        maxpooling1_2 = layers.MaxPooling1D(name="bacterial_maxpool_2",
-                                     pool_size=10,
-                                     strides=5)(conv1_2)
+    # Third convolution layer for bacteria
+    conv1_3 = Conv1D(name="bacterial_conv_3",
+                     activation="relu",
+                     filters=32,
+                     kernel_size=10,
+                     strides=5,
+                     )(maxpooling1_2)
 
-        # Third convolution layer for input 1
-        conv1_3 = layers.Conv1D(name="bacterial_conv_3",
-                         activation="relu",
-                         filters=32,
-                         kernel_size=10,
-                         strides=5,
-                         # padding='causal'
-                         )(maxpooling1_2)
+    maxpooling1_3 = MaxPooling1D(name="bacterial_maxpool_3",
+                                 pool_size=2,
+                                 strides=2
+                                 )(conv1_3)
 
-        maxpooling1_3 = layers.MaxPooling1D(name="bacterial_maxpool_3",
-                                     pool_size=2,
-                                     strides=2
-                                     )(conv1_3)
+    flatten_bact = Flatten(name="bacteria_features")(maxpooling1_3)
 
-        flatten_bact = layers.Flatten(name="bacteria_features")(maxpooling1_3)
+    input2 = Input(shape=(PHAGE_THRESHOLD, 4), name="phage_input")
 
-    with keras.backend.name_scope('phage_convolution'):
+    # First convolution layer for phage
+    conv2_1 = Conv1D(name="phage_conv_1",
+                     activation="relu",
+                     filters=64,
+                     kernel_size=30,
+                     strides=10,
+                     )(input2)
 
-        input2 = Input(shape=(PHAGE_THRESHOLD, 4), name="phage_input")
+    maxpooling2_1 = MaxPooling1D(name="phage_maxpool_1",
+                                 pool_size=15,
+                                 strides=5
+                                 )(conv2_1)
 
-        # First convolution layer for input 1
-        conv2_1 = layers.Conv1D(name="phage_conv_1",
-                         # input_shape=(PHAGE_THRESHOLD, 4),
-                         activation="relu",
-                         filters=64,
-                         kernel_size=30,
-                         strides=10,
-                         # padding="causal"
-                         # kernel_initializer=keras.initializers.Constant(value=0.25)
-                         )(input2)
+    # Second convolution layer for phage
+    conv2_2 = Conv1D(name="phage_conv_2",
+                     activation="relu",
+                     filters=32,
+                     kernel_size=25,
+                     strides=10
+                     )(maxpooling2_1)
 
-        maxpooling2_1 = layers.MaxPooling1D(name="phage_maxpool_1",
-                                     pool_size=15,
-                                     strides=5
-                                     )(conv2_1)
+    maxpooling2_2 = MaxPooling1D(name="phage_maxpool_2",
+                                 pool_size=2,
+                                 strides=2
+                                 )(conv2_2)
 
-        # Second convolution layer for input 1
-        conv2_2 = layers.Conv1D(name="phage_conv_2",
-                         activation="relu",
-                         filters=32,
-                         kernel_size=25,
-                         strides=10
-                         )(maxpooling2_1)
+    flatten_phage = Flatten(name="phage_features")(maxpooling2_2)
 
-        maxpooling2_2 = layers.MaxPooling1D(name="phage_maxpool_2",
-                                     pool_size=2,
-                                     strides=2
-                                     )(conv2_2)
-
-        flatten_phage = layers.Flatten(name="phage_features")(maxpooling2_2)
-
-    concat_features = layers.Concatenate(name="concatenated_features")([flatten_bact, flatten_phage])
+    concat_features = Concatenate(name="concatenated_features")([flatten_bact, flatten_phage])
 
     # dropout1 = Dropout(0.10)(concat_features)
-    dense1 = layers.Dense(100, activation="relu")(concat_features)
-    dropout1 = layers.Dropout(0.10)(dense1)
-    dense2 = layers.Dense(1, activation="sigmoid")(dropout1)
+    dense1 = Dense(100, activation="relu")(concat_features)
+    dropout1 = Dropout(0.10)(dense1)
+    dense2 = Dense(1, activation="sigmoid")(dropout1)
 
     model = Model(name="Perphect",
                   inputs=[input1, input2],
