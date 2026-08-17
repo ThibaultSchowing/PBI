@@ -192,7 +192,7 @@ phage_GFF3_urls:
     "TemPhD": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/TemPhD.gff3"
     "CHVD": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/CHVD.gff3"
     "IGVD": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/IGVD.gff3"
-    "IMGVR": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/IMGVR.gff3"
+    "IMGVR": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/IMG_VR.gff3"
     "GOV2": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/GOV2.gff3"
     "STV": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/STV.gff3"
     "GSV": "https://phageapi.deepomics.org/fasta/phage_sequence/phage_gff3/GSV.gff3"

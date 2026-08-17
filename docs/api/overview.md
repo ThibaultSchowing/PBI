@@ -37,6 +37,7 @@ client.close()
 | Quick metadata lookup | ✅ Recommended | ✅ Works |
 | Filtered queries | ✅ Recommended | ✅ Works |
 | Single sequence retrieval | ✅ Works | ✅ Works |
+| GFF3 annotations | ✅ Works | ✅ Recommended |
 | Bulk downloads | ❌ Not supported | ✅ Recommended |
 | ML dataset preparation | ❌ Not supported | ✅ Recommended |
 | Host genome streaming | ❌ Not supported | ✅ Required |
@@ -75,6 +76,14 @@ client.close()
 | GET | `/phage/{id}/genome` | Phage genome (concat or list) |
 | GET | `/host/{id}/genome` | Host genome with contig options |
 | GET | `/host/{id}/genome-stats` | Host genome statistics |
+
+### GFF3 Annotations
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/phage/{id}/gff3` | Raw GFF3 annotations for a phage |
+| GET | `/gff3/stats` | GFF3 index statistics |
+| GET | `/gff3/sources` | List source databases in GFF3 index |
 
 ### SQL Queries
 
@@ -178,6 +187,12 @@ curl "http://localhost:8000/phage/NC_001330.1/genome?mode=concat"
 # Host genome stats
 curl http://localhost:8000/host/GCF_000005845/genome-stats
 
+# GFF3 annotations
+curl http://localhost:8000/phage/NC_001330.1/gff3
+
+# GFF3 stats
+curl http://localhost:8000/gff3/stats
+
 # SQL query
 curl -X POST http://localhost:8000/query \
   -H "Content-Type: application/json" \
@@ -204,6 +219,10 @@ pairs = client.get_phage_host_metadata(limit=100)
 seq = client.get_phage_sequence("NC_001330.1")
 genome = client.get_phage_genome("NC_001330.1", mode="concat")
 host_genome = client.get_host_genome("GCF_000005845", mode="concat")
+
+# GFF3 annotations
+gff3 = client.get_phage_gff3("NC_001330.1")
+print(gff3[:500])  # First 500 chars
 
 # SQL query
 df = client.query("SELECT Source_DB, COUNT(*) as cnt FROM fact_phages GROUP BY Source_DB")

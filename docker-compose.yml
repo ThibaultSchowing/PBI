@@ -70,6 +70,8 @@ services:
     volumes:
       # Mount data directory (read-only for safety)
       - pbi-data:/data:ro
+      # Mount Snakemake cache (read-only) for GFF3 symlinks
+      - pbi-cache:/cache:ro
       # Mount pipeline logs (read-only) so notebooks can inspect pipeline execution logs/reports
       - ./pipeline_logs:/pipeline-logs:ro
       # Mount private datasets (read-only) so notebooks can resolve private host FASTAs
