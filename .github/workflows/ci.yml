@@ -14,6 +14,30 @@ env:
   IMAGE_NAME: pbiscope-ci
 
 jobs:
+  perphect-unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install -e ".[ml]" pytest matplotlib
+
+      - name: Run PERPHECT unit tests
+        run: |
+          python -m pytest \
+            tests/test_perpherct_transforms.py \
+            tests/test_perpherct_plotting.py \
+            tests/test_perpherct_adapter.py \
+            -v
+
   pipeline-test:
     runs-on: ubuntu-latest
     timeout-minutes: 120
