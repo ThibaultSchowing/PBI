@@ -321,7 +321,7 @@ def generator(couples, labels, bacterium_sequences, phage_sequences, min_index, 
             phage_samples[j] = phage_sequences[couples[row, 1]]
             targets[j] = labels[row]
             
-        yield [bacterium_samples, phage_samples], targets
+        yield (bacterium_samples, phage_samples), targets
 
 if __name__ == '__main__':
 

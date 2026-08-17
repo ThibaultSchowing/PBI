@@ -369,7 +369,7 @@ class PBIAdapter:
                 )
                 targets[j] = labels[idx]
 
-            yield [bacterium_samples, phage_samples], targets
+            yield (bacterium_samples, phage_samples), targets
 
     # ------------------------------------------------------------------
     # Helper: prepare training data from PBI-Scope

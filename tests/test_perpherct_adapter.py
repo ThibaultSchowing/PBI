@@ -248,6 +248,7 @@ class TestPBIAdapterGenerator:
         gen = adapter.create_tf_generator(couples, labels, batch_size=2, shuffle=False)
         batch_inputs, batch_targets = next(gen)
 
+        assert isinstance(batch_inputs, tuple)
         assert len(batch_inputs) == 2
         assert batch_inputs[0].shape == (2, 20, 4)  # bacterium
         assert batch_inputs[1].shape == (2, 10, 4)  # phage
