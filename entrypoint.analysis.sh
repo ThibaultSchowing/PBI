@@ -47,4 +47,10 @@ else
     echo "=== Jupyter Lab: running without authentication ==="
 fi
 
-exec jupyter lab "${CMD_ARGS[@]}"
+# If arguments were passed to `docker compose run`, exec them directly.
+# Otherwise start Jupyter Lab (the default service).
+if [ $# -gt 0 ]; then
+    exec "$@"
+else
+    exec jupyter lab "${CMD_ARGS[@]}"
+fi
