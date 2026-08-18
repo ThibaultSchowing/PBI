@@ -149,6 +149,9 @@ from keras.layers import Input, Conv1D, MaxPooling1D, Flatten, Dense, Dropout, C
 BACTERIUM_THRESHOLD = 7_000_000
 PHAGE_THRESHOLD = 200_000
 
+# Enable mixed precision for GPU memory efficiency
+keras.mixed_precision.set_global_policy('mixed_float16')
+
 # Bacteria branch
 input1 = Input(shape=(BACTERIUM_THRESHOLD, 4), name="bacterial_input")
 conv1_1 = Conv1D(64, 30, strides=10, activation='relu', name='bacterial_conv_1')(input1)
@@ -171,7 +174,7 @@ flatten_phage = Flatten(name='phage_features')(maxpool2_2)
 concat_features = Concatenate(name='concatenated_features')([flatten_bact, flatten_phage])
 dense1 = Dense(100, activation='relu')(concat_features)
 dropout1 = Dropout(0.10)(dense1)
-dense2 = Dense(1, activation='sigmoid')(dropout1)
+dense2 = Dense(1, activation='sigmoid', dtype='float32')(dropout1)
 
 model = Model(name='Perphect', inputs=[input1, input2], outputs=dense2)
 

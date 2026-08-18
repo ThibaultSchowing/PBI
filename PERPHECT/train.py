@@ -118,7 +118,7 @@ def build_model(bacterium_threshold=7_000_000, phage_threshold=200_000):
     concat_features = Concatenate(name="concatenated_features")([flatten_bact, flatten_phage])
     dense1 = Dense(100, activation="relu")(concat_features)
     dropout1 = Dropout(0.10)(dense1)
-    dense2 = Dense(1, activation="sigmoid")(dropout1)
+    dense2 = Dense(1, activation="sigmoid", dtype="float32")(dropout1)
 
     model = Model(name="Perphect", inputs=[input1, input2], outputs=dense2)
     return model
@@ -289,6 +289,9 @@ def main():
     # Build model
     # -----------------------------------------------------------------------
     logging.info("Building PERPHECT model...")
+    import keras
+    keras.mixed_precision.set_global_policy("mixed_float16")
+    logging.info("Mixed precision enabled: float16 compute, float32 variables")
     model = build_model(args.bacterium_threshold, args.phage_threshold)
 
     import keras
