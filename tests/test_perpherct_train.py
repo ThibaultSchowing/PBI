@@ -114,10 +114,12 @@ class TestModelBuild:
         except ImportError:
             pytest.skip("keras not installed")
         from train import build_model
-        model = build_model(bacterium_threshold=1000, phage_threshold=500)
+        # Full architecture needs large thresholds: 3 conv+pool layers for bacteria,
+        # 2 for phage. B=50000, P=5000 are minimum working values.
+        model = build_model(bacterium_threshold=50000, phage_threshold=5000)
         assert model is not None
-        assert model.input[0].shape[1] == 1000
-        assert model.input[1].shape[1] == 500
+        assert model.input[0].shape[1] == 50000
+        assert model.input[1].shape[1] == 5000
 
 
 class TestConfigLoading:

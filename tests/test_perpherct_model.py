@@ -18,8 +18,8 @@ def perphect_model():
     from keras.layers import Input, Conv1D, MaxPooling1D, Flatten, Dense, Dropout, Concatenate
     import math
 
-    BACTERIUM_THRESHOLD = 100  # Small for testing
-    PHAGE_THRESHOLD = 50
+    BACTERIUM_THRESHOLD = 1000  # Minimum for simplified 2-layer architecture
+    PHAGE_THRESHOLD = 500
 
     # Bacteria branch
     input1 = Input(shape=(BACTERIUM_THRESHOLD, 4), name="bacterial_input")
@@ -78,8 +78,8 @@ class TestPERPHECTModel:
         )
 
         # Small batch
-        bacterium_input = np.random.rand(2, 100, 4).astype(np.float32)
-        phage_input = np.random.rand(2, 50, 4).astype(np.float32)
+        bacterium_input = np.random.rand(2, 1000, 4).astype(np.float32)
+        phage_input = np.random.rand(2, 500, 4).astype(np.float32)
 
         predictions = perphect_model.predict(
             [bacterium_input, phage_input],
