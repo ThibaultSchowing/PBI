@@ -1,4 +1,4 @@
-name: CI Pipeline and DB Tests
+name: CI Pipeline, PERPHECT and DB Tests
 
 on:
   workflow_dispatch:
