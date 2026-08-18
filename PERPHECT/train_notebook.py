@@ -52,23 +52,41 @@ print(f"\nHost genome length distribution:")
 print(host_meta['Genome_Length'].describe())
 
 # --- Cell 6 ---
-# Load a small sample of positive pairs for initial testing
-positive_pairs = retriever.get_phage_host_pairs(
+# Load all pairs from the database
+all_pairs = retriever.get_phage_host_pairs(
     limit=1000,
     host_contig_mode='concat'
 )
-print(f"Loaded {len(positive_pairs)} positive pairs")
-positive_pairs.head()
+print(f"Loaded {len(all_pairs)} pairs from database")
+all_pairs.head()
 
 # --- Cell 7 ---
-neg_gen = NegativeExampleGenerator(retriever)
+# Classify pairs by interaction type
+positive_pairs, private_negatives = adapter.classify_pairs_by_interaction(all_pairs)
+print(f"Positive pairs: {len(positive_pairs)}")
+print(f"True negatives from private data: {len(private_negatives)}")
 
-# Generate equal number of negatives
-negative_pairs = neg_gen.generate_random_negatives(
+# Generate additional synthetic negatives
+neg_gen = NegativeExampleGenerator(retriever)
+generated_negatives = neg_gen.generate_random_negatives(
     positive_pairs,
     ratio=1.0
 )
-print(f"Generated {len(negative_pairs)} negative pairs")
+generated_negatives['negative_source'] = 'generated'
+print(f"Generated synthetic negatives: {len(generated_negatives)}")
+
+# Combine all negatives
+import pandas as pd
+if len(private_negatives) > 0 and len(generated_negatives) > 0:
+    negative_pairs = pd.concat([private_negatives, generated_negatives], ignore_index=True)
+elif len(private_negatives) > 0:
+    negative_pairs = private_negatives
+else:
+    negative_pairs = generated_negatives
+
+print(f"\nTotal negatives: {len(negative_pairs)}")
+print(f"  - Private data: {len(private_negatives)}")
+print(f"  - Generated: {len(generated_negatives)}")
 negative_pairs.head()
 
 # --- Cell 8 ---

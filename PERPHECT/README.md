@@ -219,24 +219,44 @@ Flatten → phage_features
 
 The `PBIAdapter` class bridges PBI-Scope's data format to PERPHECT's expectations:
 
-1. **ID Mapping**: PBI-Scope string IDs → PERPHECT integer IDs
-2. **Sequence Fetching**: On-demand from DuckDB + FASTA files
-3. **Length Filtering**: Excludes sequences below minimum thresholds
-4. **Padding**: Zero-padding to fixed lengths (or truncation)
-5. **One-Hot Encoding**: DNA → numpy array of shape `(length, 4)`
+1. **Interaction Classification**: Queries `private_interactions` to classify pairs as positive (label=1) or negative (label=0) based on interaction type. Pairs with interaction = "no interaction" become negatives.
+2. **ID Mapping**: PBI-Scope string IDs → PERPHECT integer IDs
+3. **Sequence Fetching**: On-demand from DuckDB + FASTA files
+4. **Length Filtering**: Excludes sequences below minimum thresholds
+5. **Padding**: Zero-padding to fixed lengths (or truncation)
+6. **One-Hot Encoding**: DNA → numpy array of shape `(length, 4)`
 
 ```python
 from pbi_adapter import PBIAdapter
 
 adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
 
+# Classify all pairs by interaction type
+positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
+
+# Combine with generated negatives
+negative_pairs["negative_source"] = "private_data"
+generated["negative_source"] = "generated"
+all_negatives = pd.concat([negative_pairs, generated])
+
 # DataFrame mode (small data)
-couples_df, bacteria_df, phages_df = adapter.to_perphect_dataframes(positives, negatives)
+couples_df, bacteria_df, phages_df = adapter.to_perphect_dataframes(positive_pairs, all_negatives)
 
 # Generator mode (large data)
-couples, labels = adapter.prepare_training_data(positives, negatives)
+couples, labels = adapter.prepare_training_data(positive_pairs, all_negatives)
 gen = adapter.create_tf_generator(couples, labels, batch_size=16)
 ```
+
+### Negative Source Tracking
+
+Each negative pair is tagged with its source:
+
+| Source | Description |
+|--------|-------------|
+| `private_data` | True negative from the database (interaction type = "no interaction") |
+| `generated` | Synthetic negative created by `NegativeExampleGenerator` |
+
+This is logged during training and saved in `summary.json` under `negative_sources`.
 
 ## Files
 
@@ -283,6 +303,17 @@ The container auto-detects GPU at startup. If no GPU is found, it falls back to 
 1. Verify NVIDIA driver: `nvidia-smi`
 2. Verify Container Toolkit: `docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi`
 3. Restart Docker: `sudo systemctl restart docker`
+
+### CUDA autotuning failures
+
+If you see errors like `Autotuning failed for HLO` or `cuDNN convBackwardInput`, the container automatically disables cuDNN autotuning and XLA via environment variables:
+
+```
+TF_CUDNN_USE_AUTOTUNER=0
+TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
+```
+
+These are set in `docker-compose.yml` and `train.py`. If you still see issues, try forcing CPU with `--no-gpu`.
 
 ### Training is very slow
 

@@ -33,6 +33,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Disable cuDNN autotuning and XLA to prevent autotuning failures on some GPU configs
+os.environ.setdefault("TF_CUDNN_USE_AUTOTUNER", "0")
+os.environ.setdefault("TF_XLA_FLAGS", "--tf_xla_enable_xla_devices=false")
+
 import numpy as np
 import pandas as pd
 
@@ -223,21 +227,42 @@ def main():
         phage_min_length=args.phage_min_length,
     )
 
-    # Load positive pairs
-    logging.info(f"Loading positive pairs (limit={args.limit})...")
-    positive_pairs = retriever.get_phage_host_pairs(
+    # Load all pairs from the database
+    logging.info(f"Loading pairs (limit={args.limit})...")
+    all_pairs = retriever.get_phage_host_pairs(
         limit=args.limit,
         host_contig_mode="concat",
     )
-    logging.info(f"Loaded {len(positive_pairs)} positive pairs")
+    logging.info(f"Loaded {len(all_pairs)} pairs from database")
 
-    # Generate negatives
-    logging.info(f"Generating negatives (ratio={args.negative_ratio})...")
+    # Classify pairs by interaction type
+    logging.info("Classifying pairs by interaction type...")
+    positive_pairs, private_negatives = adapter.classify_pairs_by_interaction(all_pairs)
+    logging.info(f"Positive pairs: {len(positive_pairs)}")
+    logging.info(f"True negatives from private data: {len(private_negatives)}")
+
+    # Generate synthetic negatives
+    logging.info(f"Generating synthetic negatives (ratio={args.negative_ratio})...")
     neg_gen = NegativeExampleGenerator(retriever)
-    negative_pairs = neg_gen.generate_random_negatives(
+    generated_negatives = neg_gen.generate_random_negatives(
         positive_pairs, ratio=args.negative_ratio
     )
-    logging.info(f"Generated {len(negative_pairs)} negative pairs")
+    generated_negatives["negative_source"] = "generated"
+    logging.info(f"Generated {len(generated_negatives)} synthetic negative pairs")
+
+    # Combine all negatives
+    if len(private_negatives) > 0 and len(generated_negatives) > 0:
+        negative_pairs = pd.concat([private_negatives, generated_negatives], ignore_index=True)
+    elif len(private_negatives) > 0:
+        negative_pairs = private_negatives
+    else:
+        negative_pairs = generated_negatives
+
+    logging.info(
+        f"Total negatives: {len(negative_pairs)} "
+        f"({len(private_negatives)} private_data + "
+        f"{len(generated_negatives)} generated)"
+    )
 
     # Prepare training data
     logging.info("Preparing training data (fetching sequences, padding, encoding)...")
@@ -364,9 +389,17 @@ def main():
     results_df.to_csv(str(output_dir / "results_test_set.csv"), index=False)
 
     # Save summary
+    n_private_neg = len(private_negatives)
+    n_generated_neg = len(generated_negatives)
     summary = {
         "run_name": run_name,
         "total_pairs": len(couples),
+        "positive_pairs": int(labels.sum()),
+        "negative_pairs": int(len(labels) - labels.sum()),
+        "negative_sources": {
+            "private_data": n_private_neg,
+            "generated": n_generated_neg,
+        },
         "train_size": len(X_train),
         "valid_size": len(X_valid),
         "test_size": len(X_test),

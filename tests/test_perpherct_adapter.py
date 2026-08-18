@@ -310,3 +310,104 @@ class TestPrepareTrainingData:
         positives = _make_positive_pairs(3)
         with pytest.raises(ValueError, match="No valid pairs found"):
             adapter.prepare_training_data(positives)
+
+
+# ---------------------------------------------------------------------------
+# Classify Pairs by Interaction Type Tests
+# ---------------------------------------------------------------------------
+
+class TestClassifyPairsByInteraction:
+    """Tests for classify_pairs_by_interaction."""
+
+    def _make_retriever_with_interactions(self, interactions_df):
+        """Create a mock retriever with a conn that returns interaction types."""
+        retriever = _make_retriever()
+        retriever.conn = MagicMock()
+        retriever.conn.execute = MagicMock(return_value=MagicMock(fetchdf=MagicMock(return_value=interactions_df)))
+        return retriever
+
+    def test_classifies_no_interaction_as_negative(self):
+        from pbi_adapter import PBIAdapter
+
+        interactions_df = pd.DataFrame({
+            "Phage_ID": ["phage_0"],
+            "Host_ID": ["host_0"],
+            "interaction": ["no interaction"],
+        })
+        retriever = self._make_retriever_with_interactions(interactions_df)
+        adapter = PBIAdapter(retriever)
+
+        all_pairs = _make_positive_pairs(3)
+        pos_df, neg_df = adapter.classify_pairs_by_interaction(all_pairs)
+
+        # phage_0/host_0 should be negative, others positive
+        assert len(neg_df) == 1
+        assert neg_df.iloc[0]["Phage_ID"] == "phage_0"
+        assert neg_df.iloc[0]["negative_source"] == "private_data"
+        assert len(pos_df) == 2
+
+    def test_classifies_virulent_as_positive(self):
+        from pbi_adapter import PBIAdapter
+
+        interactions_df = pd.DataFrame({
+            "Phage_ID": ["phage_0"],
+            "Host_ID": ["host_0"],
+            "interaction": ["virulent"],
+        })
+        retriever = self._make_retriever_with_interactions(interactions_df)
+        adapter = PBIAdapter(retriever)
+
+        all_pairs = _make_positive_pairs(3)
+        pos_df, neg_df = adapter.classify_pairs_by_interaction(all_pairs)
+
+        # All should be positive
+        assert len(pos_df) == 3
+        assert len(neg_df) == 0
+
+    def test_handles_empty_interactions_table(self):
+        from pbi_adapter import PBIAdapter
+
+        interactions_df = pd.DataFrame(columns=["Phage_ID", "Host_ID", "interaction"])
+        retriever = self._make_retriever_with_interactions(interactions_df)
+        adapter = PBIAdapter(retriever)
+
+        all_pairs = _make_positive_pairs(3)
+        pos_df, neg_df = adapter.classify_pairs_by_interaction(all_pairs)
+
+        # All should be positive (no interactions to classify)
+        assert len(pos_df) == 3
+        assert len(neg_df) == 0
+
+    def test_handles_missing_interaction_table(self):
+        from pbi_adapter import PBIAdapter
+
+        retriever = _make_retriever()
+        retriever.conn = MagicMock()
+        retriever.conn.execute = MagicMock(side_effect=Exception("table not found"))
+        adapter = PBIAdapter(retriever)
+
+        all_pairs = _make_positive_pairs(3)
+        pos_df, neg_df = adapter.classify_pairs_by_interaction(all_pairs)
+
+        # Should gracefully fall back to all positive
+        assert len(pos_df) == 3
+        assert len(neg_df) == 0
+
+    def test_multiple_negative_interactions(self):
+        from pbi_adapter import PBIAdapter
+
+        interactions_df = pd.DataFrame({
+            "Phage_ID": ["phage_0", "phage_1", "phage_2"],
+            "Host_ID": ["host_0", "host_1", "host_2"],
+            "interaction": ["no interaction", "none", "virulent"],
+        })
+        retriever = self._make_retriever_with_interactions(interactions_df)
+        adapter = PBIAdapter(retriever)
+
+        all_pairs = _make_positive_pairs(3)
+        pos_df, neg_df = adapter.classify_pairs_by_interaction(all_pairs)
+
+        # phage_0 and phage_1 are negative, phage_2 is positive
+        assert len(neg_df) == 2
+        assert len(pos_df) == 1
+        assert set(neg_df["Phage_ID"]) == {"phage_0", "phage_1"}

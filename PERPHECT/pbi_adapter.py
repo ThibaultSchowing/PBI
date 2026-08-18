@@ -37,6 +37,9 @@ PHAGE_THRESHOLD = 200_000
 BACTERIUM_MIN_LENGTH = 150_000
 PHAGE_MIN_LENGTH = 1_500
 
+# Interaction types that map to label=0 (negative)
+NEGATIVE_INTERACTIONS = {"no interaction", "none", "negative", "non-interacting"}
+
 
 class PBIAdapter:
     """
@@ -469,3 +472,85 @@ class PBIAdapter:
     def get_id_maps(self) -> Tuple[Dict[str, int], Dict[str, int]]:
         """Return both ID mappings as (host_map, phage_map)."""
         return self.host_id_map, self.phage_id_map
+
+    # ------------------------------------------------------------------
+    # Interaction type classification
+    # ------------------------------------------------------------------
+
+    def classify_pairs_by_interaction(
+        self, all_pairs: pd.DataFrame
+    ) -> Tuple[pd.DataFrame, pd.DataFrame]:
+        """
+        Classify pairs into positives and negatives based on interaction type.
+
+        Queries the private_interactions table for interaction types. Pairs
+        with interaction in NEGATIVE_INTERACTIONS become negatives (label=0);
+        all others become positives (label=1). This is source-agnostic — any
+        future source (PhageScope, etc.) that records interaction types in
+        private_interactions will be handled automatically.
+
+        Args:
+            all_pairs: DataFrame from get_phage_host_pairs() with at least
+                       Phage_ID and Host_ID columns.
+
+        Returns:
+            Tuple of (positive_pairs, negative_pairs) where negative_pairs
+            has an additional 'negative_source' column set to 'private_data'.
+        """
+        try:
+            interaction_df = self.retriever.conn.execute(
+                "SELECT Phage_ID, Host_ID, LOWER(TRIM(interaction)) as interaction "
+                "FROM private_interactions"
+            ).fetchdf()
+        except Exception as e:
+            logger.warning(f"Could not query private_interactions: {e}")
+            logger.info("Treating all pairs as positive")
+            return all_pairs, pd.DataFrame(
+                columns=list(all_pairs.columns) + ["negative_source"]
+            )
+
+        if interaction_df.empty:
+            logger.info("No entries in private_interactions — all pairs treated as positive")
+            return all_pairs, pd.DataFrame(
+                columns=list(all_pairs.columns) + ["negative_source"]
+            )
+
+        # Build lookup: (Phage_ID, Host_ID) -> interaction type
+        interaction_map = dict(
+            zip(
+                zip(interaction_df["Phage_ID"], interaction_df["Host_ID"]),
+                interaction_df["interaction"],
+            )
+        )
+
+        positives = []
+        negatives = []
+        for _, row in all_pairs.iterrows():
+            key = (row["Phage_ID"], row["Host_ID"])
+            interaction = interaction_map.get(key)
+
+            if interaction in NEGATIVE_INTERACTIONS:
+                neg_row = row.copy()
+                neg_row["negative_source"] = "private_data"
+                negatives.append(neg_row)
+            else:
+                positives.append(row)
+
+        pos_df = (
+            pd.DataFrame(positives)
+            if positives
+            else pd.DataFrame(columns=all_pairs.columns)
+        )
+        neg_df = (
+            pd.DataFrame(negatives)
+            if negatives
+            else pd.DataFrame(columns=list(all_pairs.columns) + ["negative_source"])
+        )
+
+        logger.info(
+            f"Classified {len(all_pairs)} pairs: "
+            f"{len(pos_df)} positive, {len(neg_df)} negative "
+            f"(from private_data)"
+        )
+
+        return pos_df, neg_df
