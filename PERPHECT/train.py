@@ -34,8 +34,11 @@ from datetime import datetime
 from pathlib import Path
 
 # Disable cuDNN autotuning and XLA to prevent autotuning failures on some GPU configs
-os.environ.setdefault("TF_CUDNN_USE_AUTOTUNER", "0")
-os.environ.setdefault("TF_XLA_FLAGS", "--tf_xla_enable_xla_devices=false")
+os.environ["TF_CUDNN_USE_AUTOTUNER"] = "0"
+os.environ["CUDNN_USE_AUTOTUNER"] = "0"
+os.environ["TF_XLA_FLAGS"] = (
+    "--tf_xla_enable_xla_devices=false --tf_xla_auto_jit=0"
+)
 
 import numpy as np
 import pandas as pd
@@ -66,6 +69,7 @@ def detect_gpu():
     """Detect and report GPU availability. Returns True if GPU is available."""
     try:
         import tensorflow as tf
+        tf.config.optimizer.set_jit(False)
         gpus = tf.config.list_physical_devices("GPU")
         if gpus:
             logging.info(f"GPU detected: {len(gpus)} device(s)")
@@ -289,7 +293,7 @@ def main():
 
     import keras
     optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-    model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"])
+    model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
     model.summary()
 
     # -----------------------------------------------------------------------
