@@ -325,7 +325,13 @@ These are set in `docker-compose.yml` and `train.py`. If you still see issues, t
 
 ### cuDNN not supported on older GPUs (sm_6.1)
 
-cuDNN 9.x dropped support for Pascal GPUs (sm_6.1, e.g. GTX 1080 Ti). You will see `NOT_FOUND: No algorithm worked!` errors. Use the `--no-cudnn` flag to fall back to TensorFlow's native convolution implementation:
+cuDNN 9.x (bundled with TF 2.16+) dropped support for Pascal GPUs (sm_6.1, e.g. GTX 1080 Ti). The Docker image pins TensorFlow to 2.15.x which bundles cuDNN 8.9.x (Pascal compatible). If you still see `No algorithm worked!` errors, rebuild the Docker image to pick up the pinned versions:
+
+```bash
+docker compose build analysis
+```
+
+If issues persist on very large sequences, use the `--no-cudnn` flag to fall back to TensorFlow's native convolution implementation (slower but works on all GPUs):
 
 ```bash
 python train.py --no-cudnn --bacterium-threshold 1000000 --phage-threshold 50000
