@@ -170,7 +170,7 @@ def main():
     parser.add_argument("--phage-min-length", type=int, default=1_500, help="Min phage length to keep")
 
     # Output parameters
-    parser.add_argument("--output-dir", type=str, default="results", help="Output directory (default: results)")
+    parser.add_argument("--output-dir", type=str, default="/results", help="Output directory (default: /results, mapped to ./outputs on host)")
     parser.add_argument("--run-name", type=str, default=None, help="Run name (default: timestamp)")
 
     # Configuration
