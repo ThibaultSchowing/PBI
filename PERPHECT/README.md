@@ -141,6 +141,7 @@ docker compose run --rm analysis \
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
 | `--no-gpu` | False | Force CPU |
+| `--no-cudnn` | False | Disable cuDNN (needed for Pascal/sm_6.1 GPUs with cuDNN 9.x) |
 | `--gpu-device` | 0 | GPU device index (0 for first GPU, 1 for second) |
 | `--verbose` | False | Verbose logging |
 | `--log-file` | None | Log to file |
@@ -321,6 +322,16 @@ These are set in `docker-compose.yml` and `train.py`. If you still see issues, t
 ### Mixed precision (float16) not supported
 
 `mixed_float16` requires GPUs with FP16 tensor cores (Volta/7.0+). Pascal GPUs (GTX 1080 Ti, sm_6.1) do not support FP16 cuDNN convolutions at this input size. Training uses float32 by default.
+
+### cuDNN not supported on older GPUs (sm_6.1)
+
+cuDNN 9.x dropped support for Pascal GPUs (sm_6.1, e.g. GTX 1080 Ti). You will see `NOT_FOUND: No algorithm worked!` errors. Use the `--no-cudnn` flag to fall back to TensorFlow's native convolution implementation:
+
+```bash
+python train.py --no-cudnn --bacterium-threshold 1000000 --phage-threshold 50000
+```
+
+This is slower but works on all GPUs. Remove `--no-cudnn` when moving to Volta/Ampere GPUs.
 
 ### Training is very slow
 
