@@ -38,7 +38,6 @@ jobs:
             tests/test_perpherct_adapter.py \
             tests/test_perpherct_model.py \
             tests/test_perpherct_train.py \
-            tests/test_perpherct_notebook_script.py \
             -v
 
   pipeline-test:

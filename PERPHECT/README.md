@@ -1,124 +1,91 @@
-# PERPHECT — PBI-Scope Integration Tutorial
+# PERPHECT — PBI-Scope Integration
 
-PERPHECT is a phage-host interaction predictor using a dual CNN architecture. This integration demonstrates how to use PBI-Scope's data streaming to train PERPHECT on the full database, replacing the original CSV-based workflow.
+PERPHECT is a dual-CNN phage-host interaction predictor. This integration replaces PERPHECT's original CSV-based data loading with PBI-Scope's streaming database, enabling training on the full dataset without manual exports.
 
-This folder serves as a complete tutorial for adapting PBI-Scope data to your own ML models.
+## What PBI-Scope Provides
 
-## Overview
+PBI-Scope (`src/pbi/`) is a self-contained phage-host data platform built on DuckDB + pyfaidx. For ML training, it provides:
 
-| What | How |
-|------|-----|
-| **Explore interactively** | Jupyter notebook (`PBI_Perphect_Training.ipynb`) |
-| **Train at scale** | CLI script (`train.py`) via `docker compose run` |
-| **GPU acceleration** | NVIDIA CUDA container (automatic if GPU available) |
+| PBI-Scope Component | What It Does |
+|---------------------|--------------|
+| `SequenceRetriever` | Core data engine. Connects DuckDB metadata to indexed FASTA files. Fetches phage/host sequences on demand via `get_phage_sequence()` and `get_host_sequence()`. Handles private data routing automatically. |
+| `NegativeExampleGenerator` | Generates synthetic negative (non-interacting) pairs using random, GC-content, and taxonomy-based strategies. |
+| `private_data` | Validates and ingests user-supplied phage-host interaction datasets. Manages `private_interactions` table with interaction type labels. |
 
-## Prerequisites
+### What We Did NOT Have to Build
 
-### 1. PBI-Scope Pipeline
+PBI-Scope handled these natively — no custom code needed:
 
-The pipeline must have been run to build the database and sequence files:
+- DuckDB connection and query engine
+- FASTA indexing and lazy sequence retrieval (pyfaidx, LRU cache, background preload)
+- Private phage/host data routing and ingestion
+- Interaction type storage and querying
+- Negative example generation strategies
+- Multi-contig genome assembly
 
-```bash
-docker compose up -d pipeline
-# Wait for completion...
-docker compose run --rm pipeline snakemake --cores 2 --snakefile /app/workflow/Snakefile
+## What the Adapter Handles
+
+The `PBIAdapter` class (`pbi_adapter.py`) is the translation layer between PBI-Scope's data format and PERPHECT's expectations. **Everything here is custom code** — PBI-Scope provides no built-in PERPHECT support.
+
+| Translation Layer | Why It's Needed |
+|-------------------|-----------------|
+| **String → Integer ID mapping** | PBI-Scope uses string IDs (`"GCF_000005845"`). PERPHECT's embedding layer requires contiguous integer indices. |
+| **Length filtering** | PERPHECT expects bacteria ≤7M bp and phages ≤200K bp. Sequences outside these ranges are dropped. |
+| **Zero-padding + truncation** | PERPHECT requires fixed-length inputs. Sequences are padded with zeros or truncated to the threshold. |
+| **One-hot encoding** | PERPHECT expects `(length, 4)` numpy arrays (A/T/G/C channels). PBI-Scope returns raw strings. |
+| **DataFrame schema mapping** | PERPHECT's original CSV format uses three tables (couples, bacteria, phages). The adapter produces these from PBI-Scope's pair DataFrames. |
+| **TF generator interface** | PERPHECT's `model.fit()` expects an infinite-loop generator yielding `([bact_batch, phage_batch], labels)`. PBI-Scope has no Keras generator. |
+| **Two-phase loading** | Loading all sequences up front takes 10+ minutes. The adapter queries pair IDs first (fast SQL), classifies them, applies limits, then fetches sequences only for selected pairs. |
+| **Interaction classification** | The `private_interactions` table stores interaction types as strings. The adapter classifies `"no interaction"` / `"none"` / `"negative"` as label=0, everything else as label=1. |
+
+### Adapter Usage
+
+```python
+from pbi_adapter import PBIAdapter
+
+adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
+
+# Phase 1: Query pair IDs only (fast SQL, no sequences loaded)
+all_pairs = adapter.get_pair_ids_only()
+
+# Phase 2: Classify by interaction type
+positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
+
+# Phase 3: Fetch sequences only for selected pairs (lazy)
+couples, labels = adapter.prepare_training_data(positive_pairs, negative_pairs)
+
+# Phase 4: Create TF generator
+gen = adapter.create_tf_generator(couples, labels, batch_size=4)
 ```
-
-### 2. Docker with GPU Support (Optional but Recommended)
-
-The analysis container includes NVIDIA CUDA for GPU-accelerated training. To use GPU:
-
-**Install NVIDIA Container Toolkit on the host:**
-
-```bash
-# Ubuntu/Debian
-curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | \
-  sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-
-curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list | \
-  sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
-  sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
-
-sudo apt-get update
-sudo apt-get install -y nvidia-container-toolkit
-sudo nvidia-ctk runtime configure --runtime=docker
-sudo systemctl restart docker
-```
-
-**Verify GPU access:**
-
-```bash
-docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi
-```
-
-**Without GPU:** Training works on CPU but is significantly slower. The container runs fine without the NVIDIA toolkit — just skip the GPU verification.
 
 ## Quick Start
 
-### Option 1: Jupyter Notebook (Exploration)
+### Prerequisites
 
-Best for: testing code, visualizing results, understanding the data pipeline.
+1. PBI-Scope pipeline must have been run to build the database and sequence files
+2. Docker with NVIDIA Container Toolkit (for GPU training)
 
-```bash
-# Start the analysis container
-docker compose up -d analysis
-
-# Connect via SSH tunnel
-ssh -L 8886:localhost:8888 <your-host>
-
-# Open http://localhost:8886, navigate to PERPHECT/, open the notebook
-```
-
-The notebook walks through:
-1. Connecting to PBI-Scope
-2. Loading positive pairs
-3. Generating negative examples
-4. Transforming data with the adapter
-5. Building and training the model
-6. Evaluating results
-
-### Option 2: Training Script (Production)
-
-Best for: long training runs, background execution, reproducible experiments.
+### Train
 
 ```bash
-# Quick test run (1000 pairs, 3 epochs)
+# Quick test (1000 pairs, 3 epochs)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --limit 1000 --epochs 3
 
-# Full training with config file
+# Full training
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml
 
-# Custom parameters
+# With specific GPU
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py \
-    --epochs 20 --batch-size 32 --output-dir /results/my_run
+  python /workspace/PERPHECT/train.py --gpu-device 0
 
-# Force CPU even if GPU available
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --no-gpu
+# Interactive notebook
+docker compose up -d analysis
+# Open http://localhost:8886, navigate to PERPHECT/
 ```
 
-**Monitor training progress:**
-
-```bash
-# Follow container logs
-docker compose logs -f analysis
-
-# Check output directory
-ls -la outputs/<run_name>/
-```
-
-### Option 3: Notebook-to-Script Conversion
-
-For keeping the notebook and a runnable script in sync:
-
-```bash
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/notebook_to_script.py \
-    --verify /workspace/PERPHECT/train.py
-```
+Results are saved to `./outputs/` on the host.
 
 ## Training Script Reference
 
@@ -137,47 +104,37 @@ docker compose run --rm analysis \
 | `--phage-threshold` | 200000 | Max phage sequence length |
 | `--bacterium-min-length` | 150000 | Min bacteria length to keep |
 | `--phage-min-length` | 1500 | Min phage length to keep |
-| `--output-dir` | results | Output directory |
+| `--output-dir` | /results | Output directory (mapped to `./outputs` on host) |
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
 | `--no-gpu` | False | Force CPU |
-| `--gpu-device` | 0 | GPU device index (0 for first GPU, 1 for second) |
+| `--gpu-device` | 0 | GPU device index |
 | `--verbose` | False | Verbose logging |
 | `--log-file` | None | Log to file |
 
 ### Configuration File
 
-Use `config.yaml` to save parameter sets:
-
 ```yaml
 training:
   epochs: 20
-  batch_size: 32
+  batch_size: 4
   steps_per_epoch: 800
   patience: 10
   learning_rate: 0.0004
 
 data:
-  # limit: null  # null = all data
   negative_ratio: 1.0
   bacterium_threshold: 7000000
   phage_threshold: 200000
 
 output:
-  dir: results
+  dir: /results
 
 gpu:
   enabled: true
 ```
 
-```bash
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml
-```
-
 ### Output Files
-
-Each training run creates a timestamped directory with:
 
 | File | Description |
 |------|-------------|
@@ -191,8 +148,6 @@ Each training run creates a timestamped directory with:
 | `config.json` | Parameters used for this run |
 
 ## Architecture
-
-PERPHECT uses two separate CNN branches:
 
 ```
 Bacteria Input (7M bp, 4 channels)
@@ -216,137 +171,89 @@ Flatten → phage_features
 [bacteria_features | phage_features] → Dense(100) → Dropout(0.1) → Dense(1, sigmoid)
 ```
 
-## How the Adapter Works
-
-The `PBIAdapter` class bridges PBI-Scope's data format to PERPHECT's expectations:
-
-1. **Lightweight ID Query** (`get_pair_ids_only()`): Fast SQL query for pair IDs without sequences. Sufficient for classification.
-2. **Interaction Classification**: Queries `private_interactions` to classify pairs as positive (label=1) or negative (label=0) based on interaction type. Pairs with interaction = "no interaction" become negatives.
-3. **Limit Applied After Classification**: The `--limit` flag caps positive pairs only — private negatives are always included.
-4. **ID Mapping**: PBI-Scope string IDs → PERPHECT integer IDs
-5. **Sequence Fetching**: On-demand from DuckDB + FASTA files (only for selected pairs)
-6. **Length Filtering**: Excludes sequences below minimum thresholds
-7. **Padding**: Zero-padding to fixed lengths (or truncation)
-8. **One-Hot Encoding**: DNA → numpy array of shape `(length, 4)`
-
-```python
-from pbi_adapter import PBIAdapter
-
-adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
-
-# Phase 1: Query pair IDs (fast — no sequences)
-all_pairs = adapter.get_pair_ids_only()
-
-# Phase 2: Classify by interaction type
-positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
-
-# Combine with generated negatives
-negative_pairs["negative_source"] = "private_data"
-generated["negative_source"] = "generated"
-all_negatives = pd.concat([negative_pairs, generated])
-
-# Phase 3: Fetch sequences only for selected pairs (lazy)
-couples, labels = adapter.prepare_training_data(positive_pairs, all_negatives)
-gen = adapter.create_tf_generator(couples, labels, batch_size=4)
-```
-
-### Negative Source Tracking
-
-Each negative pair is tagged with its source:
-
-| Source | Description |
-|--------|-------------|
-| `private_data` | True negative from the database (interaction type = "no interaction") |
-| `generated` | Synthetic negative created by `NegativeExampleGenerator` |
-
-This is logged during training and saved in `summary.json` under `negative_sources`.
-
 ## Files
 
 | File | Description |
 |------|-------------|
-| `PBI_Perphect_Training.ipynb` | Interactive training notebook |
-| `train.py` | Standalone training script for production |
-| `config.yaml` | Default training configuration |
+| `train.py` | Production training script (CLI, GPU, YAML config) |
 | `pbi_adapter.py` | Adapter bridging PBI-Scope to PERPHECT format |
 | `transforms.py` | One-hot encoding utilities |
 | `plotting_utils.py` | Training visualization utilities |
-| `notebook_to_script.py` | Notebook-to-script converter with verification |
-| `model_with_different_paddings_mixed.py` | Original PERPHECT model (standalone) |
-| `Notebook.ipynb` | Original exploratory notebook |
+| `config.yaml` | Default training configuration |
+| `PBI_Perphect_Training.ipynb` | Interactive training notebook |
 
 ## Testing
 
 ```bash
-# Run all PERPHECT tests (unit tests, no GPU/database needed)
 python -m pytest tests/test_perpherct_*.py -v
-
-# Run specific test suites
-python -m pytest tests/test_perpherct_adapter.py -v    # Adapter tests
-python -m pytest tests/test_perpherct_model.py -v      # Model build tests (requires Keras)
-python -m pytest tests/test_perpherct_train.py -v      # Script tests
-python -m pytest tests/test_perpherct_notebook_script.py -v  # Converter tests
 ```
-
-## GPU vs CPU
-
-| Aspect | CPU | GPU |
-|--------|-----|-----|
-| Training speed | ~1 epoch/hour | ~10-20x faster |
-| Memory | Lower | Higher (GPU VRAM) |
-| Setup | No extra setup | NVIDIA Container Toolkit required |
-| Docker image | N/A (CUDA works on CPU) | ~3GB larger |
-
-The container auto-detects GPU at startup. If no GPU is found, it falls back to CPU automatically.
 
 ## Troubleshooting
 
-### "No GPU detected" but GPU is installed
+### cuDNN on Pascal GPUs (GTX 1080 Ti)
 
-1. Verify NVIDIA driver: `nvidia-smi`
-2. Verify Container Toolkit: `docker run --rm --gpus all nvidia/cuda:12.4.1-base-ubuntu22.04 nvidia-smi`
-3. Restart Docker: `sudo systemctl restart docker`
-
-### CUDA autotuning failures
-
-If you see errors like `Autotuning failed for HLO` or `cuDNN convBackwardInput`, the container automatically disables cuDNN autotuning and XLA via environment variables:
-
-```
-TF_CUDNN_USE_AUTOTUNER=0
-TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
-```
-
-These are set in `docker-compose.yml` and `train.py`. If you still see issues, try forcing CPU with `--no-gpu`.
-
-### Mixed precision (float16) not supported
-
-`mixed_float16` requires GPUs with FP16 tensor cores (Volta/7.0+). Pascal GPUs (GTX 1080 Ti, sm_6.1) do not support FP16 cuDNN convolutions at this input size. Training uses float32 by default.
-
-### cuDNN not supported on older GPUs (sm_6.1)
-
-cuDNN 9.x (bundled with TF 2.16+) dropped support for Pascal GPUs (sm_6.1, e.g. GTX 1080 Ti). The Docker image pins TensorFlow to 2.15.x which bundles cuDNN 8.9.x (Pascal compatible). If you still see `No algorithm worked!` errors, rebuild the Docker image to pick up the pinned versions:
+cuDNN 9.x (bundled with TF 2.16+) dropped Pascal (sm_6.1) support. The Docker image pins TensorFlow to 2.15.x with cuDNN 8.9.x. After changing the Dockerfile, rebuild:
 
 ```bash
-docker compose build analysis
+docker compose build --no-cache analysis
 ```
-
-After rebuilding, verify TensorFlow version in the training logs. You should see `TensorFlow version: 2.15.x` with cuDNN 8.9.x.
-
-### Training is very slow
-
-- Check GPU detection in the notebook or script logs
-- Reduce `--bacterium-threshold` and `--phage-threshold` for testing
-- Use `--limit` to train on a subset first
-- Increase `--batch-size` if GPU memory allows
 
 ### Out of memory
 
-- Reduce `--batch-size` (default is 4, try 2)
-- Reduce `--bacterium-threshold` (default 7M bp is large)
-- The adapter caches only selected sequences in memory
+- Reduce `--batch-size` (try 2)
+- Reduce `--bacterium-threshold` and `--phage-threshold`
+- Use `--limit` to train on a subset first
 
-### Container fails to start
+### Slow training
 
-- Check Docker logs: `docker compose logs analysis`
-- Verify the database exists: `ls data/processed/databases/`
-- Check port availability: `lsof -i :8886`
+- Verify GPU is detected in logs (`GPU detected: 1 device(s)`)
+- Check `nvidia-smi` on the host
+- Reduce sequence thresholds for faster iteration
+
+## Suggestions for PBI-Scope Adaptation
+
+If you want to integrate another ML model with PBI-Scope, here are the key patterns from this integration:
+
+### 1. Use the Two-Phase Loading Pattern
+
+Don't load all sequences up front. PBI-Scope's `get_phage_host_pairs()` fetches everything — but for training you typically need a subset. Query IDs first, classify/filter, then fetch sequences only for selected pairs.
+
+```python
+# Instead of this (slow — fetches all sequences):
+pairs = retriever.get_phage_host_pairs()
+
+# Do this (fast — IDs only, then lazy fetch):
+adapter = PBIAdapter(retriever, ...)
+all_pairs = adapter.get_pair_ids_only()
+positive, negative = adapter.classify_pairs_by_interaction(all_pairs)
+couples, labels = adapter.prepare_training_data(positive, negative)
+```
+
+### 2. Handle ID Translation
+
+PBI-Scope uses biological string IDs. Most ML frameworks expect integer indices. Build a bidirectional mapping:
+
+```python
+id_map = {string_id: int_idx for int_idx, string_id in enumerate(unique_ids)}
+reverse_map = {v: k for k, v in id_map.items()}
+```
+
+### 3. Use the Negative Example Generator
+
+PBI-Scope's `NegativeExampleGenerator` provides three strategies (random, GC-based, taxonomy-based). For interaction prediction, the `"mixed"` strategy is recommended. You can also use the `private_interactions` table directly — pairs labeled `"no interaction"` are true negatives.
+
+### 4. Lazy Sequence Retrieval
+
+PBI-Scope caches sequences in memory (LRU, up to 1000 entries). For training with generators, fetch sequences on demand rather than pre-loading. This keeps memory usage bounded by batch size, not dataset size.
+
+### 5. Custom CNN Architectures
+
+PBI-Scope does not enforce any model architecture. The adapter handles data formatting — you can plug in any model that accepts `(length, 4)` one-hot encoded inputs. For protein-level models, use `get_protein_sequences()` instead and adjust the encoding dimension.
+
+### 6. Private Data Integration
+
+Private datasets ingested via `private_data.ingest_private_sources_into_db()` are automatically visible to `SequenceRetriever`. The adapter's `classify_pairs_by_interaction()` queries the `private_interactions` table to distinguish positive/negative pairs. No extra work needed.
+
+### 7. PyTorch Alternative
+
+PBI-Scope provides PyTorch `Dataset` and `IterableDataset` classes (`create_streaming_dataset()`, `create_indexed_dataset()`). If your model uses PyTorch instead of Keras, use these directly — they handle batching, transforms, and private data routing internally.
