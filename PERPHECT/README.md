@@ -141,6 +141,7 @@ docker compose run --rm analysis \
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
 | `--no-gpu` | False | Force CPU |
+| `--gpu-device` | 0 | GPU device index (0 for first GPU, 1 for second) |
 | `--verbose` | False | Verbose logging |
 | `--log-file` | None | Log to file |
 

@@ -63,7 +63,7 @@ def setup_logging(log_file=None, verbose=False):
 # GPU detection
 # ---------------------------------------------------------------------------
 
-def detect_gpu():
+def detect_gpu(gpu_device=0):
     """Detect and report GPU availability. Returns True if GPU is available."""
     try:
         import tensorflow as tf
@@ -73,6 +73,12 @@ def detect_gpu():
             logging.info(f"GPU detected: {len(gpus)} device(s)")
             for gpu in gpus:
                 logging.info(f"  - {gpu.name}")
+            if gpu_device < len(gpus):
+                tf.config.set_visible_devices(gpus[gpu_device], "GPU")
+                logging.info(f"Selected GPU {gpu_device}: {gpus[gpu_device].name}")
+            else:
+                logging.warning(f"GPU {gpu_device} not found, using GPU 0")
+                tf.config.set_visible_devices(gpus[0], "GPU")
             return True
         else:
             logging.info("No GPU detected. Training will use CPU (slower).")
@@ -164,6 +170,7 @@ def main():
     # Configuration
     parser.add_argument("--config", type=str, default=None, help="YAML config file (overrides CLI args)")
     parser.add_argument("--no-gpu", action="store_true", help="Force CPU even if GPU available")
+    parser.add_argument("--gpu-device", type=int, default=0, help="GPU device index (default: 0, use 1 for second GPU)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
     parser.add_argument("--log-file", type=str, default=None, help="Log to file in addition to console")
 
@@ -195,7 +202,7 @@ def main():
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         logging.info("GPU disabled by user (--no-gpu)")
     else:
-        gpu_available = detect_gpu()
+        gpu_available = detect_gpu(args.gpu_device)
 
     # Generate run name
     run_name = args.run_name or datetime.now().strftime("run_%Y%m%d_%H%M%S")

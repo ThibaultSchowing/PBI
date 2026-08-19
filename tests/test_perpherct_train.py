@@ -42,6 +42,7 @@ class TestArgParsing:
         parser.add_argument("--run-name", type=str, default=None)
         parser.add_argument("--config", type=str, default=None)
         parser.add_argument("--no-gpu", action="store_true")
+        parser.add_argument("--gpu-device", type=int, default=0)
         parser.add_argument("--verbose", "-v", action="store_true")
         parser.add_argument("--log-file", type=str, default=None)
 
@@ -50,6 +51,7 @@ class TestArgParsing:
         assert args.batch_size == 4
         assert args.limit is None
         assert args.no_gpu is False
+        assert args.gpu_device == 0
 
     def test_custom_args(self):
         import argparse
