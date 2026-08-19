@@ -80,6 +80,22 @@ class PBIAdapter:
         self._host_sequences: Dict[str, str] = {}
         self._phage_sequences: Dict[str, str] = {}
 
+    def get_pair_ids_only(self) -> pd.DataFrame:
+        """
+        Query all phage-host pair IDs without fetching sequences.
+
+        Returns a DataFrame with Phage_ID and Host_ID columns only.
+        This is fast (pure SQL) and sufficient for classify_pairs_by_interaction().
+        Sequences are fetched lazily by prepare_training_data() for selected pairs.
+        """
+        query = """
+        SELECT DISTINCT Phage_ID, Host_ID
+        FROM phage_host_associations
+        """
+        df = self.retriever.conn.execute(query).fetchdf()
+        logger.info(f"Queried {len(df):,} pair IDs (no sequences)")
+        return df
+
     def _map_host_id(self, pbi_host_id: str) -> int:
         """Map a PBI-Scope Host_ID string to a PERPHECT integer ID."""
         if pbi_host_id not in self._host_id_map:

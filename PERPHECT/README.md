@@ -127,7 +127,7 @@ docker compose run --rm analysis \
 | Argument | Default | Description |
 |----------|---------|-------------|
 | `--epochs` | 10 | Training epochs |
-| `--batch-size` | 16 | Batch size |
+| `--batch-size` | 4 | Batch size |
 | `--steps-per-epoch` | 400 | Batches per epoch |
 | `--patience` | 5 | Early stopping patience |
 | `--learning-rate` | 0.0004 | Initial learning rate |
@@ -219,19 +219,24 @@ Flatten → phage_features
 
 The `PBIAdapter` class bridges PBI-Scope's data format to PERPHECT's expectations:
 
-1. **Interaction Classification**: Queries `private_interactions` to classify pairs as positive (label=1) or negative (label=0) based on interaction type. Pairs with interaction = "no interaction" become negatives.
-2. **ID Mapping**: PBI-Scope string IDs → PERPHECT integer IDs
-3. **Sequence Fetching**: On-demand from DuckDB + FASTA files
-4. **Length Filtering**: Excludes sequences below minimum thresholds
-5. **Padding**: Zero-padding to fixed lengths (or truncation)
-6. **One-Hot Encoding**: DNA → numpy array of shape `(length, 4)`
+1. **Lightweight ID Query** (`get_pair_ids_only()`): Fast SQL query for pair IDs without sequences. Sufficient for classification.
+2. **Interaction Classification**: Queries `private_interactions` to classify pairs as positive (label=1) or negative (label=0) based on interaction type. Pairs with interaction = "no interaction" become negatives.
+3. **Limit Applied After Classification**: The `--limit` flag caps positive pairs only — private negatives are always included.
+4. **ID Mapping**: PBI-Scope string IDs → PERPHECT integer IDs
+5. **Sequence Fetching**: On-demand from DuckDB + FASTA files (only for selected pairs)
+6. **Length Filtering**: Excludes sequences below minimum thresholds
+7. **Padding**: Zero-padding to fixed lengths (or truncation)
+8. **One-Hot Encoding**: DNA → numpy array of shape `(length, 4)`
 
 ```python
 from pbi_adapter import PBIAdapter
 
 adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
 
-# Classify all pairs by interaction type
+# Phase 1: Query pair IDs (fast — no sequences)
+all_pairs = adapter.get_pair_ids_only()
+
+# Phase 2: Classify by interaction type
 positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
 
 # Combine with generated negatives
@@ -239,12 +244,9 @@ negative_pairs["negative_source"] = "private_data"
 generated["negative_source"] = "generated"
 all_negatives = pd.concat([negative_pairs, generated])
 
-# DataFrame mode (small data)
-couples_df, bacteria_df, phages_df = adapter.to_perphect_dataframes(positive_pairs, all_negatives)
-
-# Generator mode (large data)
+# Phase 3: Fetch sequences only for selected pairs (lazy)
 couples, labels = adapter.prepare_training_data(positive_pairs, all_negatives)
-gen = adapter.create_tf_generator(couples, labels, batch_size=16)
+gen = adapter.create_tf_generator(couples, labels, batch_size=4)
 ```
 
 ### Negative Source Tracking
@@ -315,6 +317,10 @@ TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
 
 These are set in `docker-compose.yml` and `train.py`. If you still see issues, try forcing CPU with `--no-gpu`.
 
+### Mixed precision (float16) not supported
+
+`mixed_float16` requires GPUs with FP16 tensor cores (Volta/7.0+). Pascal GPUs (GTX 1080 Ti, sm_6.1) do not support FP16 cuDNN convolutions at this input size. Training uses float32 by default.
+
 ### Training is very slow
 
 - Check GPU detection in the notebook or script logs
@@ -324,9 +330,9 @@ These are set in `docker-compose.yml` and `train.py`. If you still see issues, t
 
 ### Out of memory
 
-- Reduce `--batch-size`
+- Reduce `--batch-size` (default is 4, try 2)
 - Reduce `--bacterium-threshold` (default 7M bp is large)
-- The adapter caches sequences in memory; use `--limit` for large datasets
+- The adapter caches only selected sequences in memory
 
 ### Container fails to start
 

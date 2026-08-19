@@ -229,12 +229,10 @@ def main():
         phage_min_length=args.phage_min_length,
     )
 
-    # Load all pairs from the database (no limit — classification needs the full pool)
-    logging.info("Loading all pairs from database...")
-    all_pairs = retriever.get_phage_host_pairs(
-        host_contig_mode="concat",
-    )
-    logging.info(f"Loaded {len(all_pairs)} pairs from database")
+    # Phase 1: Query pair IDs only (fast — no sequences fetched)
+    logging.info("Querying pair IDs from database...")
+    all_pairs = adapter.get_pair_ids_only()
+    logging.info(f"Found {len(all_pairs)} pairs in database")
 
     # Classify pairs by interaction type (before applying limit!)
     logging.info("Classifying pairs by interaction type...")

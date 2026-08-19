@@ -52,12 +52,9 @@ print(f"\nHost genome length distribution:")
 print(host_meta['Genome_Length'].describe())
 
 # --- Cell 6 ---
-# Load all pairs from the database
-all_pairs = retriever.get_phage_host_pairs(
-    limit=1000,
-    host_contig_mode='concat'
-)
-print(f"Loaded {len(all_pairs)} pairs from database")
+# Query pair IDs only (fast — no sequences fetched)
+all_pairs = adapter.get_pair_ids_only()
+print(f"Found {len(all_pairs)} pairs in database")
 all_pairs.head()
 
 # --- Cell 7 ---
