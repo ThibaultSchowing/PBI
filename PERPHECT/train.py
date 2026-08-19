@@ -67,6 +67,12 @@ def detect_gpu(gpu_device=0):
     """Detect and report GPU availability. Returns True if GPU is available."""
     try:
         import tensorflow as tf
+        logging.info(f"TensorFlow version: {tf.__version__}")
+        logging.info(f"Built with CUDA: {tf.test.is_built_with_cuda()}")
+        try:
+            logging.info(f"cuDNN version: {tf.sysconfig.get_build_info().get('cudnn_version', 'unknown')}")
+        except Exception:
+            pass
         tf.config.optimizer.set_jit(False)
         gpus = tf.config.list_physical_devices("GPU")
         if gpus:
@@ -170,7 +176,6 @@ def main():
     # Configuration
     parser.add_argument("--config", type=str, default=None, help="YAML config file (overrides CLI args)")
     parser.add_argument("--no-gpu", action="store_true", help="Force CPU even if GPU available")
-    parser.add_argument("--no-cudnn", action="store_true", help="Disable cuDNN (needed for Pascal/sm_6.1 GPUs with cuDNN 9.x)")
     parser.add_argument("--gpu-device", type=int, default=0, help="GPU device index (default: 0, use 1 for second GPU)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
     parser.add_argument("--log-file", type=str, default=None, help="Log to file in addition to console")
@@ -203,9 +208,6 @@ def main():
         os.environ["CUDA_VISIBLE_DEVICES"] = ""
         logging.info("GPU disabled by user (--no-gpu)")
     else:
-        if args.no_cudnn:
-            os.environ["TF_USE_CUDNN"] = "0"
-            logging.info("cuDNN disabled (--no-cudnn): using TF native convolutions")
         gpu_available = detect_gpu(args.gpu_device)
 
     # Generate run name

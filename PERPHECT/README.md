@@ -141,7 +141,6 @@ docker compose run --rm analysis \
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
 | `--no-gpu` | False | Force CPU |
-| `--no-cudnn` | False | Disable cuDNN (needed for Pascal/sm_6.1 GPUs with cuDNN 9.x) |
 | `--gpu-device` | 0 | GPU device index (0 for first GPU, 1 for second) |
 | `--verbose` | False | Verbose logging |
 | `--log-file` | None | Log to file |
@@ -331,13 +330,7 @@ cuDNN 9.x (bundled with TF 2.16+) dropped support for Pascal GPUs (sm_6.1, e.g. 
 docker compose build analysis
 ```
 
-If issues persist on very large sequences, use the `--no-cudnn` flag to fall back to TensorFlow's native convolution implementation (slower but works on all GPUs):
-
-```bash
-python train.py --no-cudnn --bacterium-threshold 1000000 --phage-threshold 50000
-```
-
-This is slower but works on all GPUs. Remove `--no-cudnn` when moving to Volta/Ampere GPUs.
+After rebuilding, verify TensorFlow version in the training logs. You should see `TensorFlow version: 2.15.x` with cuDNN 8.9.x.
 
 ### Training is very slow
 

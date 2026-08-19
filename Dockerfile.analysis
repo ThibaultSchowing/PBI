@@ -1,7 +1,10 @@
 # Dockerfile for PBI Analysis Service
 # Provides direct database and FASTA file access for efficient bulk data retrieval
 # Includes NVIDIA CUDA support for GPU-accelerated ML training
-FROM nvidia/cuda:12.4.1-cudnn-runtime-ubuntu22.04
+# Base image: CUDA 12.2 + cuDNN 8.9.x (Pascal-compatible)
+# Do NOT use cuDNN 9.x images — they break Pascal GPUs (sm_6.1, GTX 1080 Ti)
+# Do NOT use tensorflow[and-cuda] — it bundles cuDNN 9.x internally
+FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
 
 # Set working directory
 WORKDIR /workspace
@@ -41,8 +44,8 @@ RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pyth
     pyarrow>=14.0.0 \
     torch>=2.0.0 \
     scikit-learn>=1.3.0 \
-    keras>=2.15.0,<3.0 \
-    "tensorflow[and-cuda]>=2.15.0,<2.16" \
+    keras==2.15.0 \
+    tensorflow==2.15.1 \
     pyyaml>=6.0
 
 # Expose Jupyter Lab port
