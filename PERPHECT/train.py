@@ -36,9 +36,7 @@ from pathlib import Path
 # Disable cuDNN autotuning and XLA to prevent autotuning failures on some GPU configs
 os.environ["TF_CUDNN_USE_AUTOTUNER"] = "0"
 os.environ["CUDNN_USE_AUTOTUNER"] = "0"
-os.environ["TF_XLA_FLAGS"] = (
-    "--tf_xla_enable_xla_devices=false --tf_xla_auto_jit=0"
-)
+os.environ["TF_XLA_FLAGS"] = "--tf_xla_enable_xla_devices=false"
 
 import numpy as np
 import pandas as pd
@@ -118,7 +116,7 @@ def build_model(bacterium_threshold=7_000_000, phage_threshold=200_000):
     concat_features = Concatenate(name="concatenated_features")([flatten_bact, flatten_phage])
     dense1 = Dense(100, activation="relu")(concat_features)
     dropout1 = Dropout(0.10)(dense1)
-    dense2 = Dense(1, activation="sigmoid", dtype="float32")(dropout1)
+    dense2 = Dense(1, activation="sigmoid")(dropout1)
 
     model = Model(name="Perphect", inputs=[input1, input2], outputs=dense2)
     return model
@@ -146,7 +144,7 @@ def main():
 
     # Training parameters
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10)")
-    parser.add_argument("--batch-size", type=int, default=16, help="Batch size (default: 16)")
+    parser.add_argument("--batch-size", type=int, default=4, help="Batch size (default: 4)")
     parser.add_argument("--steps-per-epoch", type=int, default=400, help="Batches per epoch (default: 400)")
     parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (default: 5)")
     parser.add_argument("--learning-rate", type=float, default=0.0004, help="Initial learning rate (default: 0.0004)")
@@ -231,17 +229,25 @@ def main():
         phage_min_length=args.phage_min_length,
     )
 
-    # Load all pairs from the database
-    logging.info(f"Loading pairs (limit={args.limit})...")
+    # Load all pairs from the database (no limit — classification needs the full pool)
+    logging.info("Loading all pairs from database...")
     all_pairs = retriever.get_phage_host_pairs(
-        limit=args.limit,
         host_contig_mode="concat",
     )
     logging.info(f"Loaded {len(all_pairs)} pairs from database")
 
-    # Classify pairs by interaction type
+    # Classify pairs by interaction type (before applying limit!)
     logging.info("Classifying pairs by interaction type...")
     positive_pairs, private_negatives = adapter.classify_pairs_by_interaction(all_pairs)
+
+    # Apply limit to positive pairs only (private negatives are always included)
+    if args.limit and len(positive_pairs) > args.limit:
+        logging.info(
+            f"Limiting positive pairs: {len(positive_pairs)} -> {args.limit} "
+            f"(private negatives always included)"
+        )
+        positive_pairs = positive_pairs.sample(n=args.limit, random_state=42).reset_index(drop=True)
+
     logging.info(f"Positive pairs: {len(positive_pairs)}")
     logging.info(f"True negatives from private data: {len(private_negatives)}")
 
@@ -289,9 +295,6 @@ def main():
     # Build model
     # -----------------------------------------------------------------------
     logging.info("Building PERPHECT model...")
-    import keras
-    keras.mixed_precision.set_global_policy("mixed_float16")
-    logging.info("Mixed precision enabled: float16 compute, float32 variables")
     model = build_model(args.bacterium_threshold, args.phage_threshold)
 
     import keras

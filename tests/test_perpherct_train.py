@@ -28,7 +28,7 @@ class TestArgParsing:
         # test the parser by importing and checking defaults
         parser = argparse.ArgumentParser()
         parser.add_argument("--epochs", type=int, default=10)
-        parser.add_argument("--batch-size", type=int, default=16)
+        parser.add_argument("--batch-size", type=int, default=4)
         parser.add_argument("--steps-per-epoch", type=int, default=400)
         parser.add_argument("--patience", type=int, default=5)
         parser.add_argument("--learning-rate", type=float, default=0.0004)
@@ -47,7 +47,7 @@ class TestArgParsing:
 
         args = parser.parse_args([])
         assert args.epochs == 10
-        assert args.batch_size == 16
+        assert args.batch_size == 4
         assert args.limit is None
         assert args.no_gpu is False
 
@@ -56,7 +56,7 @@ class TestArgParsing:
 
         parser = argparse.ArgumentParser()
         parser.add_argument("--epochs", type=int, default=10)
-        parser.add_argument("--batch-size", type=int, default=16)
+        parser.add_argument("--batch-size", type=int, default=4)
         parser.add_argument("--limit", type=int, default=None)
         parser.add_argument("--no-gpu", action="store_true")
         parser.add_argument("--output-dir", type=str, default="results")
@@ -136,7 +136,7 @@ class TestConfigLoading:
             assert "data" in config
             assert "output" in config
             assert config["training"]["epochs"] == 10
-            assert config["training"]["batch_size"] == 16
+            assert config["training"]["batch_size"] == 4
 
     def test_config_merging(self):
         """Verify config values override defaults."""
@@ -148,7 +148,7 @@ class TestConfigLoading:
         }
 
         # Simulate merging
-        defaults = {"epochs": 10, "batch_size": 16, "limit": None}
+        defaults = {"epochs": 10, "batch_size": 4, "limit": None}
         for section in ["training", "data"]:
             if section in config:
                 for key, value in config[section].items():
