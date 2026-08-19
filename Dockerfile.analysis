@@ -4,7 +4,7 @@
 # Base image: CUDA 12.2 + cuDNN 8.9.x (Pascal-compatible)
 # Do NOT use cuDNN 9.x images — they break Pascal GPUs (sm_6.1, GTX 1080 Ti)
 # Do NOT use tensorflow[and-cuda] — it bundles cuDNN 9.x internally
-FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
 
 # Set working directory
 WORKDIR /workspace
