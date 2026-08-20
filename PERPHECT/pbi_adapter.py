@@ -80,18 +80,24 @@ class PBIAdapter:
         self._host_sequences: Dict[str, str] = {}
         self._phage_sequences: Dict[str, str] = {}
 
-    def get_pair_ids_only(self) -> pd.DataFrame:
+    def get_pair_ids_only(self, shuffle: bool = False) -> pd.DataFrame:
         """
         Query all phage-host pair IDs without fetching sequences.
 
         Returns a DataFrame with Phage_ID and Host_ID columns only.
         This is fast (pure SQL) and sufficient for classify_pairs_by_interaction().
         Sequences are fetched lazily by prepare_training_data() for selected pairs.
+
+        Args:
+            shuffle: If True, randomize row order using a deterministic hash.
+                     Ensures reproducible shuffling without loading rows into Python.
         """
         query = """
         SELECT DISTINCT Phage_ID, Host_ID
         FROM phage_host_associations
         """
+        if shuffle:
+            query += " ORDER BY MD5(Phage_ID || Host_ID)"
         df = self.retriever.conn.execute(query).fetchdf()
         logger.info(f"Queried {len(df):,} pair IDs (no sequences)")
         return df
@@ -398,20 +404,24 @@ class PBIAdapter:
         self,
         positive_pairs: pd.DataFrame,
         negative_pairs: Optional[pd.DataFrame] = None,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
-        Prepare integer-indexed couples and labels arrays for the generator.
+        Prepare integer-indexed couples, labels, and source arrays for the generator.
 
         This loads and caches all sequences, filters by length, and returns
-        the couple/label arrays needed by create_tf_generator().
+        the couple/label/source arrays needed by create_tf_generator().
 
         Args:
             positive_pairs: DataFrame with Phage_ID, Host_ID columns.
-            negative_pairs: Optional negative pairs DataFrame.
+            negative_pairs: Optional negative pairs DataFrame. Must have a
+                           'negative_source' column ('private_data' or 'generated').
 
         Returns:
-            Tuple of (couples_array, labels_array) where couples_array is
-            shape (N, 2) with integer IDs and labels_array is shape (N,).
+            Tuple of (couples_array, labels_array, sources_array) where:
+            - couples_array is shape (N, 2) with integer IDs
+            - labels_array is shape (N,) with float32 labels (1.0 or 0.0)
+            - sources_array is shape (N,) with string source labels
+              ('positive', 'private_data', or 'generated')
         """
         records = []
 
@@ -433,7 +443,7 @@ class PBIAdapter:
             phage_id_int = self._map_phage_id(phage_id_str)
             host_id_int = self._map_host_id(host_id_str)
 
-            records.append((host_id_int, phage_id_int, 1))
+            records.append((host_id_int, phage_id_int, 1, "positive"))
 
         # Process negatives
         if negative_pairs is not None:
@@ -454,7 +464,8 @@ class PBIAdapter:
                 phage_id_int = self._map_phage_id(phage_id_str)
                 host_id_int = self._map_host_id(host_id_str)
 
-                records.append((host_id_int, phage_id_int, 0))
+                source = row.get("negative_source", "generated")
+                records.append((host_id_int, phage_id_int, 0, source))
 
         if not records:
             raise ValueError(
@@ -464,16 +475,17 @@ class PBIAdapter:
                 f"phages >= {self.phage_min_length})."
             )
 
-        records_arr = np.array(records)
+        records_arr = np.array(records, dtype=object)
         couples = records_arr[:, :2].astype(np.int64)
         labels = records_arr[:, 2].astype(np.float32)
+        sources = records_arr[:, 3]
 
         logger.info(
             f"Prepared {len(couples)} pairs "
             f"({int(labels.sum())} positive, {int(len(labels) - labels.sum())} negative)"
         )
 
-        return couples, labels
+        return couples, labels, sources
 
     @property
     def host_id_map(self) -> Dict[str, int]:

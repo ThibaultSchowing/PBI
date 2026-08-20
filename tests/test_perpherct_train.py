@@ -41,6 +41,8 @@ class TestArgParsing:
         parser.add_argument("--output-dir", type=str, default="results")
         parser.add_argument("--run-name", type=str, default=None)
         parser.add_argument("--config", type=str, default=None)
+        parser.add_argument("--cross-validate", type=int, default=0)
+        parser.add_argument("--exclude-ids", type=str, default=None)
         parser.add_argument("--no-gpu", action="store_true")
         parser.add_argument("--gpu-device", type=int, default=0)
         parser.add_argument("--verbose", "-v", action="store_true")
@@ -52,6 +54,8 @@ class TestArgParsing:
         assert args.limit is None
         assert args.no_gpu is False
         assert args.gpu_device == 0
+        assert args.cross_validate == 0
+        assert args.exclude_ids is None
 
     def test_custom_args(self):
         import argparse

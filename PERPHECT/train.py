@@ -143,6 +143,96 @@ def step_decay(epoch, initial_lrate=0.0004, drop=0.5, epochs_drop=4.0):
     return initial_lrate * math.pow(drop, math.floor((1 + epoch) / epochs_drop))
 
 
+def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
+                X_test, y_test, args, output_dir):
+    """Train and evaluate a single fold. Returns dict of fold metrics."""
+    import keras
+
+    fold_dir = output_dir / f"fold_{fold_num}"
+    fold_dir.mkdir(parents=True, exist_ok=True)
+
+    # Build model
+    model = build_model(args.bacterium_threshold, args.phage_threshold)
+    optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
+    model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
+
+    # Generators
+    train_gen = adapter.create_tf_generator(
+        X_train, y_train, batch_size=args.batch_size, shuffle=True
+    )
+    valid_gen = adapter.create_tf_generator(
+        X_valid, y_valid, batch_size=args.batch_size, shuffle=False
+    )
+    valid_steps = math.ceil(len(X_valid) / args.batch_size)
+
+    # Callbacks
+    callbacks = [
+        keras.callbacks.ModelCheckpoint(
+            filepath=str(fold_dir / "model_best.keras"),
+            monitor="val_loss", save_best_only=True,
+        ),
+        keras.callbacks.EarlyStopping(
+            monitor="val_loss", patience=args.patience, restore_best_weights=True,
+        ),
+        keras.callbacks.LearningRateScheduler(
+            lambda epoch: step_decay(epoch, args.learning_rate)
+        ),
+        keras.callbacks.CSVLogger(str(fold_dir / "training_log.csv")),
+    ]
+
+    # Train
+    history = model.fit(
+        train_gen, steps_per_epoch=args.steps_per_epoch,
+        epochs=args.epochs, validation_data=valid_gen,
+        validation_steps=valid_steps, callbacks=callbacks,
+    )
+
+    # Save final model
+    model.save(str(fold_dir / "model_final.keras"))
+
+    # Test evaluation
+    test_gen = adapter.create_tf_generator(
+        X_test, y_test, batch_size=args.batch_size, shuffle=False
+    )
+    test_steps = math.ceil(len(X_test) / args.batch_size)
+    test_predictions = model.predict(test_gen, steps=test_steps)
+    test_pred_labels = (test_predictions.flatten() > 0.5).astype(int)
+
+    from sklearn.metrics import classification_report
+    report = classification_report(
+        y_test, test_pred_labels, target_names=["Negative", "Positive"]
+    )
+
+    results_df = pd.DataFrame({
+        "bacterium_id": X_test[:, 0],
+        "phage_id": X_test[:, 1],
+        "observations": y_test,
+        "predictions": test_predictions.flatten(),
+        "prediction_labels": test_pred_labels,
+    })
+    results_df.to_csv(str(fold_dir / "results_test_set.csv"), index=False)
+
+    # Save summary
+    summary = {
+        "fold": fold_num,
+        "train_size": len(X_train),
+        "valid_size": len(X_valid),
+        "test_size": len(X_test),
+        "epochs_trained": len(history.history["loss"]),
+        "best_val_loss": float(min(history.history["val_loss"])),
+        "best_val_accuracy": float(max(history.history["val_accuracy"])),
+        "test_report": report,
+    }
+    with open(fold_dir / "summary.json", "w") as f:
+        json.dump(summary, f, indent=2)
+
+    logging.info(f"Fold {fold_num}: val_loss={summary['best_val_loss']:.4f}, "
+                 f"val_acc={summary['best_val_accuracy']:.4f}, "
+                 f"epochs={summary['epochs_trained']}")
+
+    return summary
+
+
 # ---------------------------------------------------------------------------
 # Main training function
 # ---------------------------------------------------------------------------
@@ -175,6 +265,8 @@ def main():
 
     # Configuration
     parser.add_argument("--config", type=str, default=None, help="YAML config file (overrides CLI args)")
+    parser.add_argument("--cross-validate", type=int, default=0, help="K folds for stratified K-fold CV (0 = disabled)")
+    parser.add_argument("--exclude-ids", type=str, default=None, help="CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage from held-out test set)")
     parser.add_argument("--no-gpu", action="store_true", help="Force CPU even if GPU available")
     parser.add_argument("--gpu-device", type=int, default=0, help="GPU device index (default: 0, use 1 for second GPU)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
@@ -231,7 +323,7 @@ def main():
     from pbi import quick_connect
     from pbi.negative_examples import NegativeExampleGenerator
     from pbi_adapter import PBIAdapter
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import train_test_split, StratifiedKFold
 
     retriever = quick_connect()
     adapter = PBIAdapter(
@@ -244,8 +336,27 @@ def main():
 
     # Phase 1: Query pair IDs only (fast — no sequences fetched)
     logging.info("Querying pair IDs from database...")
-    all_pairs = adapter.get_pair_ids_only()
+    all_pairs = adapter.get_pair_ids_only(shuffle=True)
     logging.info(f"Found {len(all_pairs)} pairs in database")
+
+    # Exclude held-out test pairs if specified
+    if args.exclude_ids:
+        exclude_path = Path(args.exclude_ids)
+        if exclude_path.exists():
+            exclude_df = pd.read_csv(exclude_path)
+            exclude_set = set(zip(exclude_df["Phage_ID"], exclude_df["Host_ID"]))
+            before = len(all_pairs)
+            all_pairs = all_pairs[
+                ~all_pairs.apply(
+                    lambda r: (r["Phage_ID"], r["Host_ID"]) in exclude_set, axis=1
+                )
+            ].reset_index(drop=True)
+            logging.info(
+                f"Excluded {before - len(all_pairs)} test pairs from {exclude_path} "
+                f"({len(all_pairs)} remaining)"
+            )
+        else:
+            logging.warning(f"--exclude-ids file not found: {exclude_path}")
 
     # Classify pairs by interaction type (before applying limit!)
     logging.info("Classifying pairs by interaction type...")
@@ -262,12 +373,41 @@ def main():
     logging.info(f"Positive pairs: {len(positive_pairs)}")
     logging.info(f"True negatives from private data: {len(private_negatives)}")
 
-    # Generate synthetic negatives
+    # Generate synthetic negatives (capped at 2x private negatives)
     logging.info(f"Generating synthetic negatives (ratio={args.negative_ratio})...")
     neg_gen = NegativeExampleGenerator(retriever)
+    max_generated = max(len(private_negatives) * 2, 100) if len(private_negatives) > 0 else len(positive_pairs)
     generated_negatives = neg_gen.generate_random_negatives(
         positive_pairs, ratio=args.negative_ratio
     )
+
+    # Deduplicate against private negatives
+    if len(private_negatives) > 0:
+        private_neg_set = set(
+            zip(private_negatives["Phage_ID"], private_negatives["Host_ID"])
+        )
+        before_dedup = len(generated_negatives)
+        generated_negatives = generated_negatives[
+            ~generated_negatives.apply(
+                lambda r: (r["Phage_ID"], r["Host_ID"]) in private_neg_set, axis=1
+            )
+        ].reset_index(drop=True)
+        if before_dedup - len(generated_negatives) > 0:
+            logging.info(
+                f"Removed {before_dedup - len(generated_negatives)} generated negatives "
+                f"that duplicated private data negatives"
+            )
+
+    # Cap generated negatives
+    if len(generated_negatives) > max_generated:
+        logging.info(
+            f"Capping generated negatives: {len(generated_negatives)} -> {max_generated} "
+            f"(2x private negatives)"
+        )
+        generated_negatives = generated_negatives.sample(
+            n=max_generated, random_state=42
+        ).reset_index(drop=True)
+
     generated_negatives["negative_source"] = "generated"
     logging.info(f"Generated {len(generated_negatives)} synthetic negative pairs")
 
@@ -287,157 +427,228 @@ def main():
 
     # Prepare training data
     logging.info("Preparing training data (fetching sequences, padding, encoding)...")
-    couples, labels = adapter.prepare_training_data(positive_pairs, negative_pairs)
+    couples, labels, sources = adapter.prepare_training_data(positive_pairs, negative_pairs)
     logging.info(
         f"Total pairs: {len(couples)} "
         f"({int(labels.sum())} positive, {int(len(labels) - labels.sum())} negative)"
     )
 
-    # Train/validation/test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        couples, labels, stratify=labels, test_size=0.3, shuffle=True, random_state=42
-    )
-    X_valid, X_test, y_valid, y_test = train_test_split(
-        X_test, y_test, stratify=y_test, test_size=0.5, shuffle=True, random_state=42
-    )
-    logging.info(f"Split: train={len(X_train)}, valid={len(X_valid)}, test={len(X_test)}")
+    # -----------------------------------------------------------------------
+    # Train/validation/test split (stratified by label AND source)
+    # -----------------------------------------------------------------------
+    stratify_key = np.array([
+        "pos" if l == 1 else f"neg_{s}"
+        for l, s in zip(labels, sources)
+    ])
 
     # -----------------------------------------------------------------------
-    # Build model
+    # Branch: Cross-validation or standard split
     # -----------------------------------------------------------------------
-    logging.info("Building PERPHECT model...")
-    model = build_model(args.bacterium_threshold, args.phage_threshold)
+    if args.cross_validate > 0:
+        # ---- K-fold cross-validation ----
+        k = args.cross_validate
+        logging.info(f"Starting {k}-fold stratified cross-validation...")
 
-    import keras
-    optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-    model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
-    model.summary()
+        skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
+        fold_summaries = []
 
-    # -----------------------------------------------------------------------
-    # Training
-    # -----------------------------------------------------------------------
-    logging.info("Starting training...")
+        for fold_num, (train_idx, test_idx) in enumerate(skf.split(couples, stratify_key), 1):
+            logging.info(f"\n{'='*60}")
+            logging.info(f"Fold {fold_num}/{k}")
+            logging.info(f"{'='*60}")
 
-    # Create generators
-    train_gen = adapter.create_tf_generator(
-        X_train, y_train, batch_size=args.batch_size, shuffle=True
-    )
-    valid_gen = adapter.create_tf_generator(
-        X_valid, y_valid, batch_size=args.batch_size, shuffle=False
-    )
-    valid_steps = math.ceil(len(X_valid) / args.batch_size)
+            X_fold_train, X_fold_test = couples[train_idx], couples[test_idx]
+            y_fold_train, y_fold_test = labels[train_idx], labels[test_idx]
 
-    # Callbacks
-    callbacks = [
-        keras.callbacks.ModelCheckpoint(
-            filepath=str(output_dir / "model_best.keras"),
-            monitor="val_loss",
-            save_best_only=True,
-        ),
-        keras.callbacks.EarlyStopping(
-            monitor="val_loss",
-            patience=args.patience,
-            restore_best_weights=True,
-        ),
-        keras.callbacks.LearningRateScheduler(
-            lambda epoch: step_decay(epoch, args.learning_rate)
-        ),
-        keras.callbacks.CSVLogger(str(output_dir / "training_log.csv")),
-    ]
+            # Split train into train/val (80/20 of fold train)
+            fold_strat = np.array([
+                "pos" if l == 1 else f"neg_{s}"
+                for l, s in zip(y_fold_train, sources[train_idx])
+            ])
+            X_fold_train, X_fold_val, y_fold_train, y_fold_val = train_test_split(
+                X_fold_train, y_fold_train,
+                stratify=fold_strat, test_size=0.2, shuffle=True, random_state=42
+            )
 
-    # Train
-    history = model.fit(
-        train_gen,
-        steps_per_epoch=args.steps_per_epoch,
-        epochs=args.epochs,
-        validation_data=valid_gen,
-        validation_steps=valid_steps,
-        callbacks=callbacks,
-    )
+            summary = _train_fold(
+                fold_num, adapter,
+                X_fold_train, y_fold_train,
+                X_fold_val, y_fold_val,
+                X_fold_test, y_fold_test,
+                args, output_dir,
+            )
+            fold_summaries.append(summary)
 
-    # -----------------------------------------------------------------------
-    # Save results
-    # -----------------------------------------------------------------------
-    logging.info("Saving results...")
+        # Aggregate CV results
+        cv_summary = {
+            "run_name": run_name,
+            "n_folds": k,
+            "total_pairs": len(couples),
+            "positive_pairs": int(labels.sum()),
+            "negative_pairs": int(len(labels) - labels.sum()),
+            "negative_sources": {
+                "private_data": len(private_negatives),
+                "generated": len(generated_negatives),
+            },
+            "mean_val_loss": float(np.mean([s["best_val_loss"] for s in fold_summaries])),
+            "std_val_loss": float(np.std([s["best_val_loss"] for s in fold_summaries])),
+            "mean_val_accuracy": float(np.mean([s["best_val_accuracy"] for s in fold_summaries])),
+            "std_val_accuracy": float(np.std([s["best_val_accuracy"] for s in fold_summaries])),
+            "mean_epochs": float(np.mean([s["epochs_trained"] for s in fold_summaries])),
+            "folds": fold_summaries,
+        }
+        with open(output_dir / "cv_summary.json", "w") as f:
+            json.dump(cv_summary, f, indent=2)
 
-    # Save final model
-    model.save(str(output_dir / "model_final.keras"))
+        logging.info(f"\n{'='*60}")
+        logging.info("Cross-validation complete!")
+        logging.info(f"Val loss:  {cv_summary['mean_val_loss']:.4f} +/- {cv_summary['std_val_loss']:.4f}")
+        logging.info(f"Val acc:   {cv_summary['mean_val_accuracy']:.4f} +/- {cv_summary['std_val_accuracy']:.4f}")
+        logging.info(f"Mean epochs: {cv_summary['mean_epochs']:.1f}")
+        logging.info(f"Results saved to: {output_dir}")
+        logging.info(f"Summary: {output_dir / 'cv_summary.json'}")
+        logging.info("=" * 60)
 
-    # Save training plots
-    try:
-        from plotting_utils import historic_plots
-        import matplotlib
-        matplotlib.use("Agg")
+    else:
+        # ---- Standard train/val/test split ----
+        X_train, X_test, y_train, y_test, s_train, s_test = train_test_split(
+            couples, labels, sources,
+            stratify=stratify_key, test_size=0.3, shuffle=True, random_state=42
+        )
 
-        acc_fig, loss_fig = historic_plots(history)
-        acc_fig.axes[0].set_title("Accuracy")
-        loss_fig.axes[0].set_title("Loss")
-        acc_fig.savefig(str(output_dir / "accuracy.png"), dpi=150, bbox_inches="tight")
-        loss_fig.savefig(str(output_dir / "val_loss.png"), dpi=150, bbox_inches="tight")
-        import matplotlib.pyplot as plt
-        plt.close("all")
-        logging.info("Training plots saved")
-    except Exception as e:
-        logging.warning(f"Could not save plots: {e}")
+        stratify_key_test = np.array([
+            "pos" if l == 1 else f"neg_{s}"
+            for l, s in zip(y_test, s_test)
+        ])
+        X_valid, X_test, y_valid, y_test, s_valid, s_test = train_test_split(
+            X_test, y_test, s_test,
+            stratify=stratify_key_test, test_size=0.5, shuffle=True, random_state=42
+        )
 
-    # -----------------------------------------------------------------------
-    # Test evaluation
-    # -----------------------------------------------------------------------
-    logging.info("Evaluating on test set...")
+        logging.info(f"Split: train={len(X_train)}, valid={len(X_valid)}, test={len(X_test)}")
 
-    test_gen = adapter.create_tf_generator(
-        X_test, y_test, batch_size=args.batch_size, shuffle=False
-    )
-    test_steps = math.ceil(len(X_test) / args.batch_size)
-    test_predictions = model.predict(test_gen, steps=test_steps)
-    test_pred_labels = (test_predictions.flatten() > 0.5).astype(int)
+        for split_name, split_sources in [("train", s_train), ("valid", s_valid), ("test", s_test)]:
+            unique, counts = np.unique(split_sources, return_counts=True)
+            dist = dict(zip(unique, counts))
+            logging.info(f"  {split_name}: {dist}")
 
-    # Classification report
-    from sklearn.metrics import classification_report, confusion_matrix
-    report = classification_report(
-        y_test, test_pred_labels, target_names=["Negative", "Positive"]
-    )
-    logging.info(f"\nClassification Report:\n{report}")
+        # Build model
+        logging.info("Building PERPHECT model...")
+        model = build_model(args.bacterium_threshold, args.phage_threshold)
 
-    # Save test results
-    results_df = pd.DataFrame({
-        "bacterium_id": X_test[:, 0],
-        "phage_id": X_test[:, 1],
-        "observations": y_test,
-        "predictions": test_predictions.flatten(),
-        "prediction_labels": test_pred_labels,
-    })
-    results_df.to_csv(str(output_dir / "results_test_set.csv"), index=False)
+        import keras
+        optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
+        model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
+        model.summary()
 
-    # Save summary
-    n_private_neg = len(private_negatives)
-    n_generated_neg = len(generated_negatives)
-    summary = {
-        "run_name": run_name,
-        "total_pairs": len(couples),
-        "positive_pairs": int(labels.sum()),
-        "negative_pairs": int(len(labels) - labels.sum()),
-        "negative_sources": {
-            "private_data": n_private_neg,
-            "generated": n_generated_neg,
-        },
-        "train_size": len(X_train),
-        "valid_size": len(X_valid),
-        "test_size": len(X_test),
-        "epochs_trained": len(history.history["loss"]),
-        "best_val_loss": float(min(history.history["val_loss"])),
-        "best_val_accuracy": float(max(history.history["val_accuracy"])),
-        "test_report": report,
-    }
-    with open(output_dir / "summary.json", "w") as f:
-        json.dump(summary, f, indent=2)
+        # Training
+        logging.info("Starting training...")
 
-    logging.info("=" * 60)
-    logging.info("Training complete!")
-    logging.info(f"Results saved to: {output_dir}")
-    logging.info(f"Best model: {output_dir / 'model_best.keras'}")
-    logging.info(f"Summary: {output_dir / 'summary.json'}")
-    logging.info("=" * 60)
+        train_gen = adapter.create_tf_generator(
+            X_train, y_train, batch_size=args.batch_size, shuffle=True
+        )
+        valid_gen = adapter.create_tf_generator(
+            X_valid, y_valid, batch_size=args.batch_size, shuffle=False
+        )
+        valid_steps = math.ceil(len(X_valid) / args.batch_size)
+
+        callbacks = [
+            keras.callbacks.ModelCheckpoint(
+                filepath=str(output_dir / "model_best.keras"),
+                monitor="val_loss", save_best_only=True,
+            ),
+            keras.callbacks.EarlyStopping(
+                monitor="val_loss", patience=args.patience, restore_best_weights=True,
+            ),
+            keras.callbacks.LearningRateScheduler(
+                lambda epoch: step_decay(epoch, args.learning_rate)
+            ),
+            keras.callbacks.CSVLogger(str(output_dir / "training_log.csv")),
+        ]
+
+        history = model.fit(
+            train_gen, steps_per_epoch=args.steps_per_epoch,
+            epochs=args.epochs, validation_data=valid_gen,
+            validation_steps=valid_steps, callbacks=callbacks,
+        )
+
+        # Save results
+        logging.info("Saving results...")
+        model.save(str(output_dir / "model_final.keras"))
+
+        # Save training plots
+        try:
+            from plotting_utils import historic_plots
+            import matplotlib
+            matplotlib.use("Agg")
+            acc_fig, loss_fig = historic_plots(history)
+            acc_fig.axes[0].set_title("Accuracy")
+            loss_fig.axes[0].set_title("Loss")
+            acc_fig.savefig(str(output_dir / "accuracy.png"), dpi=150, bbox_inches="tight")
+            loss_fig.savefig(str(output_dir / "val_loss.png"), dpi=150, bbox_inches="tight")
+            import matplotlib.pyplot as plt
+            plt.close("all")
+            logging.info("Training plots saved")
+        except Exception as e:
+            logging.warning(f"Could not save plots: {e}")
+
+        # Test evaluation
+        logging.info("Evaluating on test set...")
+        test_gen = adapter.create_tf_generator(
+            X_test, y_test, batch_size=args.batch_size, shuffle=False
+        )
+        test_steps = math.ceil(len(X_test) / args.batch_size)
+        test_predictions = model.predict(test_gen, steps=test_steps)
+        test_pred_labels = (test_predictions.flatten() > 0.5).astype(int)
+
+        from sklearn.metrics import classification_report
+        report = classification_report(
+            y_test, test_pred_labels, target_names=["Negative", "Positive"]
+        )
+        logging.info(f"\nClassification Report:\n{report}")
+
+        results_df = pd.DataFrame({
+            "bacterium_id": X_test[:, 0],
+            "phage_id": X_test[:, 1],
+            "observations": y_test,
+            "predictions": test_predictions.flatten(),
+            "prediction_labels": test_pred_labels,
+        })
+        results_df.to_csv(str(output_dir / "results_test_set.csv"), index=False)
+
+        # Save summary
+        n_private_neg = len(private_negatives)
+        n_generated_neg = len(generated_negatives)
+        summary = {
+            "run_name": run_name,
+            "total_pairs": len(couples),
+            "positive_pairs": int(labels.sum()),
+            "negative_pairs": int(len(labels) - labels.sum()),
+            "negative_sources": {
+                "private_data": n_private_neg,
+                "generated": n_generated_neg,
+            },
+            "train_size": len(X_train),
+            "valid_size": len(X_valid),
+            "test_size": len(X_test),
+            "split_sources": {
+                split: dict(zip(*np.unique(arr, return_counts=True)))
+                for split, arr in [("train", s_train), ("valid", s_valid), ("test", s_test)]
+            },
+            "epochs_trained": len(history.history["loss"]),
+            "best_val_loss": float(min(history.history["val_loss"])),
+            "best_val_accuracy": float(max(history.history["val_accuracy"])),
+            "test_report": report,
+        }
+        with open(output_dir / "summary.json", "w") as f:
+            json.dump(summary, f, indent=2)
+
+        logging.info("=" * 60)
+        logging.info("Training complete!")
+        logging.info(f"Results saved to: {output_dir}")
+        logging.info(f"Best model: {output_dir / 'model_best.keras'}")
+        logging.info(f"Summary: {output_dir / 'summary.json'}")
+        logging.info("=" * 60)
 
 
 if __name__ == "__main__":

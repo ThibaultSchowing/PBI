@@ -46,13 +46,13 @@ from pbi_adapter import PBIAdapter
 adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
 
 # Phase 1: Query pair IDs only (fast SQL, no sequences loaded)
-all_pairs = adapter.get_pair_ids_only()
+all_pairs = adapter.get_pair_ids_only(shuffle=True)
 
 # Phase 2: Classify by interaction type
 positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
 
 # Phase 3: Fetch sequences only for selected pairs (lazy)
-couples, labels = adapter.prepare_training_data(positive_pairs, negative_pairs)
+couples, labels, sources = adapter.prepare_training_data(positive_pairs, negative_pairs)
 
 # Phase 4: Create TF generator
 gen = adapter.create_tf_generator(couples, labels, batch_size=4)
@@ -65,25 +65,46 @@ gen = adapter.create_tf_generator(couples, labels, batch_size=4)
 1. PBI-Scope pipeline must have been run to build the database and sequence files
 2. Docker with NVIDIA Container Toolkit (for GPU training)
 
-### Train
+### 1. Prepare Test Set (notebook)
+
+Run once to create a held-out test set that is never used during training:
 
 ```bash
-# Quick test (1000 pairs, 3 epochs)
+docker compose up -d analysis
+# Open http://localhost:8886, navigate to PERPHECT/, open 01_prepare_test_set.ipynb
+```
+
+Outputs `test_data/test_set.csv` and `test_data/test_set.npz`.
+
+### 2. Train (script)
+
+```bash
+# Quick test (1000 pairs, 3 epochs, excluding held-out test pairs)
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3
+  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3 \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
 
 # Full training
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
 
-# With specific GPU
+# With cross-validation (5 folds)
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --gpu-device 0
-
-# Interactive notebook
-docker compose up -d analysis
-# Open http://localhost:8886, navigate to PERPHECT/
+  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3 \
+    --cross-validate 5 \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
 ```
+
+### 3. Evaluate (notebook)
+
+Open `02_evaluate_model.ipynb` to load the trained model and test set, then display:
+- Classification report (precision, recall, F1)
+- Confusion matrix
+- ROC-AUC curve
+- Precision-recall curve
+- Prediction distribution histogram
+- Per-source metrics (private_data vs generated negatives)
 
 Results are saved to `./outputs/` on the host.
 
@@ -107,6 +128,8 @@ Results are saved to `./outputs/` on the host.
 | `--output-dir` | /results | Output directory (mapped to `./outputs` on host) |
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
+| `--cross-validate` | 0 | K folds for stratified K-fold CV (0 = standard split) |
+| `--exclude-ids` | None | CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage) |
 | `--no-gpu` | False | Force CPU |
 | `--gpu-device` | 0 | GPU device index |
 | `--verbose` | False | Verbose logging |
@@ -171,16 +194,82 @@ Flatten → phage_features
 [bacteria_features | phage_features] → Dense(100) → Dropout(0.1) → Dense(1, sigmoid)
 ```
 
+## Data Pipeline
+
+### Pair Retrieval
+
+1. **Shuffled ID query** (`get_pair_ids_only(shuffle=True)`): Fast SQL query using `ORDER BY MD5(Phage_ID || Host_ID)` for deterministic shuffling without loading sequences.
+2. **Interaction classification** (`classify_pairs_by_interaction()`): Queries `private_interactions` to label each pair. Pairs with `"no interaction"` / `"none"` / `"negative"` become negatives (label=0). All others are positives (label=1).
+3. **Limit applied to positives only**: Private-data negatives are always included.
+
+### Negative Handling
+
+| Source | Description | Label |
+|--------|-------------|-------|
+| `positive` | Known interacting pair from `phage_host_associations` | 1 |
+| `private_data` | True negative from `private_interactions` (interaction = "no interaction") | 0 |
+| `generated` | Synthetic negative from `NegativeExampleGenerator` | 0 |
+
+Generated negatives are:
+- **Deduplicated** against private-data negatives (no duplicate pairs)
+- **Capped** at 2x the count of private-data negatives (prevents synthetic data from overwhelming true negatives)
+
+### Train/Test/Validation Split
+
+The data is split with **3-group stratification** to ensure each split contains a proportional mix of positives, private-data negatives, and generated negatives:
+
+```
+stratify_key = "pos" | "neg_private_data" | "neg_generated"
+```
+
+This ensures:
+- The positive/negative ratio is preserved across splits
+- True negatives from private data appear in all splits (not concentrated in one)
+- Generated negatives are evenly distributed
+
+Split sizes: 70% train / 15% validation / 15% test (stratified, shuffled, `random_state=42`).
+
+### Split Source Distribution (logged during training)
+
+```
+train: {'positive': N, 'private_data': M, 'generated': K}
+valid: {'positive': N', 'private_data': M', 'generated': K'}
+test:  {'positive': N'', 'private_data': M'', 'generated': K''}
+```
+
+### Summary JSON
+
+The `summary.json` file includes `split_sources` with per-split counts for each negative source, enabling analysis of model performance by data origin.
+
+## Cross-Validation
+
+Use `--cross-validate K` to run stratified K-fold cross-validation instead of a single train/val/test split:
+
+```bash
+docker compose run --rm analysis \
+  python /workspace/PERPHECT/train.py --cross-validate 5 --epochs 10
+```
+
+Each fold:
+- Gets its own `fold_<k>/` directory with `model_best.keras`, `training_log.csv`, `summary.json`
+- Uses 80/20 train/val split within the fold (stratified)
+- Is evaluated on the held-out fold test set
+
+After all folds, an aggregate `cv_summary.json` is saved with mean +/- std for val_loss, val_accuracy, and epochs trained.
+
+Use the held-out test set from `01_prepare_test_set.ipynb` for final evaluation with `02_evaluate_model.ipynb`.
+
 ## Files
 
 | File | Description |
 |------|-------------|
-| `train.py` | Production training script (CLI, GPU, YAML config) |
+| `train.py` | Production training script (CLI, GPU, YAML config, K-fold CV) |
 | `pbi_adapter.py` | Adapter bridging PBI-Scope to PERPHECT format |
 | `transforms.py` | One-hot encoding utilities |
 | `plotting_utils.py` | Training visualization utilities |
 | `config.yaml` | Default training configuration |
-| `PBI_Perphect_Training.ipynb` | Interactive training notebook |
+| `01_prepare_test_set.ipynb` | Create held-out test set (CSV + NPZ) |
+| `02_evaluate_model.ipynb` | Load model, predict test set, display metrics |
 
 ## Testing
 

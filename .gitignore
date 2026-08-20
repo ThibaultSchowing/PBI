@@ -62,6 +62,7 @@ dist/
 .ropeproject
 .test*
 tests/test*/*
+PERPHECT/test_data/
 playground/*
 tutorial/*
 

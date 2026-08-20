@@ -39,13 +39,14 @@ def _make_positive_pairs(n=5):
     })
 
 
-def _make_negative_pairs(n=5):
+def _make_negative_pairs(n=5, source="generated"):
     """Create a minimal negative pairs DataFrame."""
     return pd.DataFrame({
         "Phage_ID": [f"phage_{i+n}" for i in range(n)],
         "Host_ID": [f"host_{i+n}" for i in range(n)],
         "Phage_Sequence": ["GCTA" * 100] * n,
         "Host_Sequence": ["TTTT" * 500] * n,
+        "negative_source": [source] * n,
     })
 
 
@@ -262,7 +263,7 @@ class TestPBIAdapterGenerator:
 class TestPrepareTrainingData:
     """Tests for prepare_training_data."""
 
-    def test_returns_couples_and_labels(self):
+    def test_returns_couples_labels_and_sources(self):
         from pbi_adapter import PBIAdapter
 
         retriever = _make_retriever()
@@ -273,11 +274,13 @@ class TestPrepareTrainingData:
         )
 
         positives = _make_positive_pairs(3)
-        couples, labels = adapter.prepare_training_data(positives)
+        couples, labels, sources = adapter.prepare_training_data(positives)
 
         assert couples.shape == (3, 2)
         assert labels.shape == (3,)
+        assert sources.shape == (3,)
         assert all(labels == 1.0)
+        assert all(sources == "positive")
 
     def test_with_mixed_pairs(self):
         from pbi_adapter import PBIAdapter
@@ -290,12 +293,14 @@ class TestPrepareTrainingData:
         )
 
         positives = _make_positive_pairs(2)
-        negatives = _make_negative_pairs(2)
-        couples, labels = adapter.prepare_training_data(positives, negatives)
+        negatives = _make_negative_pairs(2, source="private_data")
+        couples, labels, sources = adapter.prepare_training_data(positives, negatives)
 
         assert len(couples) == 4
         assert sum(labels == 1.0) == 2
         assert sum(labels == 0.0) == 2
+        assert sum(sources == "positive") == 2
+        assert sum(sources == "private_data") == 2
 
     def test_raises_on_empty_data(self):
         from pbi_adapter import PBIAdapter
