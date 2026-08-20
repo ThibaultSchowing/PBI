@@ -88,10 +88,20 @@ def create_host_mapping(
     host_mapping: dict = {}
     valid_count = 0
     missing_count = 0
+    failed_count = 0
     missing_examples: list = []
 
     for _, row in metadata_df.iterrows():
         host_id = row['Host_ID']
+
+        # Skip hosts whose genome download failed — they have no FASTA file
+        # and would create orphan entries in the mapping.
+        if str(row.get('Download_Status', '')).strip().lower() == 'failed':
+            failed_count += 1
+            if len(missing_examples) < 5:
+                missing_examples.append(f"{host_id} (download failed)")
+            continue
+
         fasta_file = input_dir_path / f"{host_id}.fna"
 
         if fasta_file.exists() and fasta_file.stat().st_size > 0:
@@ -106,6 +116,10 @@ def create_host_mapping(
     if not host_mapping:
         raise ValueError("❌ No valid host FASTA files found!")
 
+    if failed_count:
+        logging.info(
+            f"⏭️  Skipped {failed_count} host(s) with failed downloads"
+        )
     if missing_count:
         logging.warning(
             f"⚠️  {missing_count} host file(s) were missing or empty"

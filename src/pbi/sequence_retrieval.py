@@ -1229,7 +1229,51 @@ class SequenceRetriever:
 
         return self.conn.execute(query, params).fetchdf()
 
-    
+    def get_pair_ids_only(
+        self,
+        shuffle: bool = False,
+        seed: Optional[int] = None,
+        limit: Optional[int] = None,
+    ) -> pd.DataFrame:
+        """Return distinct (Phage_ID, Host_ID) pairs without loading sequences.
+
+        Lightweight alternative to :meth:`get_phage_host_pairs` when only the
+        pair identifiers are needed (e.g. for counting, sampling, or building
+        negative-example sets).
+
+        Args:
+            shuffle: If ``True``, order rows deterministically using the MD5
+                hash of the concatenated pair IDs.  This produces a stable,
+                pseudo-random ordering without requiring Python-side
+                shuffling, which is useful for reproducible sub-sampling of
+                large pair lists.
+            seed: Reserved for future use.  The MD5 ordering is inherently
+                deterministic so *seed* currently has no effect.
+            limit: Optional maximum number of pairs to return.
+
+        Returns:
+            DataFrame with columns ``Phage_ID`` and ``Host_ID``.
+
+        Example:
+            >>> # All pairs in deterministic (alphabetical) order
+            >>> pairs = retriever.get_pair_ids_only()
+            >>> len(pairs)
+            1240905
+
+            >>> # Deterministic pseudo-random order for reproducible sampling
+            >>> pairs = retriever.get_pair_ids_only(shuffle=True)
+            >>> pairs.head()
+
+            >>> # First 1000 pairs in shuffled order
+            >>> sample = retriever.get_pair_ids_only(shuffle=True, limit=1000)
+        """
+        query = "SELECT DISTINCT Phage_ID, Host_ID FROM phage_host_associations"
+        if shuffle:
+            query += " ORDER BY MD5(Phage_ID || Host_ID)"
+        if limit:
+            query += f" LIMIT {int(limit)}"
+        return self.conn.execute(query).fetchdf()
+
     def get_host_sequences(self, query: str, limit: Optional[int] = None) -> pd.DataFrame:
         """
         Get host sequences based on SQL query
