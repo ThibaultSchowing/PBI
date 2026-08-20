@@ -377,8 +377,10 @@ def main():
     logging.info(f"Generating synthetic negatives (ratio={args.negative_ratio})...")
     neg_gen = NegativeExampleGenerator(retriever)
     max_generated = max(len(private_negatives) * 2, 100) if len(private_negatives) > 0 else len(positive_pairs)
+    target_count = min(len(positive_pairs), max_generated)
+    effective_ratio = target_count / len(positive_pairs) if len(positive_pairs) > 0 else 0
     generated_negatives = neg_gen.generate_random_negatives(
-        positive_pairs, ratio=args.negative_ratio
+        positive_pairs, ratio=effective_ratio
     )
 
     # Deduplicate against private negatives
@@ -397,16 +399,6 @@ def main():
                 f"Removed {before_dedup - len(generated_negatives)} generated negatives "
                 f"that duplicated private data negatives"
             )
-
-    # Cap generated negatives
-    if len(generated_negatives) > max_generated:
-        logging.info(
-            f"Capping generated negatives: {len(generated_negatives)} -> {max_generated} "
-            f"(2x private negatives)"
-        )
-        generated_negatives = generated_negatives.sample(
-            n=max_generated, random_state=42
-        ).reset_index(drop=True)
 
     generated_negatives["negative_source"] = "generated"
     logging.info(f"Generated {len(generated_negatives)} synthetic negative pairs")
