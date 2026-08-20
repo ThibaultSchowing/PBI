@@ -624,7 +624,7 @@ def main():
             "valid_size": len(X_valid),
             "test_size": len(X_test),
             "split_sources": {
-                split: dict(zip(*np.unique(arr, return_counts=True)))
+                split: {str(k): int(v) for k, v in zip(*np.unique(arr, return_counts=True))}
                 for split, arr in [("train", s_train), ("valid", s_valid), ("test", s_test)]
             },
             "epochs_trained": len(history.history["loss"]),
