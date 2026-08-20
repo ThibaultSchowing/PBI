@@ -80,6 +80,10 @@ class PBIAdapter:
         self._host_sequences: Dict[str, str] = {}
         self._phage_sequences: Dict[str, str] = {}
 
+        # Track IDs that failed to avoid repeated warnings
+        self._failed_hosts: set = set()
+        self._failed_phages: set = set()
+
     def get_pair_ids_only(self, shuffle: bool = False) -> pd.DataFrame:
         """
         Query all phage-host pair IDs without fetching sequences.
@@ -87,6 +91,9 @@ class PBIAdapter:
         Returns a DataFrame with Phage_ID and Host_ID columns only.
         This is fast (pure SQL) and sufficient for classify_pairs_by_interaction().
         Sequences are fetched lazily by prepare_training_data() for selected pairs.
+
+        Pairs where the host or phage has no registered FASTA file are
+        automatically excluded (they would fail during sequence fetching).
 
         Args:
             shuffle: If True, randomize row order using a deterministic hash.
@@ -100,7 +107,27 @@ class PBIAdapter:
             query += " ORDER BY MD5(Phage_ID || Host_ID)"
         df = self.retriever.conn.execute(query).fetchdf()
         logger.info(f"Queried {len(df):,} pair IDs (no sequences)")
+
+        # Filter out pairs where host/phage FASTA is not registered
+        df = self._filter_pairs_without_sequences(df)
         return df
+
+    def _filter_pairs_without_sequences(self, pairs: pd.DataFrame) -> pd.DataFrame:
+        """Remove pairs where host has no FASTA file registered."""
+        if not self.retriever._use_host_mapping:
+            return pairs
+
+        host_mapping = self.retriever._host_mapping or {}
+
+        before = len(pairs)
+        pairs = pairs[pairs["Host_ID"].isin(host_mapping)].reset_index(drop=True)
+        dropped = before - len(pairs)
+        if dropped > 0:
+            logger.info(
+                f"Dropped {dropped:,} pairs with unregistered host FASTA files "
+                f"({len(pairs):,} remaining)"
+            )
+        return pairs
 
     def _map_host_id(self, pbi_host_id: str) -> int:
         """Map a PBI-Scope Host_ID string to a PERPHECT integer ID."""
@@ -120,6 +147,8 @@ class PBIAdapter:
         """Fetch and cache a host sequence from PBI-Scope."""
         if host_id in self._host_sequences:
             return self._host_sequences[host_id]
+        if host_id in self._failed_hosts:
+            return None
 
         try:
             seq = self.retriever.get_host_sequence(host_id, contig_mode="concat")
@@ -131,8 +160,10 @@ class PBIAdapter:
                     f"Host {host_id} too short ({len(seq) if seq else 0} bp), "
                     f"minimum is {self.bacterium_min_length}"
                 )
+                self._failed_hosts.add(host_id)
                 return None
         except Exception as e:
+            self._failed_hosts.add(host_id)
             logger.warning(f"Failed to fetch host sequence for {host_id}: {e}")
             return None
 
@@ -140,6 +171,8 @@ class PBIAdapter:
         """Fetch and cache a phage sequence from PBI-Scope."""
         if phage_id in self._phage_sequences:
             return self._phage_sequences[phage_id]
+        if phage_id in self._failed_phages:
+            return None
 
         try:
             seq = self.retriever.get_phage_sequence(phage_id)
@@ -151,8 +184,10 @@ class PBIAdapter:
                     f"Phage {phage_id} too short ({len(seq) if seq else 0} bp), "
                     f"minimum is {self.phage_min_length}"
                 )
+                self._failed_phages.add(phage_id)
                 return None
         except Exception as e:
+            self._failed_phages.add(phage_id)
             logger.warning(f"Failed to fetch phage sequence for {phage_id}: {e}")
             return None
 
@@ -484,6 +519,10 @@ class PBIAdapter:
             f"Prepared {len(couples)} pairs "
             f"({int(labels.sum())} positive, {int(len(labels) - labels.sum())} negative)"
         )
+        if self._failed_hosts:
+            logger.info(f"Dropped {len(self._failed_hosts)} hosts with missing/too-short sequences")
+        if self._failed_phages:
+            logger.info(f"Dropped {len(self._failed_phages)} phages with missing/too-short sequences")
 
         return couples, labels, sources
 
