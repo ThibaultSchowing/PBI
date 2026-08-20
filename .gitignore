@@ -6,6 +6,7 @@ __pycache__/
 # directories and notebook stuff
 data/
 *.csv
+local_raw_data/
 
 # Private data directory — the directory is tracked but its contents are gitignored.
 # Place your private phage/host datasets here (one subdirectory per source).
@@ -61,6 +62,7 @@ dist/
 .ropeproject
 .test*
 tests/test*/*
+PERPHECT/test_data/
 playground/*
 tutorial/*
 

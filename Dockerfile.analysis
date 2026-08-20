@@ -1,16 +1,25 @@
 # Dockerfile for PBI Analysis Service
 # Provides direct database and FASTA file access for efficient bulk data retrieval
-FROM python:3.10-slim
+# Includes NVIDIA CUDA support for GPU-accelerated ML training
+# Base image: CUDA 12.2 + cuDNN 8.9.x (Pascal-compatible)
+# Do NOT use cuDNN 9.x images — they break Pascal GPUs (sm_6.1, GTX 1080 Ti)
+# Do NOT use tensorflow[and-cuda] — it bundles cuDNN 9.x internally
+FROM nvidia/cuda:12.2.2-cudnn8-devel-ubuntu22.04
 
 # Set working directory
 WORKDIR /workspace
 
-# Install system dependencies
+# Install system dependencies including Python 3.10
 RUN apt-get update && apt-get install -y \
     git \
     curl \
     build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-pip \
+    python3-dev \
+    python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/python3 /usr/bin/python
 
 # Copy entire project to get workflow scripts and all dependencies
 COPY . /app/
@@ -18,16 +27,10 @@ COPY . /app/
 # Set PYTHONPATH to include /app for proper module imports
 ENV PYTHONPATH=/app:$PYTHONPATH
 
-# NOTE: SSL verification workaround for GitHub Actions CI environment
-# This Dockerfile uses --trusted-host flags to work around self-signed certificates
-# in the CI environment. In production, these flags can be removed if you have
-# proper CA certificates configured. To use without these flags, remove the
-# --trusted-host options from the pip install commands below.
-
 # Install PBI package with analysis extras
 RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org -e /app/
 
-# Install Jupyter and scientific computing stack
+# Install Jupyter and scientific computing stack with CUDA-aware TensorFlow
 RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pythonhosted.org \
     jupyterlab==4.0.9 \
     ipykernel \
@@ -40,7 +43,10 @@ RUN pip install --no-cache-dir --trusted-host pypi.org --trusted-host files.pyth
     biopython>=1.80 \
     pyarrow>=14.0.0 \
     torch>=2.0.0 \
-    scikit-learn>=1.3.0
+    scikit-learn>=1.3.0 \
+    keras==2.15.0 \
+    tensorflow==2.15.1 \
+    pyyaml>=6.0
 
 # Expose Jupyter Lab port
 EXPOSE 8888

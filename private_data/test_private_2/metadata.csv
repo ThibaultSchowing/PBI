@@ -1,4 +1,0 @@
-Phage_ID,Host_ID,Host_name,Source_DB,interaction,Description,Year_Isolated
-TEST2_PHAGE_ZETA,TEST2_HOST_KPNEU_D,Klebsiella pneumoniae MG2,test_private_2,virulent,Test lytic phage infecting K. pneumoniae,2024
-TEST2_PHAGE_ETA,TEST2_HOST_KPNEU_D,Klebsiella pneumoniae MG2,test_private_2,temperate,Test lysogenic phage infecting K. pneumoniae,2024
-TEST2_PHAGE_THETA,TEST2_HOST_SALMO_E,Salmonella enterica LT2,test_private_2,virulent,Test lytic phage infecting S. enterica,2024
