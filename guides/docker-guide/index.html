@@ -1296,8 +1296,8 @@
 <p>The <code>analysis</code> container runs Jupyter Lab with authentication disabled for local development. See <a href="../analysis-guide/#️-security-notice">Analysis Container Guide</a> for details and hardening steps.</p>
 <h2 id="uidgid-setup">UID/GID Setup<a class="headerlink" href="#uidgid-setup" title="Permanent link">&para;</a></h2>
 <p>Both <code>pipeline</code> and <code>analysis</code> services run as your host user to prevent root-owned files. Set <code>UID</code> and <code>GID</code> in <code>.env</code> after cloning:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;UID=</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;GID=</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"UID=</span><span class="k">$(</span>id<span class="w"> </span>-u<span class="k">)</span><span class="s2">"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"GID=</span><span class="k">$(</span>id<span class="w"> </span>-g<span class="k">)</span><span class="s2">"</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>.env
 </code></pre></div>
 <p>See <a href="../installation/">Installation Guide</a> for full explanation.</p>
 <h2 id="api-service">API Service<a class="headerlink" href="#api-service" title="Permanent link">&para;</a></h2>

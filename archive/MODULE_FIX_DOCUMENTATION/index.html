@@ -1418,9 +1418,9 @@
 <p><strong>File</strong>: <code>setup.py</code></p>
 <p><strong>Changes</strong>:
 - Added missing dependencies:
-  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="s2">&quot;pyyaml&gt;=6.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="s2">&quot;aiohttp&gt;=3.8.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s2">&quot;aiofiles&gt;=23.0.0&quot;</span><span class="p">,</span>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="s2">"pyyaml&gt;=6.0"</span><span class="p">,</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="s2">"aiohttp&gt;=3.8.0"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="s2">"aiofiles&gt;=23.0.0"</span><span class="p">,</span>
 </code></pre></div></p>
 <p><strong>Why</strong>: These packages are required by <code>download_host_genomes_optimized.py</code> for async downloads and YAML config parsing.</p>
 <h3 id="2-created-python-package-structure">2. Created Python Package Structure<a class="headerlink" href="#2-created-python-package-structure" title="Permanent link">&para;</a></h3>
@@ -1471,16 +1471,16 @@
 <p><strong>Changes</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1"># Before:</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">project_root</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_root</span> <span class="o">/</span> <span class="s1">&#39;workflow&#39;</span> <span class="o">/</span> <span class="s1">&#39;scripts&#39;</span> <span class="o">/</span> <span class="s1">&#39;sequences&#39;</span><span class="p">))</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_root</span> <span class="o">/</span> <span class="s1">'workflow'</span> <span class="o">/</span> <span class="s1">'scripts'</span> <span class="o">/</span> <span class="s1">'sequences'</span><span class="p">))</span>
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">download_host_genomes_optimized</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizedHostGenomeDownloader</span><span class="p">,</span> <span class="n">load_config</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="c1"># After:</span>
 <a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="k">try</span><span class="p">:</span>
 <a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="kn">from</span><span class="w"> </span><span class="nn">workflow.scripts.sequences.download_host_genomes_optimized</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizedHostGenomeDownloader</span><span class="p">,</span> <span class="n">load_config</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;✅ Imports successful&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"✅ Imports successful"</span><span class="p">)</span>
 <a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="k">except</span> <span class="ne">ModuleNotFoundError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;❌ Import failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Make sure you&#39;re running this notebook in the analysis Docker container.&quot;</span><span class="p">)</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"❌ Import failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">"Make sure you're running this notebook in the analysis Docker container."</span><span class="p">)</span>
 <a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>    <span class="c1"># ... helpful error message ...</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>    <span class="k">raise</span>
 </code></pre></div></p>
@@ -1556,13 +1556,13 @@
 </ol>
 <h2 id="verification-commands">Verification Commands<a class="headerlink" href="#verification-commands" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Verify imports work</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from workflow.scripts.sequences.download_host_genomes_optimized import OptimizedHostGenomeDownloader; print(&#39;✅ Success&#39;)&quot;</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"from workflow.scripts.sequences.download_host_genomes_optimized import OptimizedHostGenomeDownloader; print('✅ Success')"</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># Verify dependencies</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import yaml, aiohttp, aiofiles; print(&#39;✅ All deps installed&#39;)&quot;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import yaml, aiohttp, aiofiles; print('✅ All deps installed')"</span>
 <a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># Verify from workspace context</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-w<span class="w"> </span>/workspace<span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from workflow.scripts.sequences.download_host_genomes_optimized import OptimizedHostGenomeDownloader; print(&#39;✅ Workspace context works&#39;)&quot;</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-w<span class="w"> </span>/workspace<span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"from workflow.scripts.sequences.download_host_genomes_optimized import OptimizedHostGenomeDownloader; print('✅ Workspace context works')"</span>
 </code></pre></div>
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>

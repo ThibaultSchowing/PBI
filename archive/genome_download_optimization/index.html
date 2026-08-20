@@ -1683,8 +1683,8 @@
 - Complies with NCBI usage guidelines</p>
 <p><strong>Usage</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Set your NCBI API key (optional but recommended)</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Run pipeline</span>
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>snakemake<span class="w"> </span>--use-conda
@@ -1741,14 +1741,14 @@
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="nt">cache</span><span class="p">:</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/cache/genomes&quot;</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">"data/cache/genomes"</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nt">parsing</span><span class="p">:</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span><span class="nt">fasta_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fasta-2line&quot;</span><span class="w">    </span><span class="c1"># Handles comments</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="w">  </span><span class="nt">fasta_format</span><span class="p">:</span><span class="w"> </span><span class="s">"fasta-2line"</span><span class="w">    </span><span class="c1"># Handles comments</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="nt">ncbi</span><span class="p">:</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${NCBI_EMAIL}&quot;</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${NCBI_API_KEY}&quot;</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="s">"${NCBI_EMAIL}"</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="w">  </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="s">"${NCBI_API_KEY}"</span>
 </code></pre></div></p>
 <h2 id="performance-improvements">Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permanent link">&para;</a></h2>
 <h3 id="before-optimization">Before Optimization<a class="headerlink" href="#before-optimization" title="Permanent link">&para;</a></h3>
@@ -1781,15 +1781,15 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># In Snakefile</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">rule</span> <span class="n">download_host_genomes_optimized</span><span class="p">:</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="nb">input</span><span class="p">:</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/csv/merged/merged_phage_metadata.csv&quot;</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="s2">"data/intermediate/csv/merged/merged_phage_metadata.csv"</span>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="n">output</span><span class="p">:</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/csv/merged/host_metadata.csv&quot;</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="s2">"data/intermediate/csv/merged/host_metadata.csv"</span>
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="n">params</span><span class="p">:</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/fasta/hosts&quot;</span><span class="p">,</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">config</span> <span class="o">=</span> <span class="s2">&quot;workflow/config/genome_download_config.yaml&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">"data/intermediate/fasta/hosts"</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="n">config</span> <span class="o">=</span> <span class="s2">"workflow/config/genome_download_config.yaml"</span><span class="p">,</span>
 <a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="n">limit</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Set to number for testing</span>
 <a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="n">script</span><span class="p">:</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        <span class="s2">&quot;scripts/sequences/download_host_genomes_optimized.py&quot;</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>        <span class="s2">"scripts/sequences/download_host_genomes_optimized.py"</span>
 </code></pre></div>
 <h3 id="environment-setup">Environment Setup<a class="headerlink" href="#environment-setup" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Install dependencies</span>
@@ -1797,8 +1797,8 @@
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>conda<span class="w"> </span>activate<span class="w"> </span>sequences
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># Set NCBI credentials</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span><span class="w">  </span><span class="c1"># Optional but recommended</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span><span class="w">  </span><span class="c1"># Optional but recommended</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># Run</span>
 <a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>snakemake<span class="w"> </span>download_host_genomes_optimized<span class="w"> </span>--use-conda
@@ -1815,13 +1815,13 @@
 <h3 id="issue-cache-not-being-used">Issue: Cache not being used<a class="headerlink" href="#issue-cache-not-being-used" title="Permanent link">&para;</a></h3>
 <p><strong>Solution</strong>: Check cache directory permissions and SQLite database:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>ls<span class="w"> </span>-la<span class="w"> </span>data/cache/genomes/
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">&quot;SELECT COUNT(*) FROM genomes WHERE status=&#39;success&#39;;&quot;</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">"SELECT COUNT(*) FROM genomes WHERE status='success';"</span>
 </code></pre></div>
 <h3 id="issue-gtdb-identifiers-still-being-processed">Issue: GTDB identifiers still being processed<a class="headerlink" href="#issue-gtdb-identifiers-still-being-processed" title="Permanent link">&para;</a></h3>
 <p><strong>Solution</strong>: Verify validation is enabled in config:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="nt">validation</span><span class="p">:</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">  </span><span class="nt">skip_gtdb_identifiers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">gtdb_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sp\\d{9}&quot;</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="nt">gtdb_pattern</span><span class="p">:</span><span class="w"> </span><span class="s">"sp\\d{9}"</span>
 </code></pre></div>
 <h2 id="migration-guide">Migration Guide<a class="headerlink" href="#migration-guide" title="Permanent link">&para;</a></h2>
 <h3 id="from-original-to-optimized-script">From Original to Optimized Script<a class="headerlink" href="#from-original-to-optimized-script" title="Permanent link">&para;</a></h3>
@@ -1841,8 +1841,8 @@
 </li>
 <li>
 <p><strong>Set environment variables</strong>:
-   <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
-<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
 </code></pre></div></p>
 </li>
 <li>
@@ -1861,11 +1861,11 @@
 </ol>
 <h3 id="setting-api-key">Setting API Key<a class="headerlink" href="#setting-api-key" title="Permanent link">&para;</a></h3>
 <p><strong>Linux/Mac</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export NCBI_API_KEY=&quot;your_api_key_here&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export NCBI_API_KEY="your_api_key_here"'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 </code></pre></div></p>
 <p><strong>Windows</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">setx</span> <span class="n">NCBI_API_KEY</span> <span class="s2">&quot;your_api_key_here&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">setx</span> <span class="n">NCBI_API_KEY</span> <span class="s2">"your_api_key_here"</span>
 </code></pre></div></p>
 <h2 id="testing">Testing<a class="headerlink" href="#testing" title="Permanent link">&para;</a></h2>
 <h3 id="unit-tests">Unit Tests<a class="headerlink" href="#unit-tests" title="Permanent link">&para;</a></h3>
@@ -1893,26 +1893,26 @@
 <a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a>cat<span class="w"> </span>data/progress.json
 <a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
 <a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1"># Check cache stats</span>
-<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="s2">  SELECT status, COUNT(*) as count </span>
 <a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="s2">  FROM genomes </span>
 <a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="s2">  GROUP BY status;</span>
-<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="s2">&quot;</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="s2">"</span>
 <a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a>
 <a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="c1"># View failure log</span>
 <a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a>cat<span class="w"> </span>data/failed_downloads.txt
 </code></pre></div>
 <h3 id="performance-metrics">Performance Metrics<a class="headerlink" href="#performance-metrics" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1"># Check download rate</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>tail<span class="w"> </span>-f<span class="w"> </span>data/logs/genome_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Rate:&quot;</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a>tail<span class="w"> </span>-f<span class="w"> </span>data/logs/genome_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"Rate:"</span>
 <a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
 <a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1"># Cache hit rate</span>
-<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a>sqlite3<span class="w"> </span>data/cache/metadata.db<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="s2">  SELECT </span>
 <a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="s2">    COUNT(*) as total,</span>
-<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="s2">    SUM(CASE WHEN status=&#39;success&#39; THEN 1 ELSE 0 END) as successful</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="s2">    SUM(CASE WHEN status='success' THEN 1 ELSE 0 END) as successful</span>
 <a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="s2">  FROM genomes;</span>
-<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="s2">&quot;</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="s2">"</span>
 </code></pre></div>
 <h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
 <ul>

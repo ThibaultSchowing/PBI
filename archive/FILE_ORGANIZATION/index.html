@@ -1699,13 +1699,13 @@
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>│    data/intermediate/csv/merged/                            │
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>│                                                             │
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>│    merged_phage_metadata.csv                               │
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│    (Contains &quot;Host&quot; column with species names)             │
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>│    (Contains "Host" column with species names)             │
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>└─────────────────────────────────────────────────────────────┘
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>                         │
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>                         │ Extract unique hosts
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>                         │ Filter out: null, &#39;-&#39;, &#39;unknown&#39;
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>                         │ Normalize to: &#39;Genus species&#39;
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>                         │ Skip GTDB: &#39;sp\d{9}&#39;
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>                         │ Filter out: null, '-', 'unknown'
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>                         │ Normalize to: 'Genus species'
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>                         │ Skip GTDB: 'sp\d{9}'
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>                         ↓
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>┌─────────────────────────────────────────────────────────────┐
 <a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>│              Validated Species List                         │
@@ -1722,7 +1722,7 @@
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a>┌─────────────────────────────────────────────────────────────┐
 <a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a>│                     NCBI RefSeq                             │
 <a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a>│                                                             │
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>│  Search: &quot;Species name&quot;[Organism] AND &quot;latest refseq&quot;      │
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a>│  Search: "Species name"[Organism] AND "latest refseq"      │
 <a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a>│  Return: Assembly accession (e.g., GCF_000005845.2)        │
 <a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a>└─────────────────────────────────────────────────────────────┘
 <a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a>                         │
@@ -1878,18 +1878,18 @@ to file path.</p>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># Load host mapping</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data/processed/sequences/host_fasta_mapping.json&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'data/processed/sequences/host_fasta_mapping.json'</span><span class="p">,</span> <span class="s1">'r'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">host_mapping</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># Get file path for a specific host</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">host_id</span> <span class="o">=</span> <span class="s1">&#39;GCF_000005845.2&#39;</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="n">host_id</span> <span class="o">=</span> <span class="s1">'GCF_000005845.2'</span>
 <a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="n">fasta_path</span> <span class="o">=</span> <span class="n">host_mapping</span><span class="p">[</span><span class="n">host_id</span><span class="p">]</span>
 <a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>
 <a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="c1"># Open and read the individual host file</span>
 <a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="n">host_fasta</span> <span class="o">=</span> <span class="n">Fasta</span><span class="p">(</span><span class="n">fasta_path</span><span class="p">)</span>
 <a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="n">seq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">host_fasta</span><span class="o">.</span><span class="n">keys</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Get first sequence ID in file</span>
-<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">host_fasta</span><span class="p">[</span><span class="n">seq</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Sequence: </span><span class="si">{</span><span class="n">host_fasta</span><span class="p">[</span><span class="n">seq</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">host_fasta</span><span class="p">[</span><span class="n">seq</span><span class="p">])</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Sequence: </span><span class="si">{</span><span class="n">host_fasta</span><span class="p">[</span><span class="n">seq</span><span class="p">][:</span><span class="mi">100</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="via-pbi-api">Via PBI API<a class="headerlink" href="#via-pbi-api" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pbi</span><span class="w"> </span><span class="kn">import</span> <span class="n">quick_connect</span>
@@ -1898,9 +1898,9 @@ to file path.</p>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="n">retriever</span> <span class="o">=</span> <span class="n">quick_connect</span><span class="p">()</span>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>
 <a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="c1"># Get host sequence (on-demand loading from individual files)</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">host_id</span> <span class="o">=</span> <span class="s1">&#39;GCF_000005845.2&#39;</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="n">host_id</span> <span class="o">=</span> <span class="s1">'GCF_000005845.2'</span>
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="n">host_sequence</span> <span class="o">=</span> <span class="n">retriever</span><span class="o">.</span><span class="n">get_host_sequence</span><span class="p">(</span><span class="n">host_id</span><span class="p">)</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Host sequence length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">host_sequence</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Host sequence length: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">host_sequence</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h2>
 <h3 id="regular-cleanup">Regular Cleanup<a class="headerlink" href="#regular-cleanup" title="Permanent link">&para;</a></h3>
@@ -1912,15 +1912,15 @@ to file path.</p>
 <a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>rm<span class="w"> </span>-f<span class="w"> </span>data/cache/metadata.db
 <a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>
 <a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="c1"># Remove old logs</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>find<span class="w"> </span>data/logs<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.log&quot;</span><span class="w"> </span>-mtime<span class="w"> </span>+30<span class="w"> </span>-delete
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>find<span class="w"> </span>data/logs<span class="w"> </span>-name<span class="w"> </span><span class="s2">"*.log"</span><span class="w"> </span>-mtime<span class="w"> </span>+30<span class="w"> </span>-delete
 </code></pre></div>
 <h3 id="verify-file-integrity">Verify File Integrity<a class="headerlink" href="#verify-file-integrity" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1"># Check for empty files</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>find<span class="w"> </span>data/intermediate/fasta/hosts<span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.fna&quot;</span><span class="w"> </span>-size<span class="w"> </span><span class="m">0</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a>find<span class="w"> </span>data/intermediate/fasta/hosts<span class="w"> </span>-name<span class="w"> </span><span class="s2">"*.fna"</span><span class="w"> </span>-size<span class="w"> </span><span class="m">0</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
 <a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="c1"># Verify FASTA format</span>
 <a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="k">for</span><span class="w"> </span>f<span class="w"> </span><span class="k">in</span><span class="w"> </span>data/intermediate/fasta/hosts/*.fna<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$f</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">&quot;^&gt;&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Invalid: </span><span class="nv">$f</span><span class="s2">&quot;</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">    </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-q<span class="w"> </span><span class="s2">"^&gt;"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Invalid: </span><span class="nv">$f</span><span class="s2">"</span>
 <a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="k">done</span>
 <a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
 <a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1"># Check index files exist</span>

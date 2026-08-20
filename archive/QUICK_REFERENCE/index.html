@@ -1415,17 +1415,17 @@
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>docker<span class="w"> </span>compose<span class="w"> </span>down
 </code></pre></div>
 <h3 id="verify-imports-work">Verify Imports Work<a class="headerlink" href="#verify-imports-work" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>pbi-analysis<span class="w"> </span>python3<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s2">from workflow.scripts.sequences.download_host_genomes_optimized import OptimizedHostGenomeDownloader</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s2">print(&#39;✅ Import successful!&#39;)</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s2">print('✅ Import successful!')</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">"</span>
 </code></pre></div>
 <h2 id="new-import-pattern">New Import Pattern<a class="headerlink" href="#new-import-pattern" title="Permanent link">&para;</a></h2>
 <h3 id="before-dont-use-this">Before (❌ Don't use this)<a class="headerlink" href="#before-dont-use-this" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">project_root</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_root</span> <span class="o">/</span> <span class="s1">&#39;workflow&#39;</span> <span class="o">/</span> <span class="s1">&#39;scripts&#39;</span> <span class="o">/</span> <span class="s1">&#39;sequences&#39;</span><span class="p">))</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">project_root</span> <span class="o">/</span> <span class="s1">'workflow'</span> <span class="o">/</span> <span class="s1">'scripts'</span> <span class="o">/</span> <span class="s1">'sequences'</span><span class="p">))</span>
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="kn">from</span><span class="w"> </span><span class="nn">download_host_genomes_optimized</span><span class="w"> </span><span class="kn">import</span> <span class="n">OptimizedHostGenomeDownloader</span>
 </code></pre></div>
 <h3 id="after-use-this">After (✅ Use this)<a class="headerlink" href="#after-use-this" title="Permanent link">&para;</a></h3>

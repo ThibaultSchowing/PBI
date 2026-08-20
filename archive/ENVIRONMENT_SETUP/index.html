@@ -1645,16 +1645,16 @@
 <h2 id="quick-setup">Quick Setup<a class="headerlink" href="#quick-setup" title="Permanent link">&para;</a></h2>
 <h3 id="minimal-setup-required">Minimal Setup (Required)<a class="headerlink" href="#minimal-setup-required" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># Set NCBI email (required by NCBI API)</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
 </code></pre></div>
 <h3 id="recommended-setup">Recommended Setup<a class="headerlink" href="#recommended-setup" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Set NCBI credentials</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># Make persistent (add to ~/.bashrc or ~/.zshrc)</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export NCBI_EMAIL=&quot;your.email@example.com&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export NCBI_API_KEY=&quot;your_api_key_here&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export NCBI_EMAIL="your.email@example.com"'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export NCBI_API_KEY="your_api_key_here"'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
 </code></pre></div>
 <h2 id="ncbi-credentials">NCBI Credentials<a class="headerlink" href="#ncbi-credentials" title="Permanent link">&para;</a></h2>
@@ -1685,52 +1685,52 @@
 </ol>
 <h4 id="step-3-set-api-key">Step 3: Set API Key<a class="headerlink" href="#step-3-set-api-key" title="Permanent link">&para;</a></h4>
 <p><strong>Linux/macOS</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># Make permanent</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;export NCBI_API_KEY=&quot;your_api_key_here&quot;&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'export NCBI_API_KEY="your_api_key_here"'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nb">source</span><span class="w"> </span>~/.bashrc
 </code></pre></div></p>
 <p><strong>Windows (PowerShell)</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">$env:NCBI_API_KEY</span> <span class="p">=</span> <span class="s2">&quot;your_api_key_here&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">$env:NCBI_API_KEY</span> <span class="p">=</span> <span class="s2">"your_api_key_here"</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
 <a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="c"># Make permanent</span>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">setx</span> <span class="n">NCBI_API_KEY</span> <span class="s2">&quot;your_api_key_here&quot;</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">setx</span> <span class="n">NCBI_API_KEY</span> <span class="s2">"your_api_key_here"</span>
 </code></pre></div></p>
 <p><strong>Windows (Command Prompt)</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>set NCBI_API_KEY=your_api_key_here
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>:: Make permanent
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>setx NCBI_API_KEY &quot;your_api_key_here&quot;
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>setx NCBI_API_KEY "your_api_key_here"
 </code></pre></div></p>
 <h3 id="verify-ncbi-credentials">Verify NCBI Credentials<a class="headerlink" href="#verify-ncbi-credentials" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Check if variables are set</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NCBI Email: </span><span class="nv">$NCBI_EMAIL</span><span class="s2">&quot;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;NCBI API Key: </span><span class="si">${</span><span class="nv">NCBI_API_KEY</span><span class="p">:</span><span class="nv">0</span><span class="p">:</span><span class="nv">10</span><span class="si">}</span><span class="s2">...&quot;</span><span class="w">  </span><span class="c1"># Show only first 10 chars</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"NCBI Email: </span><span class="nv">$NCBI_EMAIL</span><span class="s2">"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"NCBI API Key: </span><span class="si">${</span><span class="nv">NCBI_API_KEY</span><span class="p">:</span><span class="nv">0</span><span class="p">:</span><span class="nv">10</span><span class="si">}</span><span class="s2">..."</span><span class="w">  </span><span class="c1"># Show only first 10 chars</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="c1"># Test NCBI connection</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="s2">from Bio import Entrez</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="s2">import os</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s2">Entrez.email = os.getenv(&#39;NCBI_EMAIL&#39;)</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s2">Entrez.api_key = os.getenv(&#39;NCBI_API_KEY&#39;)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="s2">Entrez.email = os.getenv('NCBI_EMAIL')</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="s2">Entrez.api_key = os.getenv('NCBI_API_KEY')</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="s2">if Entrez.api_key:</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s2">    print(&#39;✅ API Key detected - 10 req/sec rate limit&#39;)</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="s2">    print('✅ API Key detected - 10 req/sec rate limit')</span>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="s2">else:</span>
-<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s2">    print(&#39;⚠️  No API Key - 3 req/sec rate limit&#39;)</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="s2">    print('⚠️  No API Key - 3 req/sec rate limit')</span>
 <a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>
 <a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="s2"># Test search</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s2">handle = Entrez.esearch(db=&#39;assembly&#39;, term=&#39;Escherichia coli&#39;, retmax=1)</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="s2">handle = Entrez.esearch(db='assembly', term='Escherichia coli', retmax=1)</span>
 <a id="__codelineno-5-20" name="__codelineno-5-20" href="#__codelineno-5-20"></a><span class="s2">result = Entrez.read(handle)</span>
 <a id="__codelineno-5-21" name="__codelineno-5-21" href="#__codelineno-5-21"></a><span class="s2">handle.close()</span>
 <a id="__codelineno-5-22" name="__codelineno-5-22" href="#__codelineno-5-22"></a>
-<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="s2">if result[&#39;IdList&#39;]:</span>
-<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="s2">    print(&#39;✅ NCBI connection successful&#39;)</span>
+<a id="__codelineno-5-23" name="__codelineno-5-23" href="#__codelineno-5-23"></a><span class="s2">if result['IdList']:</span>
+<a id="__codelineno-5-24" name="__codelineno-5-24" href="#__codelineno-5-24"></a><span class="s2">    print('✅ NCBI connection successful')</span>
 <a id="__codelineno-5-25" name="__codelineno-5-25" href="#__codelineno-5-25"></a><span class="s2">else:</span>
-<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="s2">    print(&#39;❌ NCBI connection failed&#39;)</span>
-<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="s2">&quot;</span>
+<a id="__codelineno-5-26" name="__codelineno-5-26" href="#__codelineno-5-26"></a><span class="s2">    print('❌ NCBI connection failed')</span>
+<a id="__codelineno-5-27" name="__codelineno-5-27" href="#__codelineno-5-27"></a><span class="s2">"</span>
 </code></pre></div>
 <h2 id="system-dependencies">System Dependencies<a class="headerlink" href="#system-dependencies" title="Permanent link">&para;</a></h2>
 <h3 id="ncbi-datasets-cli-optional-but-recommended">NCBI Datasets CLI (Optional but Recommended)<a class="headerlink" href="#ncbi-datasets-cli-optional-but-recommended" title="Permanent link">&para;</a></h3>
@@ -1741,12 +1741,12 @@
 </code></pre></div></p>
 <p><strong>Via Direct Download</strong>:</p>
 <p><strong>Linux</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>datasets<span class="w"> </span><span class="s1">&#39;https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>datasets<span class="w"> </span><span class="s1">'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/linux-amd64/datasets'</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>datasets
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>sudo<span class="w"> </span>mv<span class="w"> </span>datasets<span class="w"> </span>/usr/local/bin/
 </code></pre></div></p>
 <p><strong>macOS</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>datasets<span class="w"> </span><span class="s1">&#39;https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/mac/datasets&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>curl<span class="w"> </span>-o<span class="w"> </span>datasets<span class="w"> </span><span class="s1">'https://ftp.ncbi.nlm.nih.gov/pub/datasets/command-line/LATEST/mac/datasets'</span>
 <a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>chmod<span class="w"> </span>+x<span class="w"> </span>datasets
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>sudo<span class="w"> </span>mv<span class="w"> </span>datasets<span class="w"> </span>/usr/local/bin/
 </code></pre></div></p>
@@ -1803,22 +1803,22 @@ Add to PATH</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>conda<span class="w"> </span>activate<span class="w"> </span>snakemake_base<span class="w">  </span><span class="c1"># or pbi_env</span>
 </code></pre></div></p>
 <p><strong>Auto-activation</strong> (optional):
-<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;conda activate snakemake_base&#39;</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="nb">echo</span><span class="w"> </span><span class="s1">'conda activate snakemake_base'</span><span class="w"> </span>&gt;&gt;<span class="w"> </span>~/.bashrc
 </code></pre></div></p>
 <h3 id="verify-environment">Verify Environment<a class="headerlink" href="#verify-environment" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1"># Check Python version</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>python<span class="w"> </span>--version<span class="w">  </span><span class="c1"># Should be 3.9+</span>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Check key packages</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="s2">import Bio</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="s2">import pandas as pd</span>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="s2">import pyfaidx</span>
 <a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="s2">import yaml</span>
-<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="s2">print(&#39;✅ All key packages installed&#39;)</span>
-<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="s2">print(f&#39;Biopython version: {Bio.__version__}&#39;)</span>
-<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="s2">print(f&#39;Pandas version: {pd.__version__}&#39;)</span>
-<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="s2">&quot;</span>
+<a id="__codelineno-14-10" name="__codelineno-14-10" href="#__codelineno-14-10"></a><span class="s2">print('✅ All key packages installed')</span>
+<a id="__codelineno-14-11" name="__codelineno-14-11" href="#__codelineno-14-11"></a><span class="s2">print(f'Biopython version: {Bio.__version__}')</span>
+<a id="__codelineno-14-12" name="__codelineno-14-12" href="#__codelineno-14-12"></a><span class="s2">print(f'Pandas version: {pd.__version__}')</span>
+<a id="__codelineno-14-13" name="__codelineno-14-13" href="#__codelineno-14-13"></a><span class="s2">"</span>
 <a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a>
 <a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a><span class="c1"># Check command-line tools</span>
 <a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a>which<span class="w"> </span>snakemake
@@ -1843,125 +1843,125 @@ Add to PATH</p>
 <h3 id="using-plain-docker">Using Plain Docker<a class="headerlink" href="#using-plain-docker" title="Permanent link">&para;</a></h3>
 <p><strong>Set environment variables</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span>-e<span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span><span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">  </span>-v<span class="w"> </span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span>/data:/data<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">  </span>pbi-pipeline
 </code></pre></div></p>
 <h3 id="verify-docker-environment">Verify Docker Environment<a class="headerlink" href="#verify-docker-environment" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Test environment in container</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>pipeline<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="s2">echo &#39;NCBI Email:&#39; \$NCBI_EMAIL</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="s2">echo &#39;API Key set:&#39; \${NCBI_API_KEY:+Yes}</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="s2">python -c &#39;import Bio; print(\&quot;Biopython:\&quot;, Bio.__version__)&#39;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>docker<span class="w"> </span>compose<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>pipeline<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="s2">echo 'NCBI Email:' \$NCBI_EMAIL</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="s2">echo 'API Key set:' \${NCBI_API_KEY:+Yes}</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="s2">python -c 'import Bio; print(\"Biopython:\", Bio.__version__)'</span>
 <a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="s2">datasets version</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="s2">&quot;</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="s2">"</span>
 </code></pre></div>
 <h2 id="verification">Verification<a class="headerlink" href="#verification" title="Permanent link">&para;</a></h2>
 <h3 id="complete-verification-script">Complete Verification Script<a class="headerlink" href="#complete-verification-script" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="ch">#!/bin/bash</span>
 <a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="c1"># verify_setup.sh</span>
 <a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;=== PBI Environment Verification ===&quot;</span>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"=== PBI Environment Verification ==="</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
 <a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="c1"># 1. Check environment variables</span>
-<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;1. Environment Variables:&quot;</span>
-<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NCBI_EMAIL</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ✅ NCBI_EMAIL is set: </span><span class="nv">$NCBI_EMAIL</span><span class="s2">&quot;</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"1. Environment Variables:"</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">"</span><span class="nv">$NCBI_EMAIL</span><span class="s2">"</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ✅ NCBI_EMAIL is set: </span><span class="nv">$NCBI_EMAIL</span><span class="s2">"</span>
 <a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="k">else</span>
-<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ❌ NCBI_EMAIL is NOT set&quot;</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ❌ NCBI_EMAIL is NOT set"</span>
 <a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="k">fi</span>
 <a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>
-<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$NCBI_API_KEY</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ✅ NCBI_API_KEY is set: </span><span class="si">${</span><span class="nv">NCBI_API_KEY</span><span class="p">:</span><span class="nv">0</span><span class="p">:</span><span class="nv">10</span><span class="si">}</span><span class="s2">...&quot;</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>-n<span class="w"> </span><span class="s2">"</span><span class="nv">$NCBI_API_KEY</span><span class="s2">"</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ✅ NCBI_API_KEY is set: </span><span class="si">${</span><span class="nv">NCBI_API_KEY</span><span class="p">:</span><span class="nv">0</span><span class="p">:</span><span class="nv">10</span><span class="si">}</span><span class="s2">..."</span>
 <a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="k">else</span>
-<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ⚠️  NCBI_API_KEY is NOT set (optional but recommended)&quot;</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ⚠️  NCBI_API_KEY is NOT set (optional but recommended)"</span>
 <a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="k">fi</span>
-<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a>
 <a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="c1"># 2. Check conda environment</span>
-<a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;2. Conda Environment:&quot;</span>
+<a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"2. Conda Environment:"</span>
 <a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="k">if</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>conda<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ✅ Conda is installed&quot;</span>
-<a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   Current environment: </span><span class="nv">$CONDA_DEFAULT_ENV</span><span class="s2">&quot;</span>
+<a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ✅ Conda is installed"</span>
+<a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   Current environment: </span><span class="nv">$CONDA_DEFAULT_ENV</span><span class="s2">"</span>
 <a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="k">else</span>
-<a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ❌ Conda is NOT installed&quot;</span>
+<a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ❌ Conda is NOT installed"</span>
 <a id="__codelineno-19-29" name="__codelineno-19-29" href="#__codelineno-19-29"></a><span class="k">fi</span>
-<a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-31" name="__codelineno-19-31" href="#__codelineno-19-31"></a>
 <a id="__codelineno-19-32" name="__codelineno-19-32" href="#__codelineno-19-32"></a><span class="c1"># 3. Check Python packages</span>
-<a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;3. Python Packages:&quot;</span>
-<a id="__codelineno-19-34" name="__codelineno-19-34" href="#__codelineno-19-34"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"3. Python Packages:"</span>
+<a id="__codelineno-19-34" name="__codelineno-19-34" href="#__codelineno-19-34"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-19-35" name="__codelineno-19-35" href="#__codelineno-19-35"></a><span class="s2">try:</span>
 <a id="__codelineno-19-36" name="__codelineno-19-36" href="#__codelineno-19-36"></a><span class="s2">    import Bio</span>
-<a id="__codelineno-19-37" name="__codelineno-19-37" href="#__codelineno-19-37"></a><span class="s2">    print(f&#39;   ✅ Biopython {Bio.__version__}&#39;)</span>
+<a id="__codelineno-19-37" name="__codelineno-19-37" href="#__codelineno-19-37"></a><span class="s2">    print(f'   ✅ Biopython {Bio.__version__}')</span>
 <a id="__codelineno-19-38" name="__codelineno-19-38" href="#__codelineno-19-38"></a><span class="s2">except ImportError:</span>
-<a id="__codelineno-19-39" name="__codelineno-19-39" href="#__codelineno-19-39"></a><span class="s2">    print(&#39;   ❌ Biopython NOT installed&#39;)</span>
+<a id="__codelineno-19-39" name="__codelineno-19-39" href="#__codelineno-19-39"></a><span class="s2">    print('   ❌ Biopython NOT installed')</span>
 <a id="__codelineno-19-40" name="__codelineno-19-40" href="#__codelineno-19-40"></a>
 <a id="__codelineno-19-41" name="__codelineno-19-41" href="#__codelineno-19-41"></a><span class="s2">try:</span>
 <a id="__codelineno-19-42" name="__codelineno-19-42" href="#__codelineno-19-42"></a><span class="s2">    import pandas as pd</span>
-<a id="__codelineno-19-43" name="__codelineno-19-43" href="#__codelineno-19-43"></a><span class="s2">    print(f&#39;   ✅ Pandas {pd.__version__}&#39;)</span>
+<a id="__codelineno-19-43" name="__codelineno-19-43" href="#__codelineno-19-43"></a><span class="s2">    print(f'   ✅ Pandas {pd.__version__}')</span>
 <a id="__codelineno-19-44" name="__codelineno-19-44" href="#__codelineno-19-44"></a><span class="s2">except ImportError:</span>
-<a id="__codelineno-19-45" name="__codelineno-19-45" href="#__codelineno-19-45"></a><span class="s2">    print(&#39;   ❌ Pandas NOT installed&#39;)</span>
+<a id="__codelineno-19-45" name="__codelineno-19-45" href="#__codelineno-19-45"></a><span class="s2">    print('   ❌ Pandas NOT installed')</span>
 <a id="__codelineno-19-46" name="__codelineno-19-46" href="#__codelineno-19-46"></a>
 <a id="__codelineno-19-47" name="__codelineno-19-47" href="#__codelineno-19-47"></a><span class="s2">try:</span>
 <a id="__codelineno-19-48" name="__codelineno-19-48" href="#__codelineno-19-48"></a><span class="s2">    import pyfaidx</span>
-<a id="__codelineno-19-49" name="__codelineno-19-49" href="#__codelineno-19-49"></a><span class="s2">    print(f&#39;   ✅ pyfaidx installed&#39;)</span>
+<a id="__codelineno-19-49" name="__codelineno-19-49" href="#__codelineno-19-49"></a><span class="s2">    print(f'   ✅ pyfaidx installed')</span>
 <a id="__codelineno-19-50" name="__codelineno-19-50" href="#__codelineno-19-50"></a><span class="s2">except ImportError:</span>
-<a id="__codelineno-19-51" name="__codelineno-19-51" href="#__codelineno-19-51"></a><span class="s2">    print(&#39;   ❌ pyfaidx NOT installed&#39;)</span>
+<a id="__codelineno-19-51" name="__codelineno-19-51" href="#__codelineno-19-51"></a><span class="s2">    print('   ❌ pyfaidx NOT installed')</span>
 <a id="__codelineno-19-52" name="__codelineno-19-52" href="#__codelineno-19-52"></a>
 <a id="__codelineno-19-53" name="__codelineno-19-53" href="#__codelineno-19-53"></a><span class="s2">try:</span>
 <a id="__codelineno-19-54" name="__codelineno-19-54" href="#__codelineno-19-54"></a><span class="s2">    import yaml</span>
-<a id="__codelineno-19-55" name="__codelineno-19-55" href="#__codelineno-19-55"></a><span class="s2">    print(f&#39;   ✅ PyYAML installed&#39;)</span>
+<a id="__codelineno-19-55" name="__codelineno-19-55" href="#__codelineno-19-55"></a><span class="s2">    print(f'   ✅ PyYAML installed')</span>
 <a id="__codelineno-19-56" name="__codelineno-19-56" href="#__codelineno-19-56"></a><span class="s2">except ImportError:</span>
-<a id="__codelineno-19-57" name="__codelineno-19-57" href="#__codelineno-19-57"></a><span class="s2">    print(&#39;   ❌ PyYAML NOT installed&#39;)</span>
-<a id="__codelineno-19-58" name="__codelineno-19-58" href="#__codelineno-19-58"></a><span class="s2">&quot;</span>
-<a id="__codelineno-19-59" name="__codelineno-19-59" href="#__codelineno-19-59"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-57" name="__codelineno-19-57" href="#__codelineno-19-57"></a><span class="s2">    print('   ❌ PyYAML NOT installed')</span>
+<a id="__codelineno-19-58" name="__codelineno-19-58" href="#__codelineno-19-58"></a><span class="s2">"</span>
+<a id="__codelineno-19-59" name="__codelineno-19-59" href="#__codelineno-19-59"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-60" name="__codelineno-19-60" href="#__codelineno-19-60"></a>
 <a id="__codelineno-19-61" name="__codelineno-19-61" href="#__codelineno-19-61"></a><span class="c1"># 4. Check command-line tools</span>
-<a id="__codelineno-19-62" name="__codelineno-19-62" href="#__codelineno-19-62"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;4. Command-line Tools:&quot;</span>
+<a id="__codelineno-19-62" name="__codelineno-19-62" href="#__codelineno-19-62"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"4. Command-line Tools:"</span>
 <a id="__codelineno-19-63" name="__codelineno-19-63" href="#__codelineno-19-63"></a><span class="k">if</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>datasets<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-19-64" name="__codelineno-19-64" href="#__codelineno-19-64"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ✅ NCBI datasets CLI: </span><span class="k">$(</span>datasets<span class="w"> </span>version<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-19-64" name="__codelineno-19-64" href="#__codelineno-19-64"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ✅ NCBI datasets CLI: </span><span class="k">$(</span>datasets<span class="w"> </span>version<span class="w"> </span><span class="p">|</span><span class="w"> </span>head<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span><span class="s2">"</span>
 <a id="__codelineno-19-65" name="__codelineno-19-65" href="#__codelineno-19-65"></a><span class="k">else</span>
-<a id="__codelineno-19-66" name="__codelineno-19-66" href="#__codelineno-19-66"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ⚠️  NCBI datasets CLI NOT installed (optional but recommended)&quot;</span>
+<a id="__codelineno-19-66" name="__codelineno-19-66" href="#__codelineno-19-66"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ⚠️  NCBI datasets CLI NOT installed (optional but recommended)"</span>
 <a id="__codelineno-19-67" name="__codelineno-19-67" href="#__codelineno-19-67"></a><span class="k">fi</span>
 <a id="__codelineno-19-68" name="__codelineno-19-68" href="#__codelineno-19-68"></a>
 <a id="__codelineno-19-69" name="__codelineno-19-69" href="#__codelineno-19-69"></a><span class="k">if</span><span class="w"> </span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>snakemake<span class="w"> </span><span class="p">&amp;</span>&gt;<span class="w"> </span>/dev/null<span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<a id="__codelineno-19-70" name="__codelineno-19-70" href="#__codelineno-19-70"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ✅ Snakemake: </span><span class="k">$(</span>snakemake<span class="w"> </span>--version<span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-19-70" name="__codelineno-19-70" href="#__codelineno-19-70"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ✅ Snakemake: </span><span class="k">$(</span>snakemake<span class="w"> </span>--version<span class="k">)</span><span class="s2">"</span>
 <a id="__codelineno-19-71" name="__codelineno-19-71" href="#__codelineno-19-71"></a><span class="k">else</span>
-<a id="__codelineno-19-72" name="__codelineno-19-72" href="#__codelineno-19-72"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;   ❌ Snakemake NOT installed&quot;</span>
+<a id="__codelineno-19-72" name="__codelineno-19-72" href="#__codelineno-19-72"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"   ❌ Snakemake NOT installed"</span>
 <a id="__codelineno-19-73" name="__codelineno-19-73" href="#__codelineno-19-73"></a><span class="k">fi</span>
-<a id="__codelineno-19-74" name="__codelineno-19-74" href="#__codelineno-19-74"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-74" name="__codelineno-19-74" href="#__codelineno-19-74"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-75" name="__codelineno-19-75" href="#__codelineno-19-75"></a>
 <a id="__codelineno-19-76" name="__codelineno-19-76" href="#__codelineno-19-76"></a><span class="c1"># 5. Test NCBI connection</span>
-<a id="__codelineno-19-77" name="__codelineno-19-77" href="#__codelineno-19-77"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;5. NCBI Connection Test:&quot;</span>
-<a id="__codelineno-19-78" name="__codelineno-19-78" href="#__codelineno-19-78"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<a id="__codelineno-19-77" name="__codelineno-19-77" href="#__codelineno-19-77"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"5. NCBI Connection Test:"</span>
+<a id="__codelineno-19-78" name="__codelineno-19-78" href="#__codelineno-19-78"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-19-79" name="__codelineno-19-79" href="#__codelineno-19-79"></a><span class="s2">import os</span>
 <a id="__codelineno-19-80" name="__codelineno-19-80" href="#__codelineno-19-80"></a><span class="s2">from Bio import Entrez</span>
 <a id="__codelineno-19-81" name="__codelineno-19-81" href="#__codelineno-19-81"></a>
-<a id="__codelineno-19-82" name="__codelineno-19-82" href="#__codelineno-19-82"></a><span class="s2">Entrez.email = os.getenv(&#39;NCBI_EMAIL&#39;, &#39;test@example.com&#39;)</span>
-<a id="__codelineno-19-83" name="__codelineno-19-83" href="#__codelineno-19-83"></a><span class="s2">Entrez.api_key = os.getenv(&#39;NCBI_API_KEY&#39;)</span>
+<a id="__codelineno-19-82" name="__codelineno-19-82" href="#__codelineno-19-82"></a><span class="s2">Entrez.email = os.getenv('NCBI_EMAIL', 'test@example.com')</span>
+<a id="__codelineno-19-83" name="__codelineno-19-83" href="#__codelineno-19-83"></a><span class="s2">Entrez.api_key = os.getenv('NCBI_API_KEY')</span>
 <a id="__codelineno-19-84" name="__codelineno-19-84" href="#__codelineno-19-84"></a>
 <a id="__codelineno-19-85" name="__codelineno-19-85" href="#__codelineno-19-85"></a><span class="s2">try:</span>
-<a id="__codelineno-19-86" name="__codelineno-19-86" href="#__codelineno-19-86"></a><span class="s2">    handle = Entrez.esearch(db=&#39;assembly&#39;, term=&#39;Escherichia coli&#39;, retmax=1)</span>
+<a id="__codelineno-19-86" name="__codelineno-19-86" href="#__codelineno-19-86"></a><span class="s2">    handle = Entrez.esearch(db='assembly', term='Escherichia coli', retmax=1)</span>
 <a id="__codelineno-19-87" name="__codelineno-19-87" href="#__codelineno-19-87"></a><span class="s2">    result = Entrez.read(handle)</span>
 <a id="__codelineno-19-88" name="__codelineno-19-88" href="#__codelineno-19-88"></a><span class="s2">    handle.close()</span>
 <a id="__codelineno-19-89" name="__codelineno-19-89" href="#__codelineno-19-89"></a>
-<a id="__codelineno-19-90" name="__codelineno-19-90" href="#__codelineno-19-90"></a><span class="s2">    if result[&#39;IdList&#39;]:</span>
-<a id="__codelineno-19-91" name="__codelineno-19-91" href="#__codelineno-19-91"></a><span class="s2">        print(&#39;   ✅ NCBI connection successful&#39;)</span>
+<a id="__codelineno-19-90" name="__codelineno-19-90" href="#__codelineno-19-90"></a><span class="s2">    if result['IdList']:</span>
+<a id="__codelineno-19-91" name="__codelineno-19-91" href="#__codelineno-19-91"></a><span class="s2">        print('   ✅ NCBI connection successful')</span>
 <a id="__codelineno-19-92" name="__codelineno-19-92" href="#__codelineno-19-92"></a><span class="s2">        if Entrez.api_key:</span>
-<a id="__codelineno-19-93" name="__codelineno-19-93" href="#__codelineno-19-93"></a><span class="s2">            print(&#39;   ✅ Using API key (10 req/sec)&#39;)</span>
+<a id="__codelineno-19-93" name="__codelineno-19-93" href="#__codelineno-19-93"></a><span class="s2">            print('   ✅ Using API key (10 req/sec)')</span>
 <a id="__codelineno-19-94" name="__codelineno-19-94" href="#__codelineno-19-94"></a><span class="s2">        else:</span>
-<a id="__codelineno-19-95" name="__codelineno-19-95" href="#__codelineno-19-95"></a><span class="s2">            print(&#39;   ⚠️  No API key (3 req/sec)&#39;)</span>
+<a id="__codelineno-19-95" name="__codelineno-19-95" href="#__codelineno-19-95"></a><span class="s2">            print('   ⚠️  No API key (3 req/sec)')</span>
 <a id="__codelineno-19-96" name="__codelineno-19-96" href="#__codelineno-19-96"></a><span class="s2">    else:</span>
-<a id="__codelineno-19-97" name="__codelineno-19-97" href="#__codelineno-19-97"></a><span class="s2">        print(&#39;   ⚠️  NCBI returned no results&#39;)</span>
+<a id="__codelineno-19-97" name="__codelineno-19-97" href="#__codelineno-19-97"></a><span class="s2">        print('   ⚠️  NCBI returned no results')</span>
 <a id="__codelineno-19-98" name="__codelineno-19-98" href="#__codelineno-19-98"></a><span class="s2">except Exception as e:</span>
-<a id="__codelineno-19-99" name="__codelineno-19-99" href="#__codelineno-19-99"></a><span class="s2">    print(f&#39;   ❌ NCBI connection failed: {e}&#39;)</span>
-<a id="__codelineno-19-100" name="__codelineno-19-100" href="#__codelineno-19-100"></a><span class="s2">&quot;</span>
-<a id="__codelineno-19-101" name="__codelineno-19-101" href="#__codelineno-19-101"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
+<a id="__codelineno-19-99" name="__codelineno-19-99" href="#__codelineno-19-99"></a><span class="s2">    print(f'   ❌ NCBI connection failed: {e}')</span>
+<a id="__codelineno-19-100" name="__codelineno-19-100" href="#__codelineno-19-100"></a><span class="s2">"</span>
+<a id="__codelineno-19-101" name="__codelineno-19-101" href="#__codelineno-19-101"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
 <a id="__codelineno-19-102" name="__codelineno-19-102" href="#__codelineno-19-102"></a>
-<a id="__codelineno-19-103" name="__codelineno-19-103" href="#__codelineno-19-103"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;=== Verification Complete ===&quot;</span>
+<a id="__codelineno-19-103" name="__codelineno-19-103" href="#__codelineno-19-103"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"=== Verification Complete ==="</span>
 </code></pre></div>
 <p><strong>Run verification</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a>chmod<span class="w"> </span>+x<span class="w"> </span>verify_setup.sh
@@ -1972,21 +1972,21 @@ Add to PATH</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a>env<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>NCBI
 </code></pre></div></p>
 <p><strong>Test 2: Python Import</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;from Bio import Entrez; print(&#39;✅ Biopython OK&#39;)&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"from Bio import Entrez; print('✅ Biopython OK')"</span>
 </code></pre></div></p>
 <p><strong>Test 3: NCBI Connection</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"</span>
 <a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="s2">from Bio import Entrez</span>
 <a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="s2">import os</span>
-<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="s2">Entrez.email = os.getenv(&#39;NCBI_EMAIL&#39;, &#39;test@example.com&#39;)</span>
-<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="s2">handle = Entrez.esearch(db=&#39;assembly&#39;, term=&#39;test&#39;, retmax=1)</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="s2">Entrez.email = os.getenv('NCBI_EMAIL', 'test@example.com')</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="s2">handle = Entrez.esearch(db='assembly', term='test', retmax=1)</span>
 <a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="s2">Entrez.read(handle)</span>
 <a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="s2">handle.close()</span>
-<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="s2">print(&#39;✅ NCBI OK&#39;)</span>
-<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="s2">&quot;</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="s2">print('✅ NCBI OK')</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="s2">"</span>
 </code></pre></div></p>
 <p><strong>Test 4: Datasets CLI</strong>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>datasets<span class="w"> </span>summary<span class="w"> </span>genome<span class="w"> </span>taxon<span class="w"> </span><span class="s2">&quot;Escherichia coli&quot;</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">1</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a>datasets<span class="w"> </span>summary<span class="w"> </span>genome<span class="w"> </span>taxon<span class="w"> </span><span class="s2">"Escherichia coli"</span><span class="w"> </span>--limit<span class="w"> </span><span class="m">1</span>
 </code></pre></div></p>
 <h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <h3 id="issue-ncbi_email-not-set">Issue: NCBI_EMAIL not set<a class="headerlink" href="#issue-ncbi_email-not-set" title="Permanent link">&para;</a></h3>
@@ -1994,16 +1994,16 @@ Add to PATH</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-25-1" name="__codelineno-25-1" href="#__codelineno-25-1"></a>ValueError: NCBI requires you to set Entrez.email
 </code></pre></div></p>
 <p><strong>Solution</strong>:
-<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-26-1" name="__codelineno-26-1" href="#__codelineno-26-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
 </code></pre></div></p>
 <h3 id="issue-api-key-not-detected">Issue: API key not detected<a class="headerlink" href="#issue-api-key-not-detected" title="Permanent link">&para;</a></h3>
 <p><strong>Symptoms</strong>: Slow downloads (3 req/sec instead of 10)</p>
 <p><strong>Solution</strong>:
 <div class="highlight"><pre><span></span><code><a id="__codelineno-27-1" name="__codelineno-27-1" href="#__codelineno-27-1"></a><span class="c1"># Set API key</span>
-<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span>
+<a id="__codelineno-27-2" name="__codelineno-27-2" href="#__codelineno-27-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span>
 <a id="__codelineno-27-3" name="__codelineno-27-3" href="#__codelineno-27-3"></a>
 <a id="__codelineno-27-4" name="__codelineno-27-4" href="#__codelineno-27-4"></a><span class="c1"># Verify</span>
-<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;import os; print(&#39;API Key set:&#39;, bool(os.getenv(&#39;NCBI_API_KEY&#39;)))&quot;</span>
+<a id="__codelineno-27-5" name="__codelineno-27-5" href="#__codelineno-27-5"></a>python<span class="w"> </span>-c<span class="w"> </span><span class="s2">"import os; print('API Key set:', bool(os.getenv('NCBI_API_KEY')))"</span>
 </code></pre></div></p>
 <h3 id="issue-command-not-found-datasets">Issue: Command not found: datasets<a class="headerlink" href="#issue-command-not-found-datasets" title="Permanent link">&para;</a></h3>
 <p><strong>Solution</strong>:

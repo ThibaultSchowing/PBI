@@ -1516,7 +1516,7 @@ Each database may use slightly different column names, add new columns over time
 <a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">GC%</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">GC_content</span>
 <a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>
 <a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="nt">defaults</span><span class="p">:</span><span class="w">          </span><span class="c1"># Optional: provide a fill value instead of NA</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">Host</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;unknown&quot;</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">Host</span><span class="p">:</span><span class="w"> </span><span class="s">"unknown"</span>
 </code></pre></div>
 <table>
 <thead>
@@ -1779,34 +1779,34 @@ Each database may use slightly different column names, add new columns over time
 every column selected in SQL <code>CREATE TABLE ... AS SELECT ...</code> for each DuckDB table
 is covered either as <code>required</code> or <code>optional</code> in the corresponding contract.</p>
 <p>To re-verify at any time:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;&#39;PY&#39;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>python<span class="w"> </span>-<span class="w"> </span><span class="s">&lt;&lt;'PY'</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="s">import yaml</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="s">from pathlib import Path</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s"># Mapping: contract file → columns DuckDB reads from the merged CSV</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s">checks = {</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">    &quot;phage_metadata_merged.yaml&quot;: [</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="s">        &quot;Phage_ID&quot;, &quot;Source_DB&quot;, &quot;Length&quot;, &quot;GC_content&quot;, &quot;Taxonomy&quot;,</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="s">        &quot;Completeness&quot;, &quot;Host&quot;, &quot;Lifestyle&quot;, &quot;Cluster&quot;, &quot;Subcluster&quot;],</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="s">    &quot;annotated_proteins_metadata_merged.yaml&quot;: [</span>
-<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="s">        &quot;Phage_ID&quot;, &quot;Protein_ID&quot;, &quot;Protein_source&quot;, &quot;Function_prediction_source&quot;,</span>
-<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="s">        &quot;Start&quot;, &quot;Stop&quot;, &quot;Strand&quot;, &quot;Product&quot;, &quot;Protein_classification&quot;,</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="s">        &quot;Molecular_weight&quot;, &quot;Aromaticity&quot;, &quot;Instability_index&quot;, &quot;Isoelectric_point&quot;,</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="s">        &quot;Helix_fraction&quot;, &quot;Turn_fraction&quot;, &quot;Sheet_fraction&quot;,</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="s">        &quot;Reduced_coefficient&quot;, &quot;Oxidized_coefficient&quot;, &quot;Source_DB&quot;],</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="s">    "phage_metadata_merged.yaml": [</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="s">        "Phage_ID", "Source_DB", "Length", "GC_content", "Taxonomy",</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="s">        "Completeness", "Host", "Lifestyle", "Cluster", "Subcluster"],</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="s">    "annotated_proteins_metadata_merged.yaml": [</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="s">        "Phage_ID", "Protein_ID", "Protein_source", "Function_prediction_source",</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="s">        "Start", "Stop", "Strand", "Product", "Protein_classification",</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="s">        "Molecular_weight", "Aromaticity", "Instability_index", "Isoelectric_point",</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="s">        "Helix_fraction", "Turn_fraction", "Sheet_fraction",</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="s">        "Reduced_coefficient", "Oxidized_coefficient", "Source_DB"],</span>
 <a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="s">    # ... add remaining tables as needed</span>
 <a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="s">}</span>
 <a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>
-<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="s">schema_dir = Path(&quot;workflow/schemas&quot;)</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="s">schema_dir = Path("workflow/schemas")</span>
 <a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="s">for fname, used_cols in checks.items():</span>
 <a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="s">    with open(schema_dir / fname) as fh:</span>
 <a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="s">        c = yaml.safe_load(fh)</span>
-<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="s">    covered = set(c.get(&quot;required&quot;, []) + c.get(&quot;optional&quot;, []))</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="s">    covered = set(c.get("required", []) + c.get("optional", []))</span>
 <a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="s">    missing = set(used_cols) - covered</span>
 <a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="s">    if missing:</span>
-<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="s">        print(f&quot;❌ {fname}: uncovered columns → {missing}&quot;)</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="s">        print(f"❌ {fname}: uncovered columns → {missing}")</span>
 <a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="s">    else:</span>
-<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="s">        print(f&quot;✅ {fname}: all columns covered&quot;)</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="s">        print(f"✅ {fname}: all columns covered")</span>
 <a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="s">PY</span>
 </code></pre></div>
 <hr />
@@ -1860,7 +1860,7 @@ is covered either as <code>required</code> or <code>optional</code> in the corre
 <ol>
 <li>Edit <code>src/pbi/sequence_retrieval.py</code> and update the relevant query:</li>
 </ol>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">query</span> <span class="o">=</span> <span class="s2">"""</span>
 <a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="s2">SELECT</span>
 <a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="s2">    Phage_ID,</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="s2">    Source_DB,</span>
@@ -1869,7 +1869,7 @@ is covered either as <code>required</code> or <code>optional</code> in the corre
 <a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="s2">    Prediction_Source, -- new</span>
 <a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="s2">    ...</span>
 <a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="s2">FROM fact_phages</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">&quot;&quot;&quot;</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="s2">"""</span>
 </code></pre></div>
 <ol>
 <li>Update the method docstring to document the new return columns.</li>
@@ -1951,16 +1951,16 @@ is covered either as <code>required</code> or <code>optional</code> in the corre
 </code></pre></div>
 <p><strong>Output example:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>✅ Schema drift check passed
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Missing optional before normalization: [&#39;Host&#39;, &#39;Lifestyle&#39;]
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Added optional columns: [&#39;Host&#39;, &#39;Lifestyle&#39;]
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Aliases applied: [{&#39;from&#39;: &#39;GC%&#39;, &#39;to&#39;: &#39;GC_content&#39;}]
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>Missing optional before normalization: ['Host', 'Lifestyle']
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>Added optional columns: ['Host', 'Lifestyle']
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>Aliases applied: [{'from': 'GC%', 'to': 'GC_content'}]
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>Collisions: []
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>Unknown columns preserved: [&#39;Is_Predicted&#39;, &#39;Prediction_Source&#39;]
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>Unknown columns preserved: ['Is_Predicted', 'Prediction_Source']
 </code></pre></div>
 <p>Exit code is non-zero when required columns are missing, allowing use in CI checks:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>python<span class="w"> </span>workflow/scripts/preprocessing/report_schema_drift.py<span class="w"> </span><span class="se">\</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span>--contract<span class="w"> </span>workflow/schemas/phage_metadata_merged.yaml<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--input<span class="w"> </span>new_data.tsv<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Schema check failed!&quot;</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span>--input<span class="w"> </span>new_data.tsv<span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Schema check failed!"</span>
 </code></pre></div>
 <hr />
 <h2 id="where-the-code-lives">Where the Code Lives<a class="headerlink" href="#where-the-code-lives" title="Permanent link">&para;</a></h2>

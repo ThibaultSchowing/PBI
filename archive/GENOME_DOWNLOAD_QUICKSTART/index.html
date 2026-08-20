@@ -1547,8 +1547,8 @@
 </ul>
 <h2 id="quick-start">Quick Start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <h3 id="1-set-environment-variables-recommended">1. Set Environment Variables (Recommended)<a class="headerlink" href="#1-set-environment-variables-recommended" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key_here&quot;</span><span class="w">  </span><span class="c1"># Optional but recommended for 10 req/s</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key_here"</span><span class="w">  </span><span class="c1"># Optional but recommended for 10 req/s</span>
 </code></pre></div>
 <p>Get your API key from: https://www.ncbi.nlm.nih.gov/account/settings/</p>
 <h3 id="2-use-the-optimized-script">2. Use the Optimized Script<a class="headerlink" href="#2-use-the-optimized-script" title="Permanent link">&para;</a></h3>
@@ -1566,14 +1566,14 @@
 <p>Update your Snakefile to use the optimized script:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="n">rule</span> <span class="n">download_host_genomes_optimized</span><span class="p">:</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="nb">input</span><span class="p">:</span>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/csv/merged/merged_phage_metadata.csv&quot;</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="s2">"data/intermediate/csv/merged/merged_phage_metadata.csv"</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">output</span><span class="p">:</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/csv/merged/host_metadata.csv&quot;</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="s2">"data/intermediate/csv/merged/host_metadata.csv"</span>
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">params</span><span class="p">:</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;data/intermediate/fasta/hosts&quot;</span><span class="p">,</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="n">config</span> <span class="o">=</span> <span class="s2">&quot;workflow/config/genome_download_config.yaml&quot;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        <span class="n">output_dir</span> <span class="o">=</span> <span class="s2">"data/intermediate/fasta/hosts"</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>        <span class="n">config</span> <span class="o">=</span> <span class="s2">"workflow/config/genome_download_config.yaml"</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">script</span><span class="p">:</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="s2">&quot;scripts/sequences/download_host_genomes_optimized.py&quot;</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>        <span class="s2">"scripts/sequences/download_host_genomes_optimized.py"</span>
 </code></pre></div>
 <h3 id="3-monitor-progress">3. Monitor Progress<a class="headerlink" href="#3-monitor-progress" title="Permanent link">&para;</a></h3>
 <p>The script will display real-time progress:</p>
@@ -1597,10 +1597,10 @@
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="nt">cache</span><span class="p">:</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/cache/genomes&quot;</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">"data/cache/genomes"</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="nt">parsing</span><span class="p">:</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">fasta_format</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;fasta-2line&quot;</span><span class="w">    </span><span class="c1"># Handles comments</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">fasta_format</span><span class="p">:</span><span class="w"> </span><span class="s">"fasta-2line"</span><span class="w">    </span><span class="c1"># Handles comments</span>
 </code></pre></div>
 <h2 id="resume-after-interruption">Resume After Interruption<a class="headerlink" href="#resume-after-interruption" title="Permanent link">&para;</a></h2>
 <p>If the download is interrupted, simply run it again. The cache will prevent re-downloading:</p>

@@ -1761,7 +1761,7 @@ It exits non-zero when required columns are missing.</p>
 <p><strong>Configuration File</strong> (<code>workflow/config/genome_download_config.yaml</code>):</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">ncbi</span><span class="p">:</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">email</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">your.email@example.com</span><span class="w">  </span><span class="c1"># Required by NCBI</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span><span class="w">  </span><span class="c1"># Optional, increases rate limit to 10 req/sec</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">api_key</span><span class="p">:</span><span class="w"> </span><span class="s">""</span><span class="w">  </span><span class="c1"># Optional, increases rate limit to 10 req/sec</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
 <a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">download</span><span class="p">:</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">  </span><span class="nt">max_concurrent</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
@@ -1771,8 +1771,8 @@ It exits non-zero when required columns are missing.</p>
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="nt">cache</span><span class="p">:</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="w">  </span><span class="nt">enabled</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/cache/genomes&quot;</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="nt">metadata_db</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/cache/metadata.db&quot;</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="w">  </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">"data/cache/genomes"</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="w">  </span><span class="nt">metadata_db</span><span class="p">:</span><span class="w"> </span><span class="s">"data/cache/metadata.db"</span>
 </code></pre></div>
 <h4 id="manual-execution">Manual Execution<a class="headerlink" href="#manual-execution" title="Permanent link">&para;</a></h4>
 <p>For debugging or custom workflows:</p>
@@ -1843,17 +1843,17 @@ It exits non-zero when required columns are missing.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 <a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>
 <a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="c1"># Load metadata</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;data/processed/host_metadata.csv&#39;</span><span class="p">)</span>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="n">metadata</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">'data/processed/host_metadata.csv'</span><span class="p">)</span>
 <a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
 <a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a><span class="c1"># Summary statistics</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total genomes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Complete genomes: </span><span class="si">{</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;Assembly_Level&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;Complete Genome&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Average GC content: </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;GC_Content&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Total genomes: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">metadata</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Complete genomes: </span><span class="si">{</span><span class="p">(</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'Assembly_Level'</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">'Complete Genome'</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Average GC content: </span><span class="si">{</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'GC_Content'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
 <a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
 <a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="c1"># Check for highly fragmented assemblies</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">fragmented</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;Sequence_Count&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">]</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Highly fragmented (&gt;100 sequences): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragmented</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">fragmented</span><span class="p">[[</span><span class="s1">&#39;Species_Name&#39;</span><span class="p">,</span> <span class="s1">&#39;Assembly_Level&#39;</span><span class="p">,</span> <span class="s1">&#39;Sequence_Count&#39;</span><span class="p">]])</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="n">fragmented</span> <span class="o">=</span> <span class="n">metadata</span><span class="p">[</span><span class="n">metadata</span><span class="p">[</span><span class="s1">'Sequence_Count'</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">]</span>
+<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Highly fragmented (&gt;100 sequences): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">fragmented</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="nb">print</span><span class="p">(</span><span class="n">fragmented</span><span class="p">[[</span><span class="s1">'Species_Name'</span><span class="p">,</span> <span class="s1">'Assembly_Level'</span><span class="p">,</span> <span class="s1">'Sequence_Count'</span><span class="p">]])</span>
 </code></pre></div>
 <h4 id="2-failure-log-failed_downloadstxt">2. Failure Log (<code>failed_downloads.txt</code>)<a class="headerlink" href="#2-failure-log-failed_downloadstxt" title="Permanent link">&para;</a></h4>
 <p><strong>Location</strong>: <code>data/logs/failed_downloads.txt</code> (or as configured)</p>
@@ -1884,14 +1884,14 @@ It exits non-zero when required columns are missing.</p>
 - <strong>Empty/placeholder names</strong>: "-", "unknown host"</p>
 <p><strong>How to Investigate Failures:</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1"># Read failure log</span>
-<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;data/logs/failed_downloads.txt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">'data/logs/failed_downloads.txt'</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 <a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a>    <span class="n">failures</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
 <a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a>
 <a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="c1"># Count by category</span>
 <a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">categories</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;Category: (.*?) \((\d+)&#39;</span><span class="p">,</span> <span class="n">failures</span><span class="p">)</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="n">categories</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">findall</span><span class="p">(</span><span class="sa">r</span><span class="s1">'Category: (.*?) \((\d+)'</span><span class="p">,</span> <span class="n">failures</span><span class="p">)</span>
 <a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a><span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">categories</span><span class="p">:</span>
-<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> failures&quot;</span><span class="p">)</span>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">category</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s2"> failures"</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="3-missing-hosts-csv-from-notebooks">3. Missing Hosts CSV (from Notebooks)<a class="headerlink" href="#3-missing-hosts-csv-from-notebooks" title="Permanent link">&para;</a></h4>
 <p><strong>Location</strong>: Specified when creating datasets (e.g., <code>missing_hosts.csv</code>)</p>
@@ -1899,16 +1899,16 @@ It exits non-zero when required columns are missing.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pbi</span><span class="w"> </span><span class="kn">import</span> <span class="n">SequenceRetriever</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="n">retriever</span> <span class="o">=</span> <span class="n">SequenceRetriever</span><span class="p">(</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">db_path</span><span class="o">=</span><span class="s2">&quot;database.duckdb&quot;</span><span class="p">,</span>
-<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">phage_fasta_path</span><span class="o">=</span><span class="s2">&quot;all_phages.fasta&quot;</span><span class="p">,</span>
-<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">protein_fasta_path</span><span class="o">=</span><span class="s2">&quot;all_proteins.fasta&quot;</span><span class="p">,</span>
-<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">host_mapping_path</span><span class="o">=</span><span class="s2">&quot;host_mapping.json&quot;</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">db_path</span><span class="o">=</span><span class="s2">"database.duckdb"</span><span class="p">,</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">phage_fasta_path</span><span class="o">=</span><span class="s2">"all_phages.fasta"</span><span class="p">,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">protein_fasta_path</span><span class="o">=</span><span class="s2">"all_proteins.fasta"</span><span class="p">,</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">host_mapping_path</span><span class="o">=</span><span class="s2">"host_mapping.json"</span>
 <a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a><span class="p">)</span>
 <a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>
 <a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a><span class="c1"># Create dataset with missing hosts tracking</span>
 <a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a><span class="n">dataset</span> <span class="o">=</span> <span class="n">retriever</span><span class="o">.</span><span class="n">create_indexed_dataset</span><span class="p">(</span>
-<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>    <span class="n">where_clause</span><span class="o">=</span><span class="s2">&quot;LIMIT 1000&quot;</span><span class="p">,</span>
-<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>    <span class="n">missing_hosts_csv</span><span class="o">=</span><span class="s2">&quot;analysis/missing_hosts.csv&quot;</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>    <span class="n">where_clause</span><span class="o">=</span><span class="s2">"LIMIT 1000"</span><span class="p">,</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>    <span class="n">missing_hosts_csv</span><span class="o">=</span><span class="s2">"analysis/missing_hosts.csv"</span>
 <a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="p">)</span>
 <a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>
 <a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="c1"># After iterating through dataset</span>
@@ -1959,41 +1959,41 @@ It exits non-zero when required columns are missing.</p>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>tail<span class="w"> </span>-f<span class="w"> </span>logs/host_download.log
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1"># Count successes and failures</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>grep<span class="w"> </span><span class="s2">&quot;✅ Downloaded&quot;</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>grep<span class="w"> </span><span class="s2">&quot;❌ Download failed&quot;</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>grep<span class="w"> </span><span class="s2">"✅ Downloaded"</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>grep<span class="w"> </span><span class="s2">"❌ Download failed"</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="c1"># Find specific species</span>
-<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;escherichia coli&quot;</span><span class="w"> </span>logs/host_download.log
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">"escherichia coli"</span><span class="w"> </span>logs/host_download.log
 </code></pre></div>
 <h4 id="analyze-error-patterns">Analyze Error Patterns<a class="headerlink" href="#analyze-error-patterns" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1"># Most common errors</span>
-<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>grep<span class="w"> </span><span class="s2">&quot;ERROR&quot;</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a>grep<span class="w"> </span><span class="s2">"ERROR"</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span><span class="p">|</span><span class="w"> </span>uniq<span class="w"> </span>-c<span class="w"> </span><span class="p">|</span><span class="w"> </span>sort<span class="w"> </span>-rn<span class="w"> </span><span class="p">|</span><span class="w"> </span>head
 <a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
 <a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1"># Network timeout issues</span>
-<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">&quot;timeout&quot;</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a>grep<span class="w"> </span>-i<span class="w"> </span><span class="s2">"timeout"</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 <a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a>
 <a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="c1"># NCBI rate limiting (429 errors)</span>
-<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>grep<span class="w"> </span><span class="s2">&quot;429&quot;</span><span class="w"> </span>logs/host_download.log
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>grep<span class="w"> </span><span class="s2">"429"</span><span class="w"> </span>logs/host_download.log
 </code></pre></div>
 <h4 id="cache-statistics">Cache Statistics<a class="headerlink" href="#cache-statistics" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1"># Check cache hits (avoid re-downloads)</span>
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>grep<span class="w"> </span><span class="s2">&quot;📦 Cache hit&quot;</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>grep<span class="w"> </span><span class="s2">"📦 Cache hit"</span><span class="w"> </span>logs/host_download.log<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="c1"># Cache efficiency</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>python<span class="w"> </span><span class="s">&lt;&lt; &#39;EOF&#39;</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>python<span class="w"> </span><span class="s">&lt;&lt; 'EOF'</span>
 <a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="s">import re</span>
 <a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="s">with open(&#39;logs/host_download.log&#39;) as f:</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="s">with open('logs/host_download.log') as f:</span>
 <a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="s">    log = f.read()</span>
 <a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
-<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="s">cached = len(re.findall(r&#39;📦 Cache hit&#39;, log))</span>
-<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="s">downloaded = len(re.findall(r&#39;✅ Downloaded&#39;, log))</span>
-<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="s">failed = len(re.findall(r&#39;❌ Download failed&#39;, log))</span>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="s">cached = len(re.findall(r'📦 Cache hit', log))</span>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="s">downloaded = len(re.findall(r'✅ Downloaded', log))</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="s">failed = len(re.findall(r'❌ Download failed', log))</span>
 <a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>
 <a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a><span class="s">total = cached + downloaded + failed</span>
 <a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="s">if total &gt; 0:</span>
-<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="s">    print(f&quot;Cache efficiency: {cached/total*100:.1f}%&quot;)</span>
-<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="s">    print(f&quot;Success rate: {(downloaded+cached)/total*100:.1f}%&quot;)</span>
+<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="s">    print(f"Cache efficiency: {cached/total*100:.1f}%")</span>
+<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="s">    print(f"Success rate: {(downloaded+cached)/total*100:.1f}%")</span>
 <a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="s">EOF</span>
 </code></pre></div>
 <hr />
@@ -2002,7 +2002,7 @@ It exits non-zero when required columns are missing.</p>
 <p><strong>Symptoms</strong>: &gt;20% failures in download</p>
 <p><strong>Diagnosis:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1"># Check failure categories</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cat<span class="w"> </span>data/logs/failed_downloads.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;Category:&quot;</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>cat<span class="w"> </span>data/logs/failed_downloads.txt<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"Category:"</span>
 </code></pre></div></p>
 <p><strong>Solutions:</strong>
 - If "No assembly found": Normal for some species, may need manual curation
@@ -2012,7 +2012,7 @@ It exits non-zero when required columns are missing.</p>
 <p><strong>Symptoms</strong>: &lt;5 genomes/minute</p>
 <p><strong>Diagnosis:</strong>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1"># Check rate limiting</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>grep<span class="w"> </span><span class="s2">&quot;Rate limiter&quot;</span><span class="w"> </span>logs/host_download.log
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>grep<span class="w"> </span><span class="s2">"Rate limiter"</span><span class="w"> </span>logs/host_download.log
 </code></pre></div></p>
 <p><strong>Solutions:</strong>
 1. Add NCBI API key to config (increases from 3 to 10 req/sec)

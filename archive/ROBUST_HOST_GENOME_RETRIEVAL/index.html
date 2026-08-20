@@ -1751,19 +1751,19 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">assembly_resolver</span><span class="w"> </span><span class="kn">import</span> <span class="n">AssemblyResolver</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">resolver</span> <span class="o">=</span> <span class="n">AssemblyResolver</span><span class="p">(</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">email</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">&quot;optional_api_key&quot;</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    <span class="n">email</span><span class="o">=</span><span class="s2">"your.email@example.com"</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">"optional_api_key"</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">)</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># Resolve from species name</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">assemblies</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="s2">&quot;Escherichia coli&quot;</span><span class="p">,</span> <span class="n">prefer_refseq</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">assemblies</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="s2">"Escherichia coli"</span><span class="p">,</span> <span class="n">prefer_refseq</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">best</span> <span class="o">=</span> <span class="n">assemblies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Highest quality assembly</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1"># Resolve from assembly accession</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">assembly</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">get_best_assembly</span><span class="p">(</span><span class="s2">&quot;GCF_000005845.2&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="n">assembly</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">get_best_assembly</span><span class="p">(</span><span class="s2">"GCF_000005845.2"</span><span class="p">)</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1"># Resolve from BioSample</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">assemblies</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="s2">&quot;SAMN02604091&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="n">assemblies</span> <span class="o">=</span> <span class="n">resolver</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="s2">"SAMN02604091"</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="supported-identifier-types">Supported Identifier Types<a class="headerlink" href="#supported-identifier-types" title="Permanent link">&para;</a></h4>
 <ul>
@@ -1807,7 +1807,7 @@
 - Phage-host links CSV</p>
 <h3 id="4-download-resumption">4. Download Resumption<a class="headerlink" href="#4-download-resumption" title="Permanent link">&para;</a></h3>
 <p>Preserve already downloaded genomes from previous runs:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">skip_existing_downloads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># Don&#39;t re-download existing files</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nt">skip_existing_downloads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># Don't re-download existing files</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nt">validate_file_checksums</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span><span class="w">  </span><span class="c1"># Validate integrity of existing files</span>
 </code></pre></div>
 <h3 id="5-file-retrieval-strategy">5. File Retrieval Strategy<a class="headerlink" href="#5-file-retrieval-strategy" title="Permanent link">&para;</a></h3>
@@ -1833,27 +1833,27 @@
 <p>The robust downloader is integrated into the Snakemake pipeline via the <code>hosts.smk</code> rule:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">rule</span> <span class="n">download_host_genomes</span><span class="p">:</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>    <span class="nb">input</span><span class="p">:</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;phage_metadata_merged_output&quot;</span><span class="p">]</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>        <span class="n">phage_csv</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"phage_metadata_merged_output"</span><span class="p">]</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>    <span class="n">output</span><span class="p">:</span>
-<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;host_metadata_output&quot;</span><span class="p">],</span>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">assembly_metadata</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;assembly_metadata_output&quot;</span><span class="p">],</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">phage_host_links</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">&quot;phage_host_links_output&quot;</span><span class="p">]</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>        <span class="n">metadata</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"host_metadata_output"</span><span class="p">],</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>        <span class="n">assembly_metadata</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"assembly_metadata_output"</span><span class="p">],</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>        <span class="n">phage_host_links</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s2">"phage_host_links_output"</span><span class="p">]</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>    <span class="n">params</span><span class="p">:</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="n">use_robust_downloader</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># Enable robust downloader</span>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>    <span class="n">script</span><span class="p">:</span>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="s2">&quot;../scripts/sequences/download_host_genomes_robust.py&quot;</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>        <span class="s2">"../scripts/sequences/download_host_genomes_robust.py"</span>
 </code></pre></div>
 <h3 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h3>
 <p>Add to <code>config.yaml</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Host genome settings</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">host_genomes_intermediate</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/fasta/hosts&quot;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">host_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/csv/merged/host_metadata.csv&quot;</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">assembly_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/csv/merged/assembly_metadata.csv&quot;</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">phage_host_links_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/csv/merged/phage_host_links.csv&quot;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nt">host_genomes_intermediate</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/fasta/hosts"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nt">host_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/csv/merged/host_metadata.csv"</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="nt">assembly_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/csv/merged/assembly_metadata.csv"</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nt">phage_host_links_output</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/csv/merged/phage_host_links.csv"</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
 <a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1"># NCBI settings</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nt">ncbi_email</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;your.email@example.com&quot;</span><span class="w">  </span><span class="c1"># Required</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nt">ncbi_api_key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;${NCBI_API_KEY}&quot;</span><span class="w">       </span><span class="c1"># Optional, for higher rate limits</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nt">ncbi_email</span><span class="p">:</span><span class="w"> </span><span class="s">"your.email@example.com"</span><span class="w">  </span><span class="c1"># Required</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nt">ncbi_api_key</span><span class="p">:</span><span class="w"> </span><span class="s">"${NCBI_API_KEY}"</span><span class="w">       </span><span class="c1"># Optional, for higher rate limits</span>
 <a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1"># Download behavior</span>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="nt">metadata_only_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span><span class="w">              </span><span class="c1"># Set true to skip downloads</span>
@@ -2202,8 +2202,8 @@
 </code></pre></div>
 <h3 id="integration-tests">Integration Tests<a class="headerlink" href="#integration-tests" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="c1"># Test with NCBI API (requires NCBI_EMAIL)</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">&quot;your.email@example.com&quot;</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">&quot;your_api_key&quot;</span><span class="w">  </span><span class="c1"># Optional</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_EMAIL</span><span class="o">=</span><span class="s2">"your.email@example.com"</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">NCBI_API_KEY</span><span class="o">=</span><span class="s2">"your_api_key"</span><span class="w">  </span><span class="c1"># Optional</span>
 <a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>python<span class="w"> </span>tests/test_assembly_resolver.py
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>python<span class="w"> </span>tests/test_robust_genome_download.py
 </code></pre></div>
@@ -2232,8 +2232,8 @@
 <li>
 <p>Update <code>config.yaml</code>:
    <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="nt">use_robust_downloader</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">assembly_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/csv/merged/assembly_metadata.csv&quot;</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">phage_host_links_output</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/intermediate/csv/merged/phage_host_links.csv&quot;</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="nt">assembly_metadata_output</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/csv/merged/assembly_metadata.csv"</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="nt">phage_host_links_output</span><span class="p">:</span><span class="w"> </span><span class="s">"/data/intermediate/csv/merged/phage_host_links.csv"</span>
 </code></pre></div></p>
 </li>
 <li>
