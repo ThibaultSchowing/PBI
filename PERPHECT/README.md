@@ -89,6 +89,14 @@ docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
     --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
 
+# Full training with CV and increased batch size (A40 GPU)
+docker compose run --rm analysis \
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
+    --cross-validate 5 \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
+    --gpu-device 3 \
+    --batch-size 32 --epochs 15
+
 # With cross-validation (5 folds)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --limit 1000 --epochs 3 \
