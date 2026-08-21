@@ -108,22 +108,20 @@ services:
       # When set, JupyterLab requires the token to access the UI.
       # Example: JUPYTER_TOKEN=my-secret-token
       - JUPYTER_TOKEN=${JUPYTER_TOKEN:-}
-      # NVIDIA GPU support (requires nvidia-container-toolkit on host)
-      - NVIDIA_VISIBLE_DEVICES=all
-      # Disable cuDNN autotuning and XLA to prevent autotuning failures
+      # ── GPU support (uncomment to enable) ──────────────────────────────────
+      # Requires nvidia-container-toolkit on host.
+      #- NVIDIA_VISIBLE_DEVICES=all
       #- TF_CUDNN_USE_AUTOTUNER=0
       #- TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
-    
-    # GPU reservation: passes all available NVIDIA GPUs to the container.
+    # Uncomment to reserve GPU resources for this container.
     # Requires nvidia-container-toolkit installed on the host.
-    # To disable GPU, comment out this block or set NVIDIA_VISIBLE_DEVICES="" above.
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    #deploy:
+    #  resources:
+    #    reservations:
+    #      devices:
+    #        - driver: nvidia
+    #          count: all
+    #          capabilities: [gpu]
     networks:
       - pbi-network
     restart: unless-stopped
