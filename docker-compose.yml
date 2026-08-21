@@ -80,7 +80,7 @@ services:
       # Mount notebooks directory for persistent work
       - ./notebooks:/workspace
       # Mount PERPHECT directory for training code and notebooks
-      - ./PERPHECT:/workspace/PERPHECT
+      # - ./PERPHECT:/workspace/PERPHECT
       # Durable notebook outputs (datasets, plots, model artifacts)
       - ./outputs:/results
       # Mount src directory (read-only) for package imports
@@ -111,8 +111,9 @@ services:
       # NVIDIA GPU support (requires nvidia-container-toolkit on host)
       - NVIDIA_VISIBLE_DEVICES=all
       # Disable cuDNN autotuning and XLA to prevent autotuning failures
-      - TF_CUDNN_USE_AUTOTUNER=0
-      - TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
+      #- TF_CUDNN_USE_AUTOTUNER=0
+      #- TF_XLA_FLAGS=--tf_xla_enable_xla_devices=false
+    
     # GPU reservation: passes all available NVIDIA GPUs to the container.
     # Requires nvidia-container-toolkit installed on the host.
     # To disable GPU, comment out this block or set NVIDIA_VISIBLE_DEVICES="" above.
