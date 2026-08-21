@@ -2,8 +2,8 @@
 # Usage: python train.py --config config.yaml
 
 training:
-  epochs: 10
-  batch_size: 4
+  epochs: 15
+  batch_size: 32
   steps_per_epoch: 400
   patience: 5
   learning_rate: 0.0004
