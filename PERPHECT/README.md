@@ -124,7 +124,7 @@ Results are saved to `./outputs/` on the host.
 |----------|---------|-------------|
 | `--epochs` | 10 | Training epochs |
 | `--batch-size` | 4 | Batch size |
-| `--steps-per-epoch` | 400 | Batches per epoch |
+| `--steps-per-epoch` | None | Batches per epoch (None = cover full training set each epoch) |
 | `--patience` | 5 | Early stopping patience |
 | `--learning-rate` | 0.0004 | Initial learning rate |
 | `--limit` | None | Limit positive pairs (None = all) |
@@ -147,10 +147,9 @@ Results are saved to `./outputs/` on the host.
 
 ```yaml
 training:
-  epochs: 20
-  batch_size: 4
-  steps_per_epoch: 800
-  patience: 10
+  epochs: 15
+  batch_size: 32
+  patience: 5
   learning_rate: 0.0004
 
 data:
@@ -164,6 +163,25 @@ output:
 gpu:
   enabled: true
 ```
+
+### Performance
+
+The generator caches one-hot encoded arrays in memory, so each unique host/phage is encoded only once across all epochs. This is critical for performance since the bacterium threshold is 7M bases.
+
+**Encoding speed** (vectorized numpy):
+- 1M bases: ~13ms per encode
+- 7M bases (bacterium threshold): ~84ms per encode
+
+**Recommended settings for full training on A40 GPU:**
+```bash
+python train.py --config config.yaml \
+  --cross-validate 5 \
+  --batch-size 32 --epochs 15 \
+  --exclude-ids test_data/excluded_pairs.csv \
+  --gpu-device 3
+```
+
+**`steps_per_epoch`:** When set to `None` (default), the generator covers the full training set each epoch. This ensures every sample is seen once per epoch. For quick tests, you can override with `--steps-per-epoch 400`.
 
 ### Output Files
 

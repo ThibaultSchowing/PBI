@@ -4,7 +4,7 @@
 training:
   epochs: 15
   batch_size: 32
-  steps_per_epoch: 400
+  # steps_per_epoch: null  # null = cover full training set each epoch
   patience: 5
   learning_rate: 0.0004
 

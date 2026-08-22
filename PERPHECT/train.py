@@ -148,6 +148,17 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     """Train and evaluate a single fold. Returns dict of fold metrics."""
     import keras
 
+    class ValidationProgressCallback(keras.callbacks.Callback):
+        """Logs validation progress so the user knows it's not stuck."""
+        def __init__(self, validation_steps):
+            super().__init__()
+            self.validation_steps = validation_steps
+        def on_test_begin(self, logs=None):
+            logging.info(f"  Validation: 0/{self.validation_steps} steps")
+        def on_test_batch_end(self, batch, logs=None):
+            if (batch + 1) % max(1, self.validation_steps // 10) == 0 or batch + 1 == self.validation_steps:
+                logging.info(f"  Validation: {batch + 1}/{self.validation_steps} steps")
+
     fold_dir = output_dir / f"fold_{fold_num}"
     fold_dir.mkdir(parents=True, exist_ok=True)
 
@@ -165,6 +176,11 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     )
     valid_steps = math.ceil(len(X_valid) / args.batch_size)
 
+    # Auto-calculate steps_per_epoch if not set
+    steps_per_epoch = args.steps_per_epoch
+    if steps_per_epoch is None:
+        steps_per_epoch = math.ceil(len(X_train) / args.batch_size)
+
     # Callbacks
     callbacks = [
         keras.callbacks.ModelCheckpoint(
@@ -178,11 +194,12 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
             lambda epoch: step_decay(epoch, args.learning_rate)
         ),
         keras.callbacks.CSVLogger(str(fold_dir / "training_log.csv")),
+        ValidationProgressCallback(valid_steps),
     ]
 
     # Train
     history = model.fit(
-        train_gen, steps_per_epoch=args.steps_per_epoch,
+        train_gen, steps_per_epoch=steps_per_epoch,
         epochs=args.epochs, validation_data=valid_gen,
         validation_steps=valid_steps, callbacks=callbacks,
     )
@@ -247,7 +264,7 @@ def main():
     # Training parameters
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10)")
     parser.add_argument("--batch-size", type=int, default=4, help="Batch size (default: 4)")
-    parser.add_argument("--steps-per-epoch", type=int, default=400, help="Batches per epoch (default: 400)")
+    parser.add_argument("--steps-per-epoch", type=int, default=None, help="Batches per epoch (None = cover full training set)")
     parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (default: 5)")
     parser.add_argument("--learning-rate", type=float, default=0.0004, help="Initial learning rate (default: 0.0004)")
 
@@ -533,6 +550,17 @@ def main():
         model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
         model.summary()
 
+        class ValidationProgressCallback(keras.callbacks.Callback):
+            """Logs validation progress so the user knows it's not stuck."""
+            def __init__(self, validation_steps):
+                super().__init__()
+                self.validation_steps = validation_steps
+            def on_test_begin(self, logs=None):
+                logging.info(f"  Validation: 0/{self.validation_steps} steps")
+            def on_test_batch_end(self, batch, logs=None):
+                if (batch + 1) % max(1, self.validation_steps // 10) == 0 or batch + 1 == self.validation_steps:
+                    logging.info(f"  Validation: {batch + 1}/{self.validation_steps} steps")
+
         # Training
         logging.info("Starting training...")
 
@@ -543,6 +571,12 @@ def main():
             X_valid, y_valid, batch_size=args.batch_size, shuffle=False
         )
         valid_steps = math.ceil(len(X_valid) / args.batch_size)
+
+        # Auto-calculate steps_per_epoch if not set
+        steps_per_epoch = args.steps_per_epoch
+        if steps_per_epoch is None:
+            steps_per_epoch = math.ceil(len(X_train) / args.batch_size)
+            logging.info(f"Auto steps_per_epoch: {steps_per_epoch} (full training set)")
 
         callbacks = [
             keras.callbacks.ModelCheckpoint(
@@ -556,10 +590,11 @@ def main():
                 lambda epoch: step_decay(epoch, args.learning_rate)
             ),
             keras.callbacks.CSVLogger(str(output_dir / "training_log.csv")),
+            ValidationProgressCallback(valid_steps),
         ]
 
         history = model.fit(
-            train_gen, steps_per_epoch=args.steps_per_epoch,
+            train_gen, steps_per_epoch=steps_per_epoch,
             epochs=args.epochs, validation_data=valid_gen,
             validation_steps=valid_steps, callbacks=callbacks,
         )

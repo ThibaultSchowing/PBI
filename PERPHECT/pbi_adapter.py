@@ -76,9 +76,13 @@ class PBIAdapter:
         self._next_host_id = 0
         self._next_phage_id = 0
 
-        # Sequence caches
+        # Sequence caches (raw strings)
         self._host_sequences: Dict[str, str] = {}
         self._phage_sequences: Dict[str, str] = {}
+
+        # Encoded array caches (one-hot numpy arrays, computed on first access)
+        self._host_encoded: Dict[str, np.ndarray] = {}
+        self._phage_encoded: Dict[str, np.ndarray] = {}
 
         # Track IDs that failed to avoid repeated warnings
         self._failed_hosts: set = set()
@@ -415,18 +419,24 @@ class PBIAdapter:
                 if host_id_str is None or phage_id_str is None:
                     continue
 
-                host_seq = self._host_sequences.get(host_id_str)
-                phage_seq = self._phage_sequences.get(phage_id_str)
+                # Use cached encoded arrays to avoid re-encoding
+                if host_id_str not in self._host_encoded:
+                    host_seq = self._host_sequences.get(host_id_str)
+                    if host_seq is None:
+                        continue
+                    self._host_encoded[host_id_str] = self._pad_and_encode(
+                        host_seq, self.bacterium_threshold
+                    )
+                if phage_id_str not in self._phage_encoded:
+                    phage_seq = self._phage_sequences.get(phage_id_str)
+                    if phage_seq is None:
+                        continue
+                    self._phage_encoded[phage_id_str] = self._pad_and_encode(
+                        phage_seq, self.phage_threshold
+                    )
 
-                if host_seq is None or phage_seq is None:
-                    continue
-
-                bacterium_samples[j] = self._pad_and_encode(
-                    host_seq, self.bacterium_threshold
-                )
-                phage_samples[j] = self._pad_and_encode(
-                    phage_seq, self.phage_threshold
-                )
+                bacterium_samples[j] = self._host_encoded[host_id_str]
+                phage_samples[j] = self._phage_encoded[phage_id_str]
                 targets[j] = labels[idx]
 
             yield (bacterium_samples, phage_samples), targets
