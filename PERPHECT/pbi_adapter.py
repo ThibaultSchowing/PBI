@@ -22,6 +22,7 @@ Usage:
 
 import math
 import logging
+from collections import OrderedDict
 from typing import Optional, Tuple, Dict, List, Generator
 
 import numpy as np
@@ -80,9 +81,11 @@ class PBIAdapter:
         self._host_sequences: Dict[str, str] = {}
         self._phage_sequences: Dict[str, str] = {}
 
-        # Encoded array caches (one-hot numpy arrays, computed on first access)
-        self._host_encoded: Dict[str, np.ndarray] = {}
-        self._phage_encoded: Dict[str, np.ndarray] = {}
+        # Bounded LRU cache for host encoded arrays only.
+        # Hosts: ~5500 unique, 7M × 4 = 28MB each → cap at 200 = ~5.6GB.
+        # Phages: ~1.3M unique, 200K × 4 = 800KB each → NOT cached (re-encode on-the-fly).
+        self._host_encoded_lru: OrderedDict = OrderedDict()
+        self._host_encoded_lru_max = 200
 
         # Track IDs that failed to avoid repeated warnings
         self._failed_hosts: set = set()
@@ -419,24 +422,27 @@ class PBIAdapter:
                 if host_id_str is None or phage_id_str is None:
                     continue
 
-                # Use cached encoded arrays to avoid re-encoding
-                if host_id_str not in self._host_encoded:
+                # Host: use bounded LRU cache (only ~5500 unique, 28MB each)
+                if host_id_str in self._host_encoded_lru:
+                    self._host_encoded_lru.move_to_end(host_id_str)
+                    host_arr = self._host_encoded_lru[host_id_str]
+                else:
                     host_seq = self._host_sequences.get(host_id_str)
                     if host_seq is None:
                         continue
-                    self._host_encoded[host_id_str] = self._pad_and_encode(
-                        host_seq, self.bacterium_threshold
-                    )
-                if phage_id_str not in self._phage_encoded:
-                    phage_seq = self._phage_sequences.get(phage_id_str)
-                    if phage_seq is None:
-                        continue
-                    self._phage_encoded[phage_id_str] = self._pad_and_encode(
-                        phage_seq, self.phage_threshold
-                    )
+                    host_arr = self._pad_and_encode(host_seq, self.bacterium_threshold)
+                    self._host_encoded_lru[host_id_str] = host_arr
+                    if len(self._host_encoded_lru) > self._host_encoded_lru_max:
+                        self._host_encoded_lru.popitem(last=False)
 
-                bacterium_samples[j] = self._host_encoded[host_id_str]
-                phage_samples[j] = self._phage_encoded[phage_id_str]
+                # Phage: re-encode on-the-fly (200K × 4 = 800KB, ~5ms, too many unique to cache)
+                phage_seq = self._phage_sequences.get(phage_id_str)
+                if phage_seq is None:
+                    continue
+                phage_arr = self._pad_and_encode(phage_seq, self.phage_threshold)
+
+                bacterium_samples[j] = host_arr
+                phage_samples[j] = phage_arr
                 targets[j] = labels[idx]
 
             yield (bacterium_samples, phage_samples), targets
