@@ -459,6 +459,7 @@ def main():
     # -----------------------------------------------------------------------
     # Train/validation/test split (stratified by label AND source)
     # -----------------------------------------------------------------------
+    logging.info("Splitting data into train/validation/test (stratified)...")
     stratify_key = np.array([
         "pos" if l == 1 else f"neg_{s}"
         for l, s in zip(labels, sources)

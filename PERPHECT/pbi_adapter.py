@@ -157,6 +157,7 @@ class PBIAdapter:
         if host_id in self._failed_hosts:
             return None
 
+        logger.debug(f"Cache miss — reading host {host_id} from disk...")
         try:
             seq = self.retriever.get_host_sequence(host_id, contig_mode="concat")
             if seq and len(seq) >= self.bacterium_min_length:
@@ -181,6 +182,7 @@ class PBIAdapter:
         if phage_id in self._failed_phages:
             return None
 
+        logger.debug(f"Cache miss — reading phage {phage_id} from disk...")
         try:
             seq = self.retriever.get_phage_sequence(phage_id)
             if seq and len(seq) >= self.phage_min_length:
@@ -477,7 +479,12 @@ class PBIAdapter:
         records = []
 
         # Process positives
-        for _, row in positive_pairs.iterrows():
+        total_pos = len(positive_pairs)
+        logger.info(f"  Fetching sequences for {total_pos} positive pairs...")
+        for i, (_, row) in enumerate(positive_pairs.iterrows()):
+            if (i + 1) % 500 == 0 or i + 1 == total_pos:
+                logger.info(f"  Fetched {i + 1}/{total_pos} positive pairs")
+
             phage_id_str = row["Phage_ID"]
             host_id_str = row["Host_ID"]
 
@@ -498,7 +505,12 @@ class PBIAdapter:
 
         # Process negatives
         if negative_pairs is not None:
-            for _, row in negative_pairs.iterrows():
+            total_neg = len(negative_pairs)
+            logger.info(f"  Fetching sequences for {total_neg} negative pairs...")
+            for i, (_, row) in enumerate(negative_pairs.iterrows()):
+                if (i + 1) % 500 == 0 or i + 1 == total_neg:
+                    logger.info(f"  Fetched {i + 1}/{total_neg} negative pairs")
+
                 phage_id_str = row["Phage_ID"]
                 host_id_str = row["Host_ID"]
 
