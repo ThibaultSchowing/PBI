@@ -143,6 +143,33 @@ def step_decay(epoch, initial_lrate=0.0004, drop=0.5, epochs_drop=4.0):
     return initial_lrate * math.pow(drop, math.floor((1 + epoch) / epochs_drop))
 
 
+def focal_loss(gamma=2.0, alpha=0.25):
+    """Focal loss for imbalanced binary classification.
+
+    Down-weights easy negatives automatically so the model focuses on
+    hard examples.  No class_weight or sample_weight needed.
+
+    Args:
+        gamma: Focusing parameter (higher = more focus on hard examples).
+               0.0 recovers standard binary crossentropy.
+        alpha: Weight for the positive class.  0.25 is the standard value
+               from the original paper (Lin et al., 2017).
+    """
+    import keras
+
+    def loss(y_true, y_pred):
+        y_pred = keras.ops.clip(y_pred, keras.backend.epsilon(), 1.0 - keras.backend.epsilon())
+        bce = -(
+            y_true * keras.ops.log(y_pred)
+            + (1.0 - y_true) * keras.ops.log(1.0 - y_pred)
+        )
+        p_t = y_true * y_pred + (1.0 - y_true) * (1.0 - y_pred)
+        alpha_t = y_true * alpha + (1.0 - y_true) * (1.0 - alpha)
+        return keras.ops.mean(alpha_t * keras.ops.pow(1.0 - p_t, gamma) * bce)
+
+    return loss
+
+
 def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
                 X_test, y_test, args, output_dir):
     """Train and evaluate a single fold. Returns dict of fold metrics."""
@@ -165,7 +192,12 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     # Build model
     model = build_model(args.bacterium_threshold, args.phage_threshold)
     optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-    model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
+    model.compile(
+        optimizer,
+        focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
+        metrics=["accuracy", keras.metrics.AUC(name="auc")],
+        jit_compile=False,
+    )
 
     # Generators
     train_gen = adapter.create_tf_generator(
@@ -185,10 +217,10 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     callbacks = [
         keras.callbacks.ModelCheckpoint(
             filepath=str(fold_dir / "model_best.keras"),
-            monitor="val_loss", save_best_only=True,
+            monitor="val_auc", mode="max", save_best_only=True,
         ),
         keras.callbacks.EarlyStopping(
-            monitor="val_loss", patience=args.patience, restore_best_weights=True,
+            monitor="val_auc", mode="max", patience=args.patience, restore_best_weights=True,
         ),
         keras.callbacks.LearningRateScheduler(
             lambda epoch: step_decay(epoch, args.learning_rate)
@@ -215,10 +247,16 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     test_predictions = model.predict(test_gen, steps=test_steps)
     test_pred_labels = (test_predictions.flatten() > 0.5).astype(int)
 
-    from sklearn.metrics import classification_report
+    from sklearn.metrics import classification_report, matthews_corrcoef, confusion_matrix
     report = classification_report(
         y_test, test_pred_labels, target_names=["Negative", "Positive"]
     )
+    mcc = matthews_corrcoef(y_test, test_pred_labels)
+    tn, fp, fn, tp = confusion_matrix(y_test, test_pred_labels).ravel()
+    sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+    specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
+    logging.info(f"  MCC: {mcc:.4f}  Sensitivity: {sensitivity:.4f}  Specificity: {specificity:.4f}")
 
     results_df = pd.DataFrame({
         "bacterium_id": X_test[:, 0],
@@ -237,14 +275,19 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
         "test_size": len(X_test),
         "epochs_trained": len(history.history["loss"]),
         "best_val_loss": float(min(history.history["val_loss"])),
+        "best_val_auc": float(max(history.history["val_auc"])),
         "best_val_accuracy": float(max(history.history["val_accuracy"])),
+        "test_mcc": float(mcc),
+        "test_sensitivity": float(sensitivity),
+        "test_specificity": float(specificity),
         "test_report": report,
     }
     with open(fold_dir / "summary.json", "w") as f:
         json.dump(summary, f, indent=2)
 
-    logging.info(f"Fold {fold_num}: val_loss={summary['best_val_loss']:.4f}, "
-                 f"val_acc={summary['best_val_accuracy']:.4f}, "
+    logging.info(f"Fold {fold_num}: val_auc={summary['best_val_auc']:.4f}, "
+                 f"val_loss={summary['best_val_loss']:.4f}, "
+                 f"test_mcc={mcc:.4f}, "
                  f"epochs={summary['epochs_trained']}")
 
     return summary
@@ -270,7 +313,14 @@ def main():
 
     # Data parameters
     parser.add_argument("--limit", type=int, default=None, help="Limit positive pairs (None = all)")
-    parser.add_argument("--negative-ratio", type=float, default=1.0, help="Negatives per positive (default: 1.0)")
+    parser.add_argument("--negative-ratio", type=float, default=1.0,
+                        help="Max synthetic negatives as multiple of private negatives "
+                             "(1.0 = match private count, 2.0 = 2x, 0.0 = no synthetic). "
+                             "Default: 1.0 (gives ~50/50 balance before filtering)")
+    parser.add_argument("--focal-alpha", type=float, default=0.25,
+                        help="Focal loss positive-class weight (default: 0.25)")
+    parser.add_argument("--focal-gamma", type=float, default=2.0,
+                        help="Focal loss focusing parameter (default: 2.0)")
     parser.add_argument("--bacterium-threshold", type=int, default=7_000_000, help="Max bacteria sequence length")
     parser.add_argument("--phage-threshold", type=int, default=200_000, help="Max phage sequence length")
     parser.add_argument("--bacterium-min-length", type=int, default=150_000, help="Min bacteria length to keep")
@@ -393,12 +443,13 @@ def main():
         f"(pairs explicitly marked as 'no interaction' in private_interactions)"
     )
 
-    # Generate synthetic negatives (capped at 2x private negatives)
-    if len(private_negatives) > 0:
-        max_generated = max(len(private_negatives) * 2, 100)
+    # Generate synthetic negatives (capped by --negative-ratio × private negatives)
+    n_private = len(private_negatives)
+    if n_private > 0:
+        max_generated = int(n_private * args.negative_ratio)
         logging.info(
-            f"Generating additional synthetic negatives to increase the pool "
-            f"(capped at 2x existing negatives = {max_generated})"
+            f"Generating synthetic negatives "
+            f"(capped at {args.negative_ratio:.1f}x existing negatives = {max_generated})"
         )
     else:
         max_generated = len(positive_pairs)
@@ -514,10 +565,12 @@ def main():
                 "private_data": len(private_negatives),
                 "generated": len(generated_negatives),
             },
+            "mean_val_auc": float(np.mean([s["best_val_auc"] for s in fold_summaries])),
+            "std_val_auc": float(np.std([s["best_val_auc"] for s in fold_summaries])),
             "mean_val_loss": float(np.mean([s["best_val_loss"] for s in fold_summaries])),
             "std_val_loss": float(np.std([s["best_val_loss"] for s in fold_summaries])),
-            "mean_val_accuracy": float(np.mean([s["best_val_accuracy"] for s in fold_summaries])),
-            "std_val_accuracy": float(np.std([s["best_val_accuracy"] for s in fold_summaries])),
+            "mean_test_mcc": float(np.mean([s["test_mcc"] for s in fold_summaries])),
+            "std_test_mcc": float(np.std([s["test_mcc"] for s in fold_summaries])),
             "mean_epochs": float(np.mean([s["epochs_trained"] for s in fold_summaries])),
             "folds": fold_summaries,
         }
@@ -526,8 +579,9 @@ def main():
 
         logging.info(f"\n{'='*60}")
         logging.info("Cross-validation complete!")
+        logging.info(f"Val AUC:   {cv_summary['mean_val_auc']:.4f} +/- {cv_summary['std_val_auc']:.4f}")
         logging.info(f"Val loss:  {cv_summary['mean_val_loss']:.4f} +/- {cv_summary['std_val_loss']:.4f}")
-        logging.info(f"Val acc:   {cv_summary['mean_val_accuracy']:.4f} +/- {cv_summary['std_val_accuracy']:.4f}")
+        logging.info(f"Test MCC:  {cv_summary['mean_test_mcc']:.4f} +/- {cv_summary['std_test_mcc']:.4f}")
         logging.info(f"Mean epochs: {cv_summary['mean_epochs']:.1f}")
         logging.info(f"Results saved to: {output_dir}")
         logging.info(f"Summary: {output_dir / 'cv_summary.json'}")
@@ -562,7 +616,12 @@ def main():
 
         import keras
         optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-        model.compile(optimizer, "binary_crossentropy", metrics=["accuracy"], jit_compile=False)
+        model.compile(
+            optimizer,
+            focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
+            metrics=["accuracy", keras.metrics.AUC(name="auc")],
+            jit_compile=False,
+        )
         model.summary()
 
         class ValidationProgressCallback(keras.callbacks.Callback):
@@ -596,10 +655,10 @@ def main():
         callbacks = [
             keras.callbacks.ModelCheckpoint(
                 filepath=str(output_dir / "model_best.keras"),
-                monitor="val_loss", save_best_only=True,
+                monitor="val_auc", mode="max", save_best_only=True,
             ),
             keras.callbacks.EarlyStopping(
-                monitor="val_loss", patience=args.patience, restore_best_weights=True,
+                monitor="val_auc", mode="max", patience=args.patience, restore_best_weights=True,
             ),
             keras.callbacks.LearningRateScheduler(
                 lambda epoch: step_decay(epoch, args.learning_rate)
@@ -643,11 +702,17 @@ def main():
         test_predictions = model.predict(test_gen, steps=test_steps)
         test_pred_labels = (test_predictions.flatten() > 0.5).astype(int)
 
-        from sklearn.metrics import classification_report
+        from sklearn.metrics import classification_report, matthews_corrcoef, confusion_matrix
         report = classification_report(
             y_test, test_pred_labels, target_names=["Negative", "Positive"]
         )
+        mcc = matthews_corrcoef(y_test, test_pred_labels)
+        tn, fp, fn, tp = confusion_matrix(y_test, test_pred_labels).ravel()
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+
         logging.info(f"\nClassification Report:\n{report}")
+        logging.info(f"MCC: {mcc:.4f}  Sensitivity: {sensitivity:.4f}  Specificity: {specificity:.4f}")
 
         results_df = pd.DataFrame({
             "bacterium_id": X_test[:, 0],
@@ -679,7 +744,11 @@ def main():
             },
             "epochs_trained": len(history.history["loss"]),
             "best_val_loss": float(min(history.history["val_loss"])),
+            "best_val_auc": float(max(history.history["val_auc"])),
             "best_val_accuracy": float(max(history.history["val_accuracy"])),
+            "test_mcc": float(mcc),
+            "test_sensitivity": float(sensitivity),
+            "test_specificity": float(specificity),
             "test_report": report,
         }
         with open(output_dir / "summary.json", "w") as f:

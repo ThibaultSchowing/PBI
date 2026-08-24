@@ -122,13 +122,15 @@ Results are saved to `./outputs/` on the host.
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `--epochs` | 10 | Training epochs |
-| `--batch-size` | 4 | Batch size |
+| `--epochs` | 15 | Training epochs |
+| `--batch-size` | 32 | Batch size |
 | `--steps-per-epoch` | None | Batches per epoch (None = cover full training set each epoch) |
 | `--patience` | 5 | Early stopping patience |
 | `--learning-rate` | 0.0004 | Initial learning rate |
 | `--limit` | None | Limit positive pairs (None = all) |
-| `--negative-ratio` | 1.0 | Negatives per positive |
+| `--negative-ratio` | 1.0 | Max synthetic negatives as multiple of private negatives (1.0 = match count, 2.0 = 2x, 0.0 = none) |
+| `--focal-alpha` | 0.25 | Focal loss positive-class weight |
+| `--focal-gamma` | 2.0 | Focal loss focusing parameter |
 | `--bacterium-threshold` | 7000000 | Max bacteria sequence length |
 | `--phage-threshold` | 200000 | Max phage sequence length |
 | `--bacterium-min-length` | 150000 | Min bacteria length to keep |
@@ -151,6 +153,8 @@ training:
   batch_size: 32
   patience: 5
   learning_rate: 0.0004
+  focal_alpha: 0.25
+  focal_gamma: 2.0
 
 data:
   negative_ratio: 1.0
@@ -163,6 +167,24 @@ output:
 gpu:
   enabled: true
 ```
+
+### Class Imbalance & Loss Function
+
+The training uses **focal loss** (Lin et al., 2017) instead of standard binary cross-entropy. Focal loss down-weights easy negatives automatically, so the model focuses on hard examples. This is critical because:
+- Generated negatives (random phage-host pairs) are trivially distinguishable from real interactions
+- Standard BCE lets the model achieve high accuracy by memorizing easy negatives
+
+**Metrics tracked during training:**
+- `val_auc` — threshold-independent, used for early stopping and model checkpointing
+- `accuracy` — logged for reference but not used for early stopping
+
+**Metrics computed on test set:**
+- Classification report (precision, recall, F1)
+- MCC (Matthews Correlation Coefficient) — balanced even with class imbalance
+- Sensitivity (recall for positive class)
+- Specificity (recall for negative class)
+
+**Negative balance:** `--negative-ratio 1.0` (default) caps synthetic negatives at 1x the private negative count, giving ~50/50 balance before sequence filtering. Use `--negative-ratio 2.0` for the previous behavior.
 
 ### Performance
 
@@ -177,6 +199,7 @@ The generator caches one-hot encoded arrays in memory, so each unique host/phage
 python train.py --config config.yaml \
   --cross-validate 5 \
   --batch-size 32 --epochs 15 \
+  --negative-ratio 1.0 \
   --exclude-ids test_data/excluded_pairs.csv \
   --gpu-device 3
 ```

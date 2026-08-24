@@ -7,10 +7,12 @@ training:
   # steps_per_epoch: null  # null = cover full training set each epoch
   patience: 5
   learning_rate: 0.0004
+  focal_alpha: 0.25
+  focal_gamma: 2.0
 
 data:
   # limit: null  # null = all data; set to an integer to limit
-  negative_ratio: 1.0
+  negative_ratio: 1.0  # max synthetic negatives as multiple of private negatives (1.0 = 50/50 balance)
   bacterium_threshold: 7000000
   phage_threshold: 200000
   bacterium_min_length: 150000
