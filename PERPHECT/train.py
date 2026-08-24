@@ -388,14 +388,28 @@ def main():
         positive_pairs = positive_pairs.sample(n=args.limit, random_state=42).reset_index(drop=True)
 
     logging.info(f"Positive pairs: {len(positive_pairs)}")
-    logging.info(f"True negatives from private data: {len(private_negatives)}")
+    logging.info(
+        f"Existing negatives from private data: {len(private_negatives)} "
+        f"(pairs explicitly marked as 'no interaction' in private_interactions)"
+    )
 
     # Generate synthetic negatives (capped at 2x private negatives)
-    logging.info(f"Generating synthetic negatives (ratio={args.negative_ratio})...")
+    if len(private_negatives) > 0:
+        max_generated = max(len(private_negatives) * 2, 100)
+        logging.info(
+            f"Generating additional synthetic negatives to increase the pool "
+            f"(capped at 2x existing negatives = {max_generated})"
+        )
+    else:
+        max_generated = len(positive_pairs)
+        logging.info(
+            f"No existing negatives in private data — generating synthetic negatives "
+            f"to create a negative class"
+        )
     neg_gen = NegativeExampleGenerator(retriever)
-    max_generated = max(len(private_negatives) * 2, 100) if len(private_negatives) > 0 else len(positive_pairs)
     target_count = min(len(positive_pairs), max_generated)
     effective_ratio = target_count / len(positive_pairs) if len(positive_pairs) > 0 else 0
+    logging.info(f"  Target: {target_count} synthetic negatives (ratio={effective_ratio:.3f})")
     generated_negatives = neg_gen.generate_random_negatives(
         positive_pairs, ratio=effective_ratio
     )
@@ -413,12 +427,12 @@ def main():
         ].reset_index(drop=True)
         if before_dedup - len(generated_negatives) > 0:
             logging.info(
-                f"Removed {before_dedup - len(generated_negatives)} generated negatives "
-                f"that duplicated private data negatives"
+                f"  Removed {before_dedup - len(generated_negatives)} duplicates "
+                f"against existing private negatives"
             )
 
     generated_negatives["negative_source"] = "generated"
-    logging.info(f"Generated {len(generated_negatives)} synthetic negative pairs")
+    logging.info(f"  Generated: {len(generated_negatives)} synthetic negative pairs")
 
     # Combine all negatives
     if len(private_negatives) > 0 and len(generated_negatives) > 0:
@@ -429,8 +443,8 @@ def main():
         negative_pairs = generated_negatives
 
     logging.info(
-        f"Total negatives: {len(negative_pairs)} "
-        f"({len(private_negatives)} private_data + "
+        f"Final negative pool: {len(negative_pairs)} total "
+        f"({len(private_negatives)} from private data + "
         f"{len(generated_negatives)} generated)"
     )
 
