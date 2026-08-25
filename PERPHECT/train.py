@@ -156,16 +156,18 @@ def focal_loss(gamma=2.0, alpha=0.25):
                from the original paper (Lin et al., 2017).
     """
     import keras
+    import tensorflow as tf
 
     def loss(y_true, y_pred):
-        y_pred = keras.ops.clip(y_pred, keras.backend.epsilon(), 1.0 - keras.backend.epsilon())
+        epsilon = keras.backend.epsilon()
+        y_pred = tf.clip_by_value(y_pred, epsilon, 1.0 - epsilon)
         bce = -(
-            y_true * keras.ops.log(y_pred)
-            + (1.0 - y_true) * keras.ops.log(1.0 - y_pred)
+            y_true * tf.math.log(y_pred)
+            + (1.0 - y_true) * tf.math.log(1.0 - y_pred)
         )
         p_t = y_true * y_pred + (1.0 - y_true) * (1.0 - y_pred)
         alpha_t = y_true * alpha + (1.0 - y_true) * (1.0 - alpha)
-        return keras.ops.mean(alpha_t * keras.ops.pow(1.0 - p_t, gamma) * bce)
+        return tf.reduce_mean(alpha_t * tf.pow(1.0 - p_t, gamma) * bce)
 
     return loss
 
