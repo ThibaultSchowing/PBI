@@ -172,6 +172,57 @@ def focal_loss(gamma=2.0, alpha=0.25):
     return loss
 
 
+def freeze_base_layers(model, up_to_layer="concatenated_features"):
+    """Freeze base encoder layers up to (and including) the specified layer."""
+    for layer in model.layers:
+        layer.trainable = False
+        if layer.name == up_to_layer:
+            break
+    trainable_count = sum(1 for l in model.layers if l.trainable)
+    total_count = len(model.layers)
+    logging.info(f"Frozen layers up to '{up_to_layer}': {total_count - trainable_count}/{total_count} frozen, {trainable_count} trainable")
+    return trainable_count
+
+
+def load_or_build_model(args, bacterium_threshold, phage_threshold, is_finetuning=False):
+    """Load pre-trained model or build new one. Returns (model, is_finetuning_flag)."""
+    import keras
+    
+    if args.pretrained_model:
+        logging.info(f"Loading pre-trained model from {args.pretrained_model}")
+        model = keras.models.load_model(
+            args.pretrained_model,
+            custom_objects={"focal_loss": focal_loss}
+        )
+        is_finetuning = True
+        
+        if args.freeze_base:
+            freeze_base_layers(model, args.freeze_up_to)
+        
+        # Recompile with fine-tuning LR
+        lr = args.fine_tune_lr if is_finetuning else args.learning_rate
+        optimizer = keras.optimizers.Adam(learning_rate=lr)
+        model.compile(
+            optimizer,
+            focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
+            metrics=["accuracy", keras.metrics.AUC(name="auc")],
+            jit_compile=False,
+        )
+        logging.info(f"Model loaded for {'fine-tuning' if is_finetuning else 'training'} with LR={lr}")
+        return model, True
+    else:
+        model = build_model(bacterium_threshold, phage_threshold)
+        optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
+        model.compile(
+            optimizer,
+            focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
+            metrics=["accuracy", keras.metrics.AUC(name="auc")],
+            jit_compile=False,
+        )
+        logging.info(f"New model built for training with LR={args.learning_rate}")
+        return model, False
+
+
 def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
                 X_test, y_test, args, output_dir):
     """Train and evaluate a single fold. Returns dict of fold metrics."""
@@ -191,14 +242,9 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
     fold_dir = output_dir / f"fold_{fold_num}"
     fold_dir.mkdir(parents=True, exist_ok=True)
 
-    # Build model
-    model = build_model(args.bacterium_threshold, args.phage_threshold)
-    optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-    model.compile(
-        optimizer,
-        focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
-        metrics=["accuracy", keras.metrics.AUC(name="auc")],
-        jit_compile=False,
+    # Build or load model
+    model, is_finetuning_fold = load_or_build_model(
+        args, args.bacterium_threshold, args.phage_threshold, is_finetuning=False
     )
 
     # Generators
@@ -336,6 +382,16 @@ def main():
     parser.add_argument("--config", type=str, default=None, help="YAML config file (overrides CLI args)")
     parser.add_argument("--cross-validate", type=int, default=0, help="K folds for stratified K-fold CV (0 = disabled)")
     parser.add_argument("--exclude-ids", type=str, default=None, help="CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage from held-out test set)")
+    parser.add_argument("--exclude-sources", type=str, default=None, help="Comma-separated Source_DB values to exclude from training (e.g., 'PERPHECT_private,other_source')")
+    
+    # Pre-trained model / fine-tuning
+    parser.add_argument("--pretrained-model", type=str, default=None, help="Path to pre-trained .keras model to load (enables fine-tuning mode)")
+    parser.add_argument("--freeze-base", action="store_true", help="Freeze CNN encoder layers, only train classification head")
+    parser.add_argument("--freeze-up-to", type=str, default="concatenated_features", help="Freeze layers up to this layer name (default: concatenated_features)")
+    parser.add_argument("--fine-tune-lr", type=float, default=0.0001, help="Learning rate for fine-tuning (default: 0.0001)")
+    parser.add_argument("--fine-tune-epochs", type=int, default=5, help="Epochs for fine-tuning (default: 5)")
+    parser.add_argument("--finetuned-model-name", type=str, default="model_finetuned_best.keras", help="Output name for fine-tuned best model")
+    
     parser.add_argument("--no-gpu", action="store_true", help="Force CPU even if GPU available")
     parser.add_argument("--gpu-device", type=int, default=0, help="GPU device index (default: 0, use 1 for second GPU)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
@@ -403,10 +459,38 @@ def main():
         phage_min_length=args.phage_min_length,
     )
 
+    # Parse exclude-sources (comma-separated)
+    exclude_sources = None
+    if args.exclude_sources:
+        exclude_sources = [s.strip() for s in args.exclude_sources.split(",") if s.strip()]
+        logging.info(f"Excluding sources: {exclude_sources}")
+
+    is_finetuning = args.pretrained_model is not None
+
     # Phase 1: Query pair IDs only (fast — no sequences fetched)
     logging.info("Querying pair IDs from database...")
-    all_pairs = adapter.get_pair_ids_only(shuffle=True)
-    logging.info(f"Found {len(all_pairs)} pairs in database")
+    
+    if is_finetuning:
+        # FINE-TUNING MODE: Only use the excluded sources
+        if not exclude_sources:
+            raise ValueError("--exclude-sources is required for fine-tuning mode")
+        
+        # Query ONLY the specified sources for fine-tuning
+        placeholders = ", ".join(["?" for _ in exclude_sources])
+        query = f"""
+        SELECT DISTINCT pha.Phage_ID, pha.Host_ID
+        FROM phage_host_associations pha
+        JOIN fact_phages p ON pha.Phage_ID = p.Phage_ID
+        WHERE p.Source_DB IN ({", ".join(["?" for _ in exclude_sources])})
+        """
+        if shuffle := True:
+            query += " ORDER BY MD5(Phage_ID || Host_ID)"
+        all_pairs = retriever.conn.execute(query, exclude_sources + exclude_sources).fetchdf()
+        logging.info(f"Fine-tuning mode: Found {len(all_pairs)} pairs from sources {exclude_sources}")
+    else:
+        # PRE-TRAINING MODE: Exclude specified sources
+        all_pairs = adapter.get_pair_ids_only(shuffle=True, exclude_sources=exclude_sources)
+        logging.info(f"Pre-training mode: Found {len(all_pairs)} pairs in database (excluded sources: {exclude_sources})")
 
     # Exclude held-out test pairs if specified
     if args.exclude_ids:
@@ -522,6 +606,8 @@ def main():
     # Branch: Cross-validation or standard split
     # -----------------------------------------------------------------------
     if args.cross_validate > 0:
+        if args.pretrained_model:
+            raise ValueError("Cross-validation (--cross-validate) is not supported with fine-tuning (--pretrained-model). Use standard split for fine-tuning.")
         # ---- K-fold cross-validation ----
         k = args.cross_validate
         logging.info(f"Starting {k}-fold stratified cross-validation...")
@@ -613,16 +699,9 @@ def main():
             logging.info(f"  {split_name}: {dist}")
 
         # Build model
-        logging.info("Building PERPHECT model...")
-        model = build_model(args.bacterium_threshold, args.phage_threshold)
-
-        import keras
-        optimizer = keras.optimizers.Adam(learning_rate=args.learning_rate)
-        model.compile(
-            optimizer,
-            focal_loss(gamma=args.focal_gamma, alpha=args.focal_alpha),
-            metrics=["accuracy", keras.metrics.AUC(name="auc")],
-            jit_compile=False,
+        logging.info("Building/loading PERPHECT model...")
+        model, is_finetuning = load_or_build_model(
+            args, args.bacterium_threshold, args.phage_threshold, is_finetuning=args.pretrained_model is not None
         )
         model.summary()
 
@@ -648,6 +727,18 @@ def main():
         )
         valid_steps = math.ceil(len(X_valid) / args.batch_size)
 
+        # Determine training parameters based on mode
+        if is_finetuning:
+            train_epochs = args.fine_tune_epochs
+            train_lr = args.fine_tune_lr
+            best_model_name = args.finetuned_model_name
+            logging.info(f"Fine-tuning mode: epochs={train_epochs}, lr={train_lr}, best_model={best_model_name}")
+        else:
+            train_epochs = args.epochs
+            train_lr = args.learning_rate
+            best_model_name = "model_best.keras"
+            logging.info(f"Training mode: epochs={train_epochs}, lr={train_lr}")
+
         # Auto-calculate steps_per_epoch if not set
         steps_per_epoch = args.steps_per_epoch
         if steps_per_epoch is None:
@@ -656,14 +747,14 @@ def main():
 
         callbacks = [
             keras.callbacks.ModelCheckpoint(
-                filepath=str(output_dir / "model_best.keras"),
+                filepath=str(output_dir / best_model_name),
                 monitor="val_auc", mode="max", save_best_only=True,
             ),
             keras.callbacks.EarlyStopping(
                 monitor="val_auc", mode="max", patience=args.patience, restore_best_weights=True,
             ),
             keras.callbacks.LearningRateScheduler(
-                lambda epoch: step_decay(epoch, args.learning_rate)
+                lambda epoch: step_decay(epoch, train_lr)
             ),
             keras.callbacks.CSVLogger(str(output_dir / "training_log.csv")),
             ValidationProgressCallback(valid_steps),
@@ -671,7 +762,7 @@ def main():
 
         history = model.fit(
             train_gen, steps_per_epoch=steps_per_epoch,
-            epochs=args.epochs, validation_data=valid_gen,
+            epochs=train_epochs, validation_data=valid_gen,
             validation_steps=valid_steps, callbacks=callbacks,
         )
 

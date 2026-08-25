@@ -91,7 +91,7 @@ class PBIAdapter:
         self._failed_hosts: set = set()
         self._failed_phages: set = set()
 
-    def get_pair_ids_only(self, shuffle: bool = False) -> pd.DataFrame:
+    def get_pair_ids_only(self, shuffle: bool = False, exclude_sources: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Query all phage-host pair IDs without fetching sequences.
 
@@ -105,15 +105,34 @@ class PBIAdapter:
         Args:
             shuffle: If True, randomize row order using a deterministic hash.
                      Ensures reproducible shuffling without loading rows into Python.
+            exclude_sources: Optional list of Source_DB values to exclude from results.
+                            Pairs where the phage's Source_DB matches any value in this
+                            list will be excluded. Useful for holding out private data
+                            sources for fine-tuning.
         """
         query = """
-        SELECT DISTINCT Phage_ID, Host_ID
-        FROM phage_host_associations
+        SELECT DISTINCT pha.Phage_ID, pha.Host_ID
+        FROM phage_host_associations pha
+        JOIN fact_phages p ON pha.Phage_ID = p.Phage_ID
         """
+        
+        if exclude_sources:
+            # Build parameterized IN clause
+            placeholders = ", ".join(["?" for _ in exclude_sources])
+            query += f" WHERE p.Source_DB NOT IN ({placeholders})"
+        
         if shuffle:
             query += " ORDER BY MD5(Phage_ID || Host_ID)"
-        df = self.retriever.conn.execute(query).fetchdf()
+        
+        if exclude_sources:
+            df = self.retriever.conn.execute(query, exclude_sources).fetchdf()
+        else:
+            df = self.retriever.conn.execute(query).fetchdf()
+        
         logger.info(f"Queried {len(df):,} pair IDs (no sequences)")
+        
+        if exclude_sources:
+            logger.info(f"Excluded sources: {exclude_sources}")
 
         # Filter out pairs where host/phage FASTA is not registered
         df = self._filter_pairs_without_sequences(df)

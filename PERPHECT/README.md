@@ -104,6 +104,49 @@ docker compose run --rm analysis \
     --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
 ```
 
+### Two-Stage Workflow: Pre-training + Fine-tuning
+
+For best results with private data, use the two-stage workflow:
+
+**Stage 1: Pre-training on PBI-Scope (exclude private source)**
+
+```bash
+# Pre-train on all PBI-Scope data except your private source
+docker compose run --rm analysis \
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config_pretrain.yaml \
+    --cross-validate 5 \
+    --exclude-sources PERPHECT_private \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
+    --gpu-device 3 --batch-size 32 --epochs 15
+```
+
+Outputs: `outputs/run_*/fold_*/model_best.keras` (pre-trained models)
+
+**Stage 2: Fine-tuning on private data only**
+
+```bash
+# Fine-tune on your private data (e.g., PERPHECT_private)
+docker compose run --rm analysis \
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config_finetune.yaml \
+    --pretrained-model /workspace/PERPHECT/outputs/run_*/fold_1/model_best.keras \
+    --exclude-sources PERPHECT_private \
+    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
+    --freeze-base \
+    --gpu-device 3 --batch-size 16
+```
+
+Outputs: `outputs/run_*/model_finetuned_best.keras` (fine-tuned model)
+
+**Key points:**
+- `--exclude-sources PERPHECT_private` in Stage 1 excludes your private data from pre-training
+- Same `--exclude-sources PERPHECT_private` in Stage 2 selects ONLY that source for fine-tuning
+- Same `--exclude-ids` test set is excluded in BOTH stages (no data leakage)
+- `--freeze-base` freezes CNN encoders, only trains classification head
+- Fine-tuning uses lower LR (0.0001), fewer epochs (5), smaller batch (16)
+- Fine-tuned model saved as `model_finetuned_best.keras`
+
+**Multiple sources:** `--exclude-sources PERPHECT_private,other_source` (comma-separated)
+
 ### 3. Evaluate (notebook)
 
 Open `02_evaluate_model.ipynb` to load the trained model and test set, then display:
@@ -140,6 +183,13 @@ Results are saved to `./outputs/` on the host.
 | `--config` | None | YAML config file |
 | `--cross-validate` | 0 | K folds for stratified K-fold CV (0 = standard split) |
 | `--exclude-ids` | None | CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage) |
+| `--exclude-sources` | None | Comma-separated Source_DB values to exclude/include (e.g., `PERPHECT_private,other_source`) |
+| `--pretrained-model` | None | Path to pre-trained .keras model (enables fine-tuning mode) |
+| `--freeze-base` | False | Freeze CNN encoder layers, only train classification head |
+| `--freeze-up-to` | concatenated_features | Layer name to freeze up to |
+| `--fine-tune-lr` | 0.0001 | Learning rate for fine-tuning |
+| `--fine-tune-epochs` | 5 | Epochs for fine-tuning |
+| `--finetuned-model-name` | model_finetuned_best.keras | Output name for fine-tuned best model |
 | `--no-gpu` | False | Force CPU |
 | `--gpu-device` | 0 | GPU device index |
 | `--verbose` | False | Verbose logging |
@@ -155,6 +205,12 @@ training:
   learning_rate: 0.0004
   focal_alpha: 0.25
   focal_gamma: 2.0
+  # Fine-tuning parameters (used when --pretrained-model is provided)
+  fine_tune_lr: 0.0001
+  fine_tune_epochs: 5
+  freeze_base: true
+  freeze_up_to: "concatenated_features"
+  finetuned_model_name: "model_finetuned_best.keras"
 
 data:
   negative_ratio: 1.0
