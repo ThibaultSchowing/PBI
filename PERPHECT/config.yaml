@@ -32,7 +32,7 @@ defaults:
     # exclude_sources: null      # list of Source_DB values to exclude
 
   output:
-    dir: results
+    dir: /results
     # run_name: null             # null = timestamp
     # log_file: null             # null = console only
 

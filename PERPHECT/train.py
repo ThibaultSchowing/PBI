@@ -358,7 +358,7 @@ def main():
 
     # Training parameters
     parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10)")
-    parser.add_argument("--batch-size", type=int, default=4, help="Batch size (default: 4)")
+    parser.add_argument("--batch-size", type=int, default=32, help="Batch size (default: 32)")
     parser.add_argument("--steps-per-epoch", type=int, default=None, help="Batches per epoch (None = cover full training set)")
     parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (default: 5)")
     parser.add_argument("--learning-rate", type=float, default=0.0004, help="Initial learning rate (default: 0.0004)")

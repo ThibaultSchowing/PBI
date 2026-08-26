@@ -1,62 +1,71 @@
-# PERPHECT — PBI-Scope Integration
+# PERPHECT — Phage-Host Interaction Predictor
 
-PERPHECT is a dual-CNN phage-host interaction predictor. This integration replaces PERPHECT's original CSV-based data loading with PBI-Scope's streaming database, enabling training on the full dataset without manual exports.
+PERPHECT is a dual-CNN model that predicts phage-bacteria interactions from genomic sequences. It uses two parallel convolutional encoders — one for the bacterial genome (up to 7M bp) and one for the phage genome (up to 200K bp) — whose features are concatenated and fed to a classification head.
 
-## What PBI-Scope Provides
+This directory contains the complete training pipeline, integrated with PBI-Scope as the data backend.
 
-PBI-Scope (`src/pbi/`) is a self-contained phage-host data platform built on DuckDB + pyfaidx. For ML training, it provides:
+## How It Works
 
-| PBI-Scope Component | What It Does |
-|---------------------|--------------|
-| `SequenceRetriever` | Core data engine. Connects DuckDB metadata to indexed FASTA files. Fetches phage/host sequences on demand via `get_phage_sequence()` and `get_host_sequence()`. Handles private data routing automatically. |
-| `NegativeExampleGenerator` | Generates synthetic negative (non-interacting) pairs using random, GC-content, and taxonomy-based strategies. |
-| `private_data` | Validates and ingests user-supplied phage-host interaction datasets. Manages `private_interactions` table with interaction type labels. |
+### Training Pipeline Overview
 
-### What We Did NOT Have to Build
-
-PBI-Scope handled these natively — no custom code needed:
-
-- DuckDB connection and query engine
-- FASTA indexing and lazy sequence retrieval (pyfaidx, LRU cache, background preload)
-- Private phage/host data routing and ingestion
-- Interaction type storage and querying
-- Negative example generation strategies
-- Multi-contig genome assembly
-
-## What the Adapter Handles
-
-The `PBIAdapter` class (`pbi_adapter.py`) is the translation layer between PBI-Scope's data format and PERPHECT's expectations. **Everything here is custom code** — PBI-Scope provides no built-in PERPHECT support.
-
-| Translation Layer | Why It's Needed |
-|-------------------|-----------------|
-| **String → Integer ID mapping** | PBI-Scope uses string IDs (`"GCF_000005845"`). PERPHECT's embedding layer requires contiguous integer indices. |
-| **Length filtering** | PERPHECT expects bacteria ≤7M bp and phages ≤200K bp. Sequences outside these ranges are dropped. |
-| **Zero-padding + truncation** | PERPHECT requires fixed-length inputs. Sequences are padded with zeros or truncated to the threshold. |
-| **One-hot encoding** | PERPHECT expects `(length, 4)` numpy arrays (A/T/G/C channels). PBI-Scope returns raw strings. |
-| **DataFrame schema mapping** | PERPHECT's original CSV format uses three tables (couples, bacteria, phages). The adapter produces these from PBI-Scope's pair DataFrames. |
-| **TF generator interface** | PERPHECT's `model.fit()` expects an infinite-loop generator yielding `([bact_batch, phage_batch], labels)`. PBI-Scope has no Keras generator. |
-| **Two-phase loading** | Loading all sequences up front takes 10+ minutes. The adapter queries pair IDs first (fast SQL), classifies them, applies limits, then fetches sequences only for selected pairs. |
-| **Interaction classification** | The `private_interactions` table stores interaction types as strings. The adapter classifies `"no interaction"` / `"none"` / `"negative"` as label=0, everything else as label=1. |
-
-### Adapter Usage
-
-```python
-from pbi_adapter import PBIAdapter
-
-adapter = PBIAdapter(retriever, bacterium_threshold=7_000_000, phage_threshold=200_000)
-
-# Phase 1: Query pair IDs only (fast SQL, no sequences loaded)
-all_pairs = adapter.get_pair_ids_only(shuffle=True)
-
-# Phase 2: Classify by interaction type
-positive_pairs, negative_pairs = adapter.classify_pairs_by_interaction(all_pairs)
-
-# Phase 3: Fetch sequences only for selected pairs (lazy)
-couples, labels, sources = adapter.prepare_training_data(positive_pairs, negative_pairs)
-
-# Phase 4: Create TF generator
-gen = adapter.create_tf_generator(couples, labels, batch_size=4)
 ```
+PBI-Scope DB (DuckDB + FASTA)
+    │
+    ▼
+PBIAdapter.get_pair_ids_only()     ← fast SQL, no sequences
+    │
+    ▼
+PBIAdapter.classify_pairs_by_interaction()
+    │
+    ▼
+NegativeExampleGenerator           ← synthetic negatives
+    │
+    ▼
+PBIAdapter.prepare_training_data() ← fetches sequences, one-hot encodes
+    │
+    ▼
+train_test_split()                 ← 70/15/15 stratified
+    │
+    ▼
+model.fit()                        ← focal loss, val_auc monitoring
+    │
+    ▼
+model_best.keras + summary.json
+```
+
+### The Adapter (`pbi_adapter.py`)
+
+The `PBIAdapter` translates between PBI-Scope's data format and PERPHECT's expectations:
+
+| What It Does | Why |
+|---|---|
+| **String → integer ID mapping** | PBI-Scope uses `"GCF_000005845"`. PERPHECT's embedding layer needs contiguous integers. |
+| **Length filtering** | Drops bacteria >7M bp or <150K bp. Drops phages >200K bp or <1.5K bp. |
+| **Zero-padding + truncation** | PERPHECT requires fixed-length `(length, 4)` inputs. |
+| **One-hot encoding** | Converts `"ATGC..."` strings to `(length, 4)` numpy arrays via a 256-entry LUT. |
+| **LRU host cache** | `OrderedDict` with max 200 entries (~5.6GB cap). Hosts are reused across epochs; phages are re-encoded on the fly (~5ms). |
+| **Interaction classification** | Queries `private_interactions` table. Labels: `"no interaction"` / `"none"` / `"negative"` → 0, everything else → 1. |
+| **TF generator** | Yields `([bact_batch, phage_batch], labels)` indefinitely for `model.fit()`. |
+
+### Data Sources
+
+| Source | Label | Description |
+|---|---|---|
+| `positive` | 1 | Known interacting pair from `phage_host_associations` |
+| `private_data` | 0 | True negative from `private_interactions` |
+| `generated` | 0 | Synthetic negative from `NegativeExampleGenerator` |
+
+Generated negatives are deduplicated against private-data negatives and capped at `--negative-ratio` × private negative count.
+
+### Stratification
+
+Data is split with a 3-group stratification key to ensure proportional distribution:
+
+```
+stratify_key = "pos" | "neg_private_data" | "neg_generated"
+```
+
+Default split: 70% train / 15% validation / 15% test.
 
 ## Quick Start
 
@@ -65,58 +74,30 @@ gen = adapter.create_tf_generator(couples, labels, batch_size=4)
 1. PBI-Scope pipeline must have been run to build the database and sequence files
 2. Docker with NVIDIA Container Toolkit (for GPU training)
 
-### 1. Prepare Test Set (notebook)
+### 1. Prepare Test Set
 
 Run once to create a held-out test set that is never used during training:
 
 ```bash
 docker compose up -d analysis
-# Open http://localhost:8886, navigate to PERPHECT/, open 01_prepare_test_set.ipynb
+# Open http://localhost:8886 → PERPHECT/01_prepare_test_set.ipynb
 ```
 
-Outputs `test_data/test_set.csv` and `test_data/test_set.npz`.
+Outputs: `test_data/test_set.csv`, `test_data/test_set.npz`, `test_data/excluded_pairs.csv`
 
-### 2. Train (script)
+### 2. Train
 
 ```bash
 # Quick test (1000 pairs, 3 epochs)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --limit 1000 --epochs 3
 
-# Full training (uses defaults from config.yaml)
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml
-
-# Pre-training with profile (excludes private data, 5-fold CV)
+# Pre-training (excludes private data, 5-fold CV)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
     --profile pretrain --gpu-device 3
 
-# Full training with CV and increased batch size (A40 GPU)
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
-    --cross-validate 5 --gpu-device 3 --batch-size 32 --epochs 15
-```
-
-### Two-Stage Workflow: Pre-training + Fine-tuning
-
-For best results with private data, use the two-stage workflow:
-
-**Stage 1: Pre-training on PBI-Scope (exclude private source)**
-
-```bash
-# Pre-train on all PBI-Scope data except your private source
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
-    --profile pretrain --gpu-device 3
-```
-
-Outputs: `outputs/run_*/fold_*/model_best.keras` (pre-trained models)
-
-**Stage 2: Fine-tuning on private data only**
-
-```bash
-# Fine-tune on your private data (e.g., PERPHECT_private)
+# Fine-tuning (requires pre-trained model from stage 1)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
     --profile finetune \
@@ -124,68 +105,54 @@ docker compose run --rm analysis \
     --freeze-base --gpu-device 3
 ```
 
-Outputs: `outputs/run_*/model_finetuned_best.keras` (fine-tuned model)
+### 3. Evaluate
 
-**Key points:**
-- `--profile pretrain` excludes `PERPHECT_private` from pre-training data
-- `--profile finetune` selects ONLY `PERPHECT_private` for fine-tuning
-- Same `exclude_ids` test set is excluded in BOTH stages (no data leakage)
+Open `02_evaluate_model.ipynb` to load a trained model against the held-out test set.
+
+## Two-Stage Workflow
+
+For best results with private data:
+
+| Stage | Profile | Data Used | Output |
+|---|---|---|---|
+| Pre-train | `--profile pretrain` | All PBI-Scope **except** private source | `model_best.keras` |
+| Fine-tune | `--profile finetune` | **Only** private source | `model_finetuned_best.keras` |
+
+Key rules:
+- `--exclude-ids` (the held-out test set) is excluded in **both** stages
+- Fine-tuning uses `--freeze-base` to freeze CNN encoders, training only the classification head
 - Fine-tuning uses lower LR (0.0001), fewer epochs (5), smaller batch (16)
-- Fine-tuned model saved as `model_finetuned_best.keras`
 
-### 3. Evaluate (notebook)
+## Model Architecture
 
-Open `02_evaluate_model.ipynb` to load the trained model and test set, then display:
-- Classification report (precision, recall, F1)
-- Confusion matrix
-- ROC-AUC curve
-- Precision-recall curve
-- Prediction distribution histogram
-- Per-source metrics (private_data vs generated negatives)
+```
+Bacteria Input (7,000,000 bp × 4 channels)
+    │
+    Conv1D(64, k=30, s=10) → MaxPool(15, s=5)
+    Conv1D(32, k=25, s=10) → MaxPool(10, s=5)
+    Conv1D(32, k=10, s=5)  → MaxPool(2, s=2)
+    │
+    Flatten → bacteria_features
 
-Results are saved to `./outputs/` on the host.
+Phage Input (200,000 bp × 4 channels)
+    │
+    Conv1D(64, k=30, s=10) → MaxPool(15, s=5)
+    Conv1D(32, k=25, s=10) → MaxPool(2, s=2)
+    │
+    Flatten → phage_features
 
-## Training Script Reference
+Concatenate → Dense(100, relu) → Dropout(0.1) → Dense(1, sigmoid)
+```
 
-### Command-Line Arguments
+Bacteria has 3 conv layers (larger input), phage has 2 conv layers (smaller input).
 
-| Argument | Default | Description |
-|----------|---------|-------------|
-| `--epochs` | 15 | Training epochs |
-| `--batch-size` | 32 | Batch size |
-| `--steps-per-epoch` | None | Batches per epoch (None = cover full training set each epoch) |
-| `--patience` | 5 | Early stopping patience |
-| `--learning-rate` | 0.0004 | Initial learning rate |
-| `--limit` | None | Limit positive pairs (None = all) |
-| `--negative-ratio` | 1.0 | Max synthetic negatives as multiple of private negatives (1.0 = match count, 2.0 = 2x, 0.0 = none) |
-| `--focal-alpha` | 0.25 | Focal loss positive-class weight |
-| `--focal-gamma` | 2.0 | Focal loss focusing parameter |
-| `--bacterium-threshold` | 7000000 | Max bacteria sequence length |
-| `--phage-threshold` | 200000 | Max phage sequence length |
-| `--bacterium-min-length` | 150000 | Min bacteria length to keep |
-| `--phage-min-length` | 1500 | Min phage length to keep |
-| `--output-dir` | /results | Output directory (mapped to `./outputs` on host) |
-| `--run-name` | timestamp | Run name |
-| `--config` | None | YAML config file |
-| `--profile` | None | Profile name from config (e.g., `pretrain`, `finetune`) |
-| `--cross-validate` | 0 | K folds for stratified K-fold CV (0 = standard split, overrides config) |
-| `--pretrained-model` | None | Path to pre-trained .keras model (enables fine-tuning mode) |
-| `--freeze-base` | False | Freeze CNN encoder layers, only train classification head |
-| `--freeze-up-to` | concatenated_features | Layer name to freeze up to |
-| `--fine-tune-lr` | 0.0001 | Learning rate for fine-tuning |
-| `--fine-tune-epochs` | 5 | Epochs for fine-tuning |
-| `--finetuned-model-name` | model_finetuned_best.keras | Output name for fine-tuned best model |
-| `--no-gpu` | False | Force CPU |
-| `--gpu-device` | 0 | GPU device index |
-| `--verbose` | False | Verbose logging |
-| `--log-file` | None | Log to file |
+## Configuration
 
-**Config priority:** CLI args > profile overrides > defaults. Parameters like `exclude_ids` and `exclude_sources` are set in the YAML config (under `defaults` or a profile), not as CLI flags.
+### Config File (`config.yaml`)
 
-### Configuration File
+Uses a `defaults` + `profiles` structure. Priority: **CLI args > profile overrides > defaults**.
 
 ```yaml
-# ── Default values ───────────────────────────────────────────────
 defaults:
   training:
     epochs: 15
@@ -200,6 +167,8 @@ defaults:
     negative_ratio: 1.0
     bacterium_threshold: 7000000
     phage_threshold: 200000
+    bacterium_min_length: 150000
+    phage_min_length: 1500
     exclude_ids: "test_data/excluded_pairs.csv"
     exclude_sources:
       - "PERPHECT_private"
@@ -210,7 +179,6 @@ defaults:
   gpu:
     enabled: true
 
-# ── Profiles (override defaults) ─────────────────────────────────
 profiles:
   pretrain:
     training:
@@ -228,243 +196,158 @@ profiles:
       finetuned_model_name: "model_finetuned_best.keras"
 ```
 
-### Class Imbalance & Loss Function
+Parameters like `exclude_ids` and `exclude_sources` are config-only — not CLI flags.
 
-The training uses **focal loss** (Lin et al., 2017) instead of standard binary cross-entropy. Focal loss down-weights easy negatives automatically, so the model focuses on hard examples. This is critical because:
-- Generated negatives (random phage-host pairs) are trivially distinguishable from real interactions
-- Standard BCE lets the model achieve high accuracy by memorizing easy negatives
+### Command-Line Arguments
 
-**Metrics tracked during training:**
-- `val_auc` — threshold-independent, used for early stopping and model checkpointing
-- `accuracy` — logged for reference but not used for early stopping
+| Argument | Default | Description |
+|---|---|---|
+| `--epochs` | 15 | Training epochs |
+| `--batch-size` | 32 | Batch size |
+| `--steps-per-epoch` | None | Batches per epoch (None = full dataset) |
+| `--patience` | 5 | Early stopping patience |
+| `--learning-rate` | 0.0004 | Initial learning rate |
+| `--limit` | None | Limit positive pairs (None = all) |
+| `--negative-ratio` | 1.0 | Max synthetic negatives × private negatives |
+| `--focal-alpha` | 0.25 | Focal loss positive-class weight |
+| `--focal-gamma` | 2.0 | Focal loss focusing parameter |
+| `--bacterium-threshold` | 7000000 | Max bacteria length |
+| `--phage-threshold` | 200000 | Max phage length |
+| `--bacterium-min-length` | 150000 | Min bacteria length |
+| `--phage-min-length` | 1500 | Min phage length |
+| `--output-dir` | /results | Output directory (Docker: mapped to `./outputs`) |
+| `--run-name` | timestamp | Run name |
+| `--config` | None | YAML config file |
+| `--profile` | None | Profile name (`pretrain`, `finetune`) |
+| `--cross-validate` | 0 | K folds for CV (0 = standard split) |
+| `--pretrained-model` | None | Path to pre-trained `.keras` model |
+| `--freeze-base` | False | Freeze CNN encoders |
+| `--freeze-up-to` | concatenated_features | Layer to freeze up to |
+| `--fine-tune-lr` | 0.0001 | Fine-tuning learning rate |
+| `--fine-tune-epochs` | 5 | Fine-tuning epochs |
+| `--finetuned-model-name` | model_finetuned_best.keras | Fine-tuned model output name |
+| `--no-gpu` | False | Force CPU |
+| `--gpu-device` | 0 | GPU device index |
 
-**Metrics computed on test set:**
-- Classification report (precision, recall, F1)
-- MCC (Matthews Correlation Coefficient) — balanced even with class imbalance
-- Sensitivity (recall for positive class)
-- Specificity (recall for negative class)
+## Loss Function & Metrics
 
-**Negative balance:** `--negative-ratio 1.0` (default) caps synthetic negatives at 1x the private negative count, giving ~50/50 balance before sequence filtering. Use `--negative-ratio 2.0` for the previous behavior.
+### Focal Loss
 
-### Performance
+Training uses **focal loss** (Lin et al., 2017) instead of binary cross-entropy. Focal loss down-weights easy negatives automatically, so the model focuses on hard examples. This is critical because generated negatives (random phage-host pairs) are trivially distinguishable from real interactions — standard BCE lets the model achieve high accuracy by memorizing easy negatives.
 
-The generator caches one-hot encoded arrays in memory, so each unique host/phage is encoded only once across all epochs. This is critical for performance since the bacterium threshold is 7M bases.
+Parameters: `--focal-alpha` (class balance, default 0.25) and `--focal-gamma` (focusing, default 2.0).
 
-**Encoding speed** (vectorized numpy):
-- 1M bases: ~13ms per encode
-- 7M bases (bacterium threshold): ~84ms per encode
+### Metrics
 
-**Recommended settings for full training on A40 GPU:**
-```bash
-python train.py --config config.yaml --profile pretrain \
-  --gpu-device 3
+| Metric | When | Purpose |
+|---|---|---|
+| `val_auc` | Training | Early stopping + checkpoint selection (threshold-independent) |
+| `accuracy` | Training | Logged for reference |
+| MCC | Test | Matthews Correlation Coefficient — balanced even with class imbalance |
+| Sensitivity | Test | Recall for positive class |
+| Specificity | Test | Recall for negative class |
+| Classification report | Test | Precision, recall, F1 per class |
+
+## Output Files
+
+### Standard Split
+
+```
+outputs/run_<timestamp>/
+├── model_best.keras              # Best model (by val_auc)
+├── model_final.keras             # Final model
+├── training_log.csv              # Epoch metrics
+├── accuracy.png                  # Training/validation accuracy
+├── val_loss.png                  # Training/validation loss
+├── pairs_all.csv                 # All pairs (string IDs, labels, sources)
+├── pairs_train.csv               # Training split pairs
+├── pairs_val.csv                 # Validation split pairs
+├── pairs_test.csv                # Test split pairs
+├── results_test_set.csv          # Test predictions (string + integer IDs)
+├── summary.json                  # Run metadata + metrics
+└── config.json                   # Parameters used
 ```
 
-**`steps_per_epoch`:** When set to `None` (default), the generator covers the full training set each epoch. This ensures every sample is seen once per epoch. For quick tests, you can override with `--steps-per-epoch 400`.
+### Cross-Validation
 
-### Output Files
-
-| File | Description |
-|------|-------------|
-| `model_best.keras` | Best model (by validation AUC) |
-| `model_final.keras` | Final model at end of training |
-| `training_log.csv` | Epoch-by-epoch metrics |
-| `accuracy.png` | Accuracy plot |
-| `val_loss.png` | Loss plot |
-| `pairs_all.csv` | All pairs with string IDs, labels, and sources (before splitting) |
-| `pairs_train.csv` | Training set pairs (string IDs) |
-| `pairs_val.csv` | Validation set pairs (string IDs) |
-| `pairs_test.csv` | Test set pairs (string IDs) |
-| `results_test_set.csv` | Test set predictions (string IDs + integer IDs + predictions) |
-| `summary.json` | Run metadata and metrics |
-| `config.json` | Parameters used for this run |
+```
+outputs/run_<timestamp>/
+├── fold_1/
+│   ├── model_best.keras
+│   ├── training_log.csv
+│   ├── pairs_train.csv
+│   ├── pairs_val.csv
+│   ├── pairs_test.csv
+│   ├── summary.json
+│   └── ...
+├── fold_2/
+│   └── ...
+├── cv_summary.json               # Aggregated mean ± std across folds
+└── ...
+```
 
 ### Traceability
 
-Every training run saves `pairs_all.csv` and per-split `pairs_train.csv`, `pairs_val.csv`, `pairs_test.csv` with the original string IDs (`host_id`, `phage_id`), true labels, and data sources. This lets you:
+Every run saves `pairs_all.csv` and per-split `pairs_*.csv` with original string IDs (`host_id`, `phage_id`), labels, and data sources. The `results_test_set.csv` includes both string and integer IDs alongside predictions.
 
-- Verify which specific phage-host pairs ended up in each fold/split
-- Cross-reference with taxonomy metadata in the database
-- Check for data leakage between train and test sets
+This lets you:
+- Verify which specific pairs ended up in each split
+- Check for data leakage between train and test
 - Analyze per-species or per-source model performance
-
-For cross-validation, each fold directory (`fold_X/`) contains its own `pairs_train.csv`, `pairs_val.csv`, and `pairs_test.csv`.
-
-The `results_test_set.csv` includes both string IDs (`host_id`, `phage_id`) and integer-encoded IDs (`bacterium_id`, `phage_id_int`) alongside predictions.
-
-## Architecture
-
-```
-Bacteria Input (7M bp, 4 channels)
-    ↓
-Conv1D(64, k=30, s=10) → MaxPool(15, s=5)
-    ↓
-Conv1D(32, k=25, s=10) → MaxPool(10, s=5)
-    ↓
-Conv1D(32, k=10, s=5) → MaxPool(2, s=2)
-    ↓
-Flatten → bacteria_features
-
-Phage Input (200K bp, 4 channels)
-    ↓
-Conv1D(64, k=30, s=10) → MaxPool(15, s=5)
-    ↓
-Conv1D(32, k=25, s=10) → MaxPool(2, s=2)
-    ↓
-Flatten → phage_features
-
-[bacteria_features | phage_features] → Dense(100) → Dropout(0.1) → Dense(1, sigmoid)
-```
-
-## Data Pipeline
-
-### Pair Retrieval
-
-1. **Shuffled ID query** (`get_pair_ids_only(shuffle=True)`): Fast SQL query using `ORDER BY MD5(Phage_ID || Host_ID)` for deterministic shuffling without loading sequences.
-2. **Interaction classification** (`classify_pairs_by_interaction()`): Queries `private_interactions` to label each pair. Pairs with `"no interaction"` / `"none"` / `"negative"` become negatives (label=0). All others are positives (label=1).
-3. **Limit applied to positives only**: Private-data negatives are always included.
-
-### Negative Handling
-
-| Source | Description | Label |
-|--------|-------------|-------|
-| `positive` | Known interacting pair from `phage_host_associations` | 1 |
-| `private_data` | True negative from `private_interactions` (interaction = "no interaction") | 0 |
-| `generated` | Synthetic negative from `NegativeExampleGenerator` | 0 |
-
-Generated negatives are:
-- **Deduplicated** against private-data negatives (no duplicate pairs)
-- **Capped** at 2x the count of private-data negatives (prevents synthetic data from overwhelming true negatives)
-
-### Train/Test/Validation Split
-
-The data is split with **3-group stratification** to ensure each split contains a proportional mix of positives, private-data negatives, and generated negatives:
-
-```
-stratify_key = "pos" | "neg_private_data" | "neg_generated"
-```
-
-This ensures:
-- The positive/negative ratio is preserved across splits
-- True negatives from private data appear in all splits (not concentrated in one)
-- Generated negatives are evenly distributed
-
-Split sizes: 70% train / 15% validation / 15% test (stratified, shuffled, `random_state=42`).
-
-### Split Source Distribution (logged during training)
-
-```
-train: {'positive': N, 'private_data': M, 'generated': K}
-valid: {'positive': N', 'private_data': M', 'generated': K'}
-test:  {'positive': N'', 'private_data': M'', 'generated': K''}
-```
-
-### Summary JSON
-
-The `summary.json` file includes `split_sources` with per-split counts for each negative source, enabling analysis of model performance by data origin.
+- Cross-reference with taxonomy metadata
 
 ## Cross-Validation
 
-Use `--cross-validate K` to run stratified K-fold cross-validation instead of a single train/val/test split:
-
 ```bash
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --cross-validate 5 --epochs 10
+python train.py --config config.yaml --cross-validate 5 --epochs 10
 ```
 
-Each fold:
-- Gets its own `fold_<k>/` directory with `model_best.keras`, `training_log.csv`, `summary.json`
-- Uses 80/20 train/val split within the fold (stratified)
-- Is evaluated on the held-out fold test set
+- Each fold gets its own `fold_X/` directory with model, logs, and pair CSVs
+- Uses 80/20 train/val split within each fold
+- After all folds: `cv_summary.json` with mean ± std for val_loss, val_accuracy, and epochs
+- **Not compatible** with `--pretrained-model` (fine-tuning)
 
-After all folds, an aggregate `cv_summary.json` is saved with mean +/- std for val_loss, val_accuracy, and epochs trained.
+## Evaluation Notebook
 
-Use the held-out test set from `01_prepare_test_set.ipynb` for final evaluation with `02_evaluate_model.ipynb`.
+`02_evaluate_model.ipynb` loads a trained model and evaluates it against the held-out test set from `01_prepare_test_set.ipynb`:
+
+1. Loads `test_set.npz` (pre-encoded numpy arrays)
+2. Finds `model_best.keras` or `model_final.keras` in the outputs directory
+3. Generates predictions
+4. Computes: MCC, sensitivity, specificity, classification report
+5. Plots: confusion matrix, ROC curve, precision-recall curve, prediction distribution
+6. Per-source metrics (if sources are available)
+7. Optionally compares multiple runs side by side
 
 ## Files
 
 | File | Description |
-|------|-------------|
-| `train.py` | Production training script (CLI, GPU, YAML config, profiles, K-fold CV) |
-| `pbi_adapter.py` | Adapter bridging PBI-Scope to PERPHECT format |
-| `transforms.py` | One-hot encoding utilities |
-| `plotting_utils.py` | Training visualization utilities |
-| `config.yaml` | Training configuration with defaults and profiles |
-| `01_prepare_test_set.ipynb` | Create held-out test set (CSV + NPZ) |
-| `02_evaluate_model.ipynb` | Load model, predict test set, display metrics |
+|---|---|
+| `train.py` | Training script (CLI, GPU, config profiles, K-fold CV, fine-tuning) |
+| `pbi_adapter.py` | Adapter bridging PBI-Scope data to PERPHECT format |
+| `transforms.py` | Vectorized one-hot encoding via numpy LUT |
+| `plotting_utils.py` | Training history plots |
+| `config.yaml` | Training configuration (defaults + profiles) |
+| `01_prepare_test_set.ipynb` | Creates held-out test set (CSV + NPZ) |
+| `02_evaluate_model.ipynb` | Loads model, evaluates on test set, compares runs |
 
 ## Testing
 
 ```bash
-python -m pytest tests/test_perpherct_*.py -v
+python -m pytest tests/test_perpherct_*.py
 ```
+
+Test coverage:
+- `test_perpherct_transforms.py` — one-hot encoding edge cases
+- `test_perpherct_adapter.py` — ID mapping, encoding, generators, interaction classification
+- `test_perpherct_model.py` — model building (skipped without keras)
+- `test_perpherct_train.py` — CLI args, config loading, profile merging, full pretrain/finetune paths (mocked)
+- `test_perpherct_plotting.py` — training history plots
 
 ## Troubleshooting
 
-### cuDNN on Pascal GPUs (GTX 1080 Ti)
+**cuDNN on Pascal GPUs (GTX 1080 Ti):** cuDNN 9.x dropped Pascal (sm_6.1) support. The Docker image pins TF 2.15 + cuDNN 8.9.x. Rebuild with `docker compose build --no-cache analysis`.
 
-cuDNN 9.x (bundled with TF 2.16+) dropped Pascal (sm_6.1) support. The Docker image pins TensorFlow to 2.15.x with cuDNN 8.9.x. After changing the Dockerfile, rebuild:
+**Out of memory:** Reduce `--batch-size` (try 2), reduce thresholds, or use `--limit` on a subset.
 
-```bash
-docker compose build --no-cache analysis
-```
-
-### Out of memory
-
-- Reduce `--batch-size` (try 2)
-- Reduce `--bacterium-threshold` and `--phage-threshold`
-- Use `--limit` to train on a subset first
-
-### Slow training
-
-- Verify GPU is detected in logs (`GPU detected: 1 device(s)`)
-- Check `nvidia-smi` on the host
-- Reduce sequence thresholds for faster iteration
-
-## Suggestions for PBI-Scope Adaptation
-
-If you want to integrate another ML model with PBI-Scope, here are the key patterns from this integration:
-
-### 1. Use the Two-Phase Loading Pattern
-
-Don't load all sequences up front. PBI-Scope's `get_phage_host_pairs()` fetches everything — but for training you typically need a subset. Query IDs first, classify/filter, then fetch sequences only for selected pairs.
-
-```python
-# Instead of this (slow — fetches all sequences):
-pairs = retriever.get_phage_host_pairs()
-
-# Do this (fast — IDs only, then lazy fetch):
-adapter = PBIAdapter(retriever, ...)
-all_pairs = adapter.get_pair_ids_only()
-positive, negative = adapter.classify_pairs_by_interaction(all_pairs)
-couples, labels = adapter.prepare_training_data(positive, negative)
-```
-
-### 2. Handle ID Translation
-
-PBI-Scope uses biological string IDs. Most ML frameworks expect integer indices. Build a bidirectional mapping:
-
-```python
-id_map = {string_id: int_idx for int_idx, string_id in enumerate(unique_ids)}
-reverse_map = {v: k for k, v in id_map.items()}
-```
-
-### 3. Use the Negative Example Generator
-
-PBI-Scope's `NegativeExampleGenerator` provides three strategies (random, GC-based, taxonomy-based). For interaction prediction, the `"mixed"` strategy is recommended. You can also use the `private_interactions` table directly — pairs labeled `"no interaction"` are true negatives.
-
-### 4. Lazy Sequence Retrieval
-
-PBI-Scope caches sequences in memory (LRU, up to 1000 entries). For training with generators, fetch sequences on demand rather than pre-loading. This keeps memory usage bounded by batch size, not dataset size.
-
-### 5. Custom CNN Architectures
-
-PBI-Scope does not enforce any model architecture. The adapter handles data formatting — you can plug in any model that accepts `(length, 4)` one-hot encoded inputs. For protein-level models, use `get_protein_sequences()` instead and adjust the encoding dimension.
-
-### 6. Private Data Integration
-
-Private datasets ingested via `private_data.ingest_private_sources_into_db()` are automatically visible to `SequenceRetriever`. The adapter's `classify_pairs_by_interaction()` queries the `private_interactions` table to distinguish positive/negative pairs. No extra work needed.
-
-### 7. PyTorch Alternative
-
-PBI-Scope provides PyTorch `Dataset` and `IterableDataset` classes (`create_streaming_dataset()`, `create_indexed_dataset()`). If your model uses PyTorch instead of Keras, use these directly — they handle batching, transforms, and private data routing internally.
+**Slow training:** Check `nvidia-smi` on host. Verify GPU detected in logs (`GPU detected: 1 device(s)`). The host cache (~5.6GB) ensures each unique host is encoded once.
