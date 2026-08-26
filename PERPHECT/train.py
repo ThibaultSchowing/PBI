@@ -367,6 +367,8 @@ def main():
 
     # Data parameters
     parser.add_argument("--limit", type=int, default=None, help="Limit positive pairs (None = all)")
+    parser.add_argument("--exclude-ids", type=str, default=None, help="CSV with Phage_ID,Host_ID to exclude (config-only)")
+    parser.add_argument("--exclude-sources", nargs="*", type=str, default=None, help="Source_DB values to exclude (config-only)")
     parser.add_argument("--negative-ratio", type=float, default=None,
                         help="Max synthetic negatives as multiple of private negatives "
                              "(1.0 = match private count, 2.0 = 2x, 0.0 = no synthetic). "
@@ -437,14 +439,11 @@ def main():
             if section in merged:
                 for key, value in merged[section].items():
                     attr = key.replace("-", "_")
-                    # Try bare key first (e.g. epochs -> args.epochs),
-                    # then section_key (e.g. output.dir -> args.output_dir)
-                    if getattr(args, attr, None) is None:
-                        setattr(args, attr, value)
-                    else:
-                        section_key = f"{section}_{attr}"
-                        if getattr(args, section_key, None) is None:
-                            setattr(args, section_key, value)
+                    section_key = f"{section}_{attr}"
+                    # Pick the attribute name that matches an actual argparse dest
+                    target = attr if hasattr(args, attr) else section_key
+                    if getattr(args, target, None) is None:
+                        setattr(args, target, value)
 
     # Hardcoded fallback defaults (used when neither CLI nor config provides a value)
     _defaults = {
