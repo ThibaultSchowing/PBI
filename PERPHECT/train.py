@@ -357,29 +357,31 @@ def main():
     )
 
     # Training parameters
-    parser.add_argument("--epochs", type=int, default=10, help="Number of training epochs (default: 10)")
-    parser.add_argument("--batch-size", type=int, default=32, help="Batch size (default: 32)")
+    # Defaults are None so config file values can override them.
+    # Hardcoded fallbacks are applied after config loading.
+    parser.add_argument("--epochs", type=int, default=None, help="Number of training epochs (default: 10)")
+    parser.add_argument("--batch-size", type=int, default=None, help="Batch size (default: 32)")
     parser.add_argument("--steps-per-epoch", type=int, default=None, help="Batches per epoch (None = cover full training set)")
-    parser.add_argument("--patience", type=int, default=5, help="Early stopping patience (default: 5)")
-    parser.add_argument("--learning-rate", type=float, default=0.0004, help="Initial learning rate (default: 0.0004)")
+    parser.add_argument("--patience", type=int, default=None, help="Early stopping patience (default: 5)")
+    parser.add_argument("--learning-rate", type=float, default=None, help="Initial learning rate (default: 0.0004)")
 
     # Data parameters
     parser.add_argument("--limit", type=int, default=None, help="Limit positive pairs (None = all)")
-    parser.add_argument("--negative-ratio", type=float, default=1.0,
+    parser.add_argument("--negative-ratio", type=float, default=None,
                         help="Max synthetic negatives as multiple of private negatives "
                              "(1.0 = match private count, 2.0 = 2x, 0.0 = no synthetic). "
                              "Default: 1.0 (gives ~50/50 balance before filtering)")
-    parser.add_argument("--focal-alpha", type=float, default=0.25,
+    parser.add_argument("--focal-alpha", type=float, default=None,
                         help="Focal loss positive-class weight (default: 0.25)")
-    parser.add_argument("--focal-gamma", type=float, default=2.0,
+    parser.add_argument("--focal-gamma", type=float, default=None,
                         help="Focal loss focusing parameter (default: 2.0)")
-    parser.add_argument("--bacterium-threshold", type=int, default=7_000_000, help="Max bacteria sequence length")
-    parser.add_argument("--phage-threshold", type=int, default=200_000, help="Max phage sequence length")
-    parser.add_argument("--bacterium-min-length", type=int, default=150_000, help="Min bacteria length to keep")
-    parser.add_argument("--phage-min-length", type=int, default=1_500, help="Min phage length to keep")
+    parser.add_argument("--bacterium-threshold", type=int, default=None, help="Max bacteria sequence length")
+    parser.add_argument("--phage-threshold", type=int, default=None, help="Max phage sequence length")
+    parser.add_argument("--bacterium-min-length", type=int, default=None, help="Min bacteria length to keep")
+    parser.add_argument("--phage-min-length", type=int, default=None, help="Min phage length to keep")
 
     # Output parameters
-    parser.add_argument("--output-dir", type=str, default="/results", help="Output directory (default: /results, mapped to ./outputs on host)")
+    parser.add_argument("--output-dir", type=str, default=None, help="Output directory (default: /results, mapped to ./outputs on host)")
     parser.add_argument("--run-name", type=str, default=None, help="Run name (default: timestamp)")
 
     # Configuration
@@ -390,13 +392,13 @@ def main():
     # Pre-trained model / fine-tuning
     parser.add_argument("--pretrained-model", type=str, default=None, help="Path to pre-trained .keras model to load (enables fine-tuning mode)")
     parser.add_argument("--freeze-base", action="store_true", help="Freeze CNN encoder layers, only train classification head")
-    parser.add_argument("--freeze-up-to", type=str, default="concatenated_features", help="Freeze layers up to this layer name (default: concatenated_features)")
-    parser.add_argument("--fine-tune-lr", type=float, default=0.0001, help="Learning rate for fine-tuning (default: 0.0001)")
-    parser.add_argument("--fine-tune-epochs", type=int, default=5, help="Epochs for fine-tuning (default: 5)")
-    parser.add_argument("--finetuned-model-name", type=str, default="model_finetuned_best.keras", help="Output name for fine-tuned best model")
+    parser.add_argument("--freeze-up-to", type=str, default=None, help="Freeze layers up to this layer name (default: concatenated_features)")
+    parser.add_argument("--fine-tune-lr", type=float, default=None, help="Learning rate for fine-tuning (default: 0.0001)")
+    parser.add_argument("--fine-tune-epochs", type=int, default=None, help="Epochs for fine-tuning (default: 5)")
+    parser.add_argument("--finetuned-model-name", type=str, default=None, help="Output name for fine-tuned best model")
     
     parser.add_argument("--no-gpu", action="store_true", help="Force CPU even if GPU available")
-    parser.add_argument("--gpu-device", type=int, default=0, help="GPU device index (default: 0, use 1 for second GPU)")
+    parser.add_argument("--gpu-device", type=int, default=None, help="GPU device index (default: 0)")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
     parser.add_argument("--log-file", type=str, default=None, help="Log to file in addition to console")
 
@@ -435,9 +437,29 @@ def main():
             if section in merged:
                 for key, value in merged[section].items():
                     attr = key.replace("-", "_")
-                    current = getattr(args, attr, None)
-                    if current is None:
+                    # Try bare key first (e.g. epochs -> args.epochs),
+                    # then section_key (e.g. output.dir -> args.output_dir)
+                    if getattr(args, attr, None) is None:
                         setattr(args, attr, value)
+                    else:
+                        section_key = f"{section}_{attr}"
+                        if getattr(args, section_key, None) is None:
+                            setattr(args, section_key, value)
+
+    # Hardcoded fallback defaults (used when neither CLI nor config provides a value)
+    _defaults = {
+        "epochs": 10, "batch_size": 32, "patience": 5, "learning_rate": 0.0004,
+        "negative_ratio": 1.0, "focal_alpha": 0.25, "focal_gamma": 2.0,
+        "bacterium_threshold": 7_000_000, "phage_threshold": 200_000,
+        "bacterium_min_length": 150_000, "phage_min_length": 1_500,
+        "output_dir": "/results", "gpu_device": 0,
+        "freeze_up_to": "concatenated_features",
+        "fine_tune_lr": 0.0001, "fine_tune_epochs": 5,
+        "finetuned_model_name": "model_finetuned_best.keras",
+    }
+    for attr, fallback in _defaults.items():
+        if getattr(args, attr, None) is None:
+            setattr(args, attr, fallback)
 
     # Setup
     setup_logging(args.log_file, args.verbose)
