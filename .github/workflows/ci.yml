@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install -e ".[ml]" pytest matplotlib tensorflow
+          pip install -e . pytest matplotlib tensorflow scikit-learn
 
       - name: Run PERPHECT unit tests
         run: |
@@ -37,8 +37,7 @@ jobs:
             tests/test_perpherct_plotting.py \
             tests/test_perpherct_adapter.py \
             tests/test_perpherct_model.py \
-            tests/test_perpherct_train.py \
-            -v
+            tests/test_perpherct_train.py
 
   pipeline-test:
     runs-on: ubuntu-latest

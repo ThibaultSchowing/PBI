@@ -1,27 +1,71 @@
 # PERPHECT training configuration
-# Usage: python train.py --config config.yaml
+#
+# Usage:
+#   Pre-train:  python train.py --config config.yaml --profile pretrain
+#   Fine-tune:  python train.py --config config.yaml --profile finetune \
+#                 --pretrained-model <path>
+#   Custom:     python train.py --config config.yaml
+#               (uses defaults; override any value via CLI)
+#
+# Priority: CLI args > profile overrides > defaults
 
-training:
-  epochs: 15
-  batch_size: 32
-  # steps_per_epoch: null  # null = cover full training set each epoch
-  patience: 5
-  learning_rate: 0.0004
-  focal_alpha: 0.25
-  focal_gamma: 2.0
+# ── Default values ───────────────────────────────────────────────
+defaults:
+  training:
+    epochs: 15
+    batch_size: 32
+    # steps_per_epoch: null     # null = cover full training set each epoch
+    patience: 5
+    learning_rate: 0.0004
+    focal_alpha: 0.25
+    focal_gamma: 2.0
+    cross_validate: 0           # 0 = standard split; K = K-fold CV
 
-data:
-  # limit: null  # null = all data; set to an integer to limit
-  negative_ratio: 1.0  # max synthetic negatives as multiple of private negatives (1.0 = 50/50 balance)
-  bacterium_threshold: 7000000
-  phage_threshold: 200000
-  bacterium_min_length: 150000
-  phage_min_length: 1500
+  data:
+    # limit: null                # null = all data; integer to cap positive pairs
+    negative_ratio: 1.0         # max synthetic negatives as multiple of private negatives
+    bacterium_threshold: 7000000
+    phage_threshold: 200000
+    bacterium_min_length: 150000
+    phage_min_length: 1500
+    # exclude_ids: null          # CSV with Phage_ID,Host_ID to exclude
+    # exclude_sources: null      # list of Source_DB values to exclude
 
-output:
-  dir: results
-  # run_name: null  # null = timestamp-based name
-  # log_file: null  # null = console only
+  output:
+    dir: results
+    # run_name: null             # null = timestamp
+    # log_file: null             # null = console only
 
-gpu:
-  enabled: true  # set false to force CPU
+  gpu:
+    enabled: true
+
+# ── Profiles (override defaults) ─────────────────────────────────
+# Activate with --profile <name>. Profile values override defaults;
+# CLI args override everything.
+profiles:
+  # Pre-training: exclude private data, use 5-fold CV
+  pretrain:
+    training:
+      cross_validate: 5
+    data:
+      exclude_ids: "test_data/excluded_pairs.csv"
+      exclude_sources:
+        - "PERPHECT_private"
+
+  # Fine-tuning: smaller batch, fewer epochs, freeze base layers.
+  # Requires --pretrained-model on CLI.
+  finetune:
+    training:
+      epochs: 5
+      batch_size: 16
+      patience: 3
+      cross_validate: 0         # CV not supported with fine-tuning
+      fine_tune_lr: 0.0001
+      fine_tune_epochs: 5
+      freeze_base: true
+      freeze_up_to: "concatenated_features"
+      finetuned_model_name: "model_finetuned_best.keras"
+    data:
+      exclude_ids: "test_data/excluded_pairs.csv"
+      exclude_sources:
+        - "PERPHECT_private"

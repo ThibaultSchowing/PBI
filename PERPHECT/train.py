@@ -224,7 +224,7 @@ def load_or_build_model(args, bacterium_threshold, phage_threshold, is_finetunin
 
 
 def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
-                X_test, y_test, args, output_dir):
+                X_test, y_test, args, output_dir, test_pair_ids=None):
     """Train and evaluate a single fold. Returns dict of fold metrics."""
     import keras
 
@@ -306,13 +306,17 @@ def _train_fold(fold_num, adapter, X_train, y_train, X_valid, y_valid,
 
     logging.info(f"  MCC: {mcc:.4f}  Sensitivity: {sensitivity:.4f}  Specificity: {specificity:.4f}")
 
-    results_df = pd.DataFrame({
+    results_data = {
         "bacterium_id": X_test[:, 0],
-        "phage_id": X_test[:, 1],
+        "phage_id_int": X_test[:, 1],
         "observations": y_test,
         "predictions": test_predictions.flatten(),
         "prediction_labels": test_pred_labels,
-    })
+    }
+    if test_pair_ids is not None:
+        results_data["host_id"] = test_pair_ids["host_id"].values
+        results_data["phage_id"] = test_pair_ids["phage_id"].values
+    results_df = pd.DataFrame(results_data)
     results_df.to_csv(str(fold_dir / "results_test_set.csv"), index=False)
 
     # Save summary
@@ -379,10 +383,9 @@ def main():
     parser.add_argument("--run-name", type=str, default=None, help="Run name (default: timestamp)")
 
     # Configuration
-    parser.add_argument("--config", type=str, default=None, help="YAML config file (overrides CLI args)")
-    parser.add_argument("--cross-validate", type=int, default=0, help="K folds for stratified K-fold CV (0 = disabled)")
-    parser.add_argument("--exclude-ids", type=str, default=None, help="CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage from held-out test set)")
-    parser.add_argument("--exclude-sources", type=str, default=None, help="Comma-separated Source_DB values to exclude from training (e.g., 'PERPHECT_private,other_source')")
+    parser.add_argument("--config", type=str, default=None, help="YAML config file")
+    parser.add_argument("--profile", type=str, default=None, help="Profile name from config (e.g., 'pretrain', 'finetune')")
+    parser.add_argument("--cross-validate", type=int, default=None, help="K folds for stratified K-fold CV (overrides config)")
     
     # Pre-trained model / fine-tuning
     parser.add_argument("--pretrained-model", type=str, default=None, help="Path to pre-trained .keras model to load (enables fine-tuning mode)")
@@ -404,14 +407,36 @@ def main():
         import yaml
         with open(args.config) as f:
             config = yaml.safe_load(f)
-        # Config values override defaults but not explicit CLI args
+
+        # Resolve which config section to use: defaults + optional profile overlay
+        if "defaults" in config:
+            merged = config["defaults"]
+        else:
+            merged = config  # backward compat: flat config treated as defaults
+
+        if args.profile:
+            profiles = config.get("profiles", {})
+            if args.profile not in profiles:
+                available = list(profiles.keys()) if profiles else "(none)"
+                raise ValueError(
+                    f"Profile '{args.profile}' not found in {args.config}. "
+                    f"Available profiles: {available}"
+                )
+            profile = profiles[args.profile]
+            for section in ["training", "data", "output", "gpu"]:
+                if section in profile:
+                    if section not in merged:
+                        merged[section] = {}
+                    merged[section].update(profile[section])
+            logging.info(f"Using profile: {args.profile}")
+
+        # Apply config values to args (only when CLI arg was not explicitly set)
         for section in ["training", "data", "output", "gpu"]:
-            if section in config:
-                for key, value in config[section].items():
+            if section in merged:
+                for key, value in merged[section].items():
                     attr = key.replace("-", "_")
-                    # Only apply if the CLI arg is at its default value
                     current = getattr(args, attr, None)
-                    if current is not None:
+                    if current is None:
                         setattr(args, attr, value)
 
     # Setup
@@ -459,10 +484,13 @@ def main():
         phage_min_length=args.phage_min_length,
     )
 
-    # Parse exclude-sources (comma-separated)
+    # Parse exclude-sources (list from config or comma-separated string)
     exclude_sources = None
     if args.exclude_sources:
-        exclude_sources = [s.strip() for s in args.exclude_sources.split(",") if s.strip()]
+        if isinstance(args.exclude_sources, list):
+            exclude_sources = [s.strip() for s in args.exclude_sources if s.strip()]
+        else:
+            exclude_sources = [s.strip() for s in args.exclude_sources.split(",") if s.strip()]
         logging.info(f"Excluding sources: {exclude_sources}")
 
     is_finetuning = args.pretrained_model is not None
@@ -481,11 +509,10 @@ def main():
         SELECT DISTINCT pha.Phage_ID, pha.Host_ID
         FROM phage_host_associations pha
         JOIN fact_phages p ON pha.Phage_ID = p.Phage_ID
-        WHERE p.Source_DB IN ({", ".join(["?" for _ in exclude_sources])})
+        WHERE p.Source_DB IN ({placeholders})
         """
-        if shuffle := True:
-            query += " ORDER BY MD5(Phage_ID || Host_ID)"
-        all_pairs = retriever.conn.execute(query, exclude_sources + exclude_sources).fetchdf()
+        query += " ORDER BY MD5(Phage_ID || Host_ID)"
+        all_pairs = retriever.conn.execute(query, exclude_sources).fetchdf()
         logging.info(f"Fine-tuning mode: Found {len(all_pairs)} pairs from sources {exclude_sources}")
     else:
         # PRE-TRAINING MODE: Exclude specified sources
@@ -509,7 +536,10 @@ def main():
                 f"({len(all_pairs)} remaining)"
             )
         else:
-            logging.warning(f"--exclude-ids file not found: {exclude_path}")
+            raise FileNotFoundError(
+                f"--exclude-ids file not found: {exclude_path}. "
+                "Run 01_prepare_test_set.ipynb first to create the excluded pairs CSV."
+            )
 
     # Classify pairs by interaction type (before applying limit!)
     logging.info("Classifying pairs by interaction type...")
@@ -552,6 +582,8 @@ def main():
     )
 
     # Deduplicate against private negatives
+    # NOTE: Generated negatives are NOT deduped against the --exclude-ids test set.
+    # Collision probability is negligible (billions of possible phage-host pairs).
     if len(private_negatives) > 0:
         private_neg_set = set(
             zip(private_negatives["Phage_ID"], private_negatives["Host_ID"])
@@ -590,8 +622,21 @@ def main():
     couples, labels, sources = adapter.prepare_training_data(positive_pairs, negative_pairs)
     logging.info(
         f"Total pairs: {len(couples)} "
-        f"({int(labels.sum())} positive, {int(len(labels) - labels.sum())} negative)"
+        f"({int(labels.sum())} positive, {int(len(labels) - labels.sum())} negative"
+        f")"
     )
+
+    # Build pair_ids DataFrame for traceability (maps integer indices back to string IDs)
+    reverse_host = {v: k for k, v in adapter.host_id_map.items()}
+    reverse_phage = {v: k for k, v in adapter.phage_id_map.items()}
+    pair_ids = pd.DataFrame({
+        "host_id": [reverse_host.get(int(c[0]), str(c[0])) for c in couples],
+        "phage_id": [reverse_phage.get(int(c[1]), str(c[1])) for c in couples],
+        "label": labels.astype(int),
+        "source": sources,
+    })
+    pair_ids.to_csv(str(output_dir / "pairs_all.csv"), index=False)
+    logging.info(f"Saved all pair IDs to {output_dir / 'pairs_all.csv'}")
 
     # -----------------------------------------------------------------------
     # Train/validation/test split (stratified by label AND source)
@@ -605,11 +650,11 @@ def main():
     # -----------------------------------------------------------------------
     # Branch: Cross-validation or standard split
     # -----------------------------------------------------------------------
-    if args.cross_validate > 0:
+    if (args.cross_validate or 0) > 0:
         if args.pretrained_model:
             raise ValueError("Cross-validation (--cross-validate) is not supported with fine-tuning (--pretrained-model). Use standard split for fine-tuning.")
         # ---- K-fold cross-validation ----
-        k = args.cross_validate
+        k = args.cross_validate or 0
         logging.info(f"Starting {k}-fold stratified cross-validation...")
 
         skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=42)
@@ -633,13 +678,28 @@ def main():
                 stratify=fold_strat, test_size=0.2, shuffle=True, random_state=42
             )
 
+            # Propagate pair_ids through this fold's splits
+            fold_pair_ids = pair_ids.iloc[test_idx].reset_index(drop=True)
+            fold_train_pair_ids, fold_val_pair_ids = train_test_split(
+                pair_ids.iloc[train_idx].reset_index(drop=True),
+                stratify=fold_strat, test_size=0.2, shuffle=True, random_state=42
+            )
+
             summary = _train_fold(
                 fold_num, adapter,
                 X_fold_train, y_fold_train,
                 X_fold_val, y_fold_val,
                 X_fold_test, y_fold_test,
                 args, output_dir,
+                test_pair_ids=fold_pair_ids,
             )
+
+            # Save per-fold pair IDs for traceability
+            fold_dir = output_dir / f"fold_{fold_num}"
+            fold_train_pair_ids.to_csv(str(fold_dir / "pairs_train.csv"), index=False)
+            fold_val_pair_ids.to_csv(str(fold_dir / "pairs_val.csv"), index=False)
+            fold_pair_ids.to_csv(str(fold_dir / "pairs_test.csv"), index=False)
+
             fold_summaries.append(summary)
 
         # Aggregate CV results
@@ -653,6 +713,7 @@ def main():
                 "private_data": len(private_negatives),
                 "generated": len(generated_negatives),
             },
+            "pair_ids_file": "pairs_all.csv",
             "mean_val_auc": float(np.mean([s["best_val_auc"] for s in fold_summaries])),
             "std_val_auc": float(np.std([s["best_val_auc"] for s in fold_summaries])),
             "mean_val_loss": float(np.mean([s["best_val_loss"] for s in fold_summaries])),
@@ -681,6 +742,9 @@ def main():
             couples, labels, sources,
             stratify=stratify_key, test_size=0.3, shuffle=True, random_state=42
         )
+        pairs_train, pairs_test = train_test_split(
+            pair_ids, stratify=stratify_key, test_size=0.3, shuffle=True, random_state=42
+        )
 
         stratify_key_test = np.array([
             "pos" if l == 1 else f"neg_{s}"
@@ -690,6 +754,14 @@ def main():
             X_test, y_test, s_test,
             stratify=stratify_key_test, test_size=0.5, shuffle=True, random_state=42
         )
+        pairs_val, pairs_test = train_test_split(
+            pairs_test, stratify=stratify_key_test, test_size=0.5, shuffle=True, random_state=42
+        )
+
+        # Save per-split pair IDs for traceability
+        pairs_train.to_csv(str(output_dir / "pairs_train.csv"), index=False)
+        pairs_val.to_csv(str(output_dir / "pairs_val.csv"), index=False)
+        pairs_test.to_csv(str(output_dir / "pairs_test.csv"), index=False)
 
         logging.info(f"Split: train={len(X_train)}, valid={len(X_valid)}, test={len(X_test)}")
 
@@ -808,8 +880,10 @@ def main():
         logging.info(f"MCC: {mcc:.4f}  Sensitivity: {sensitivity:.4f}  Specificity: {specificity:.4f}")
 
         results_df = pd.DataFrame({
+            "host_id": pairs_test["host_id"].values,
+            "phage_id": pairs_test["phage_id"].values,
             "bacterium_id": X_test[:, 0],
-            "phage_id": X_test[:, 1],
+            "phage_id_int": X_test[:, 1],
             "observations": y_test,
             "predictions": test_predictions.flatten(),
             "prediction_labels": test_pred_labels,
@@ -828,6 +902,7 @@ def main():
                 "private_data": n_private_neg,
                 "generated": n_generated_neg,
             },
+            "pair_ids_file": "pairs_all.csv",
             "train_size": len(X_train),
             "valid_size": len(X_valid),
             "test_size": len(X_test),

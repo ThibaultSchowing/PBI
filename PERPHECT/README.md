@@ -79,29 +79,23 @@ Outputs `test_data/test_set.csv` and `test_data/test_set.npz`.
 ### 2. Train (script)
 
 ```bash
-# Quick test (1000 pairs, 3 epochs, excluding held-out test pairs)
+# Quick test (1000 pairs, 3 epochs)
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3 \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
+  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3
 
-# Full training
+# Full training (uses defaults from config.yaml)
+docker compose run --rm analysis \
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml
+
+# Pre-training with profile (excludes private data, 5-fold CV)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
+    --profile pretrain --gpu-device 3
 
 # Full training with CV and increased batch size (A40 GPU)
 docker compose run --rm analysis \
   python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
-    --cross-validate 5 \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
-    --gpu-device 3 \
-    --batch-size 32 --epochs 15
-
-# With cross-validation (5 folds)
-docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --limit 1000 --epochs 3 \
-    --cross-validate 5 \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv
+    --cross-validate 5 --gpu-device 3 --batch-size 32 --epochs 15
 ```
 
 ### Two-Stage Workflow: Pre-training + Fine-tuning
@@ -113,11 +107,8 @@ For best results with private data, use the two-stage workflow:
 ```bash
 # Pre-train on all PBI-Scope data except your private source
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config_pretrain.yaml \
-    --cross-validate 5 \
-    --exclude-sources PERPHECT_private \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
-    --gpu-device 3 --batch-size 32 --epochs 15
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
+    --profile pretrain --gpu-device 3
 ```
 
 Outputs: `outputs/run_*/fold_*/model_best.keras` (pre-trained models)
@@ -127,25 +118,20 @@ Outputs: `outputs/run_*/fold_*/model_best.keras` (pre-trained models)
 ```bash
 # Fine-tune on your private data (e.g., PERPHECT_private)
 docker compose run --rm analysis \
-  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config_finetune.yaml \
+  python /workspace/PERPHECT/train.py --config /workspace/PERPHECT/config.yaml \
+    --profile finetune \
     --pretrained-model /workspace/PERPHECT/outputs/run_*/fold_1/model_best.keras \
-    --exclude-sources PERPHECT_private \
-    --exclude-ids /workspace/PERPHECT/test_data/excluded_pairs.csv \
-    --freeze-base \
-    --gpu-device 3 --batch-size 16
+    --freeze-base --gpu-device 3
 ```
 
 Outputs: `outputs/run_*/model_finetuned_best.keras` (fine-tuned model)
 
 **Key points:**
-- `--exclude-sources PERPHECT_private` in Stage 1 excludes your private data from pre-training
-- Same `--exclude-sources PERPHECT_private` in Stage 2 selects ONLY that source for fine-tuning
-- Same `--exclude-ids` test set is excluded in BOTH stages (no data leakage)
-- `--freeze-base` freezes CNN encoders, only trains classification head
+- `--profile pretrain` excludes `PERPHECT_private` from pre-training data
+- `--profile finetune` selects ONLY `PERPHECT_private` for fine-tuning
+- Same `exclude_ids` test set is excluded in BOTH stages (no data leakage)
 - Fine-tuning uses lower LR (0.0001), fewer epochs (5), smaller batch (16)
 - Fine-tuned model saved as `model_finetuned_best.keras`
-
-**Multiple sources:** `--exclude-sources PERPHECT_private,other_source` (comma-separated)
 
 ### 3. Evaluate (notebook)
 
@@ -181,9 +167,8 @@ Results are saved to `./outputs/` on the host.
 | `--output-dir` | /results | Output directory (mapped to `./outputs` on host) |
 | `--run-name` | timestamp | Run name |
 | `--config` | None | YAML config file |
-| `--cross-validate` | 0 | K folds for stratified K-fold CV (0 = standard split) |
-| `--exclude-ids` | None | CSV with Phage_ID,Host_ID to exclude from training (prevents data leakage) |
-| `--exclude-sources` | None | Comma-separated Source_DB values to exclude/include (e.g., `PERPHECT_private,other_source`) |
+| `--profile` | None | Profile name from config (e.g., `pretrain`, `finetune`) |
+| `--cross-validate` | 0 | K folds for stratified K-fold CV (0 = standard split, overrides config) |
 | `--pretrained-model` | None | Path to pre-trained .keras model (enables fine-tuning mode) |
 | `--freeze-base` | False | Freeze CNN encoder layers, only train classification head |
 | `--freeze-up-to` | concatenated_features | Layer name to freeze up to |
@@ -195,33 +180,52 @@ Results are saved to `./outputs/` on the host.
 | `--verbose` | False | Verbose logging |
 | `--log-file` | None | Log to file |
 
+**Config priority:** CLI args > profile overrides > defaults. Parameters like `exclude_ids` and `exclude_sources` are set in the YAML config (under `defaults` or a profile), not as CLI flags.
+
 ### Configuration File
 
 ```yaml
-training:
-  epochs: 15
-  batch_size: 32
-  patience: 5
-  learning_rate: 0.0004
-  focal_alpha: 0.25
-  focal_gamma: 2.0
-  # Fine-tuning parameters (used when --pretrained-model is provided)
-  fine_tune_lr: 0.0001
-  fine_tune_epochs: 5
-  freeze_base: true
-  freeze_up_to: "concatenated_features"
-  finetuned_model_name: "model_finetuned_best.keras"
+# ── Default values ───────────────────────────────────────────────
+defaults:
+  training:
+    epochs: 15
+    batch_size: 32
+    patience: 5
+    learning_rate: 0.0004
+    focal_alpha: 0.25
+    focal_gamma: 2.0
+    cross_validate: 0
 
-data:
-  negative_ratio: 1.0
-  bacterium_threshold: 7000000
-  phage_threshold: 200000
+  data:
+    negative_ratio: 1.0
+    bacterium_threshold: 7000000
+    phage_threshold: 200000
+    exclude_ids: "test_data/excluded_pairs.csv"
+    exclude_sources:
+      - "PERPHECT_private"
 
-output:
-  dir: /results
+  output:
+    dir: /results
 
-gpu:
-  enabled: true
+  gpu:
+    enabled: true
+
+# ── Profiles (override defaults) ─────────────────────────────────
+profiles:
+  pretrain:
+    training:
+      cross_validate: 5
+
+  finetune:
+    training:
+      epochs: 5
+      batch_size: 16
+      patience: 3
+      fine_tune_lr: 0.0001
+      fine_tune_epochs: 5
+      freeze_base: true
+      freeze_up_to: "concatenated_features"
+      finetuned_model_name: "model_finetuned_best.keras"
 ```
 
 ### Class Imbalance & Loss Function
@@ -252,11 +256,7 @@ The generator caches one-hot encoded arrays in memory, so each unique host/phage
 
 **Recommended settings for full training on A40 GPU:**
 ```bash
-python train.py --config config.yaml \
-  --cross-validate 5 \
-  --batch-size 32 --epochs 15 \
-  --negative-ratio 1.0 \
-  --exclude-ids test_data/excluded_pairs.csv \
+python train.py --config config.yaml --profile pretrain \
   --gpu-device 3
 ```
 
@@ -266,14 +266,31 @@ python train.py --config config.yaml \
 
 | File | Description |
 |------|-------------|
-| `model_best.keras` | Best model (by validation loss) |
+| `model_best.keras` | Best model (by validation AUC) |
 | `model_final.keras` | Final model at end of training |
 | `training_log.csv` | Epoch-by-epoch metrics |
 | `accuracy.png` | Accuracy plot |
 | `val_loss.png` | Loss plot |
-| `results_test_set.csv` | Test set predictions |
+| `pairs_all.csv` | All pairs with string IDs, labels, and sources (before splitting) |
+| `pairs_train.csv` | Training set pairs (string IDs) |
+| `pairs_val.csv` | Validation set pairs (string IDs) |
+| `pairs_test.csv` | Test set pairs (string IDs) |
+| `results_test_set.csv` | Test set predictions (string IDs + integer IDs + predictions) |
 | `summary.json` | Run metadata and metrics |
 | `config.json` | Parameters used for this run |
+
+### Traceability
+
+Every training run saves `pairs_all.csv` and per-split `pairs_train.csv`, `pairs_val.csv`, `pairs_test.csv` with the original string IDs (`host_id`, `phage_id`), true labels, and data sources. This lets you:
+
+- Verify which specific phage-host pairs ended up in each fold/split
+- Cross-reference with taxonomy metadata in the database
+- Check for data leakage between train and test sets
+- Analyze per-species or per-source model performance
+
+For cross-validation, each fold directory (`fold_X/`) contains its own `pairs_train.csv`, `pairs_val.csv`, and `pairs_test.csv`.
+
+The `results_test_set.csv` includes both string IDs (`host_id`, `phage_id`) and integer-encoded IDs (`bacterium_id`, `phage_id_int`) alongside predictions.
 
 ## Architecture
 
@@ -368,11 +385,11 @@ Use the held-out test set from `01_prepare_test_set.ipynb` for final evaluation 
 
 | File | Description |
 |------|-------------|
-| `train.py` | Production training script (CLI, GPU, YAML config, K-fold CV) |
+| `train.py` | Production training script (CLI, GPU, YAML config, profiles, K-fold CV) |
 | `pbi_adapter.py` | Adapter bridging PBI-Scope to PERPHECT format |
 | `transforms.py` | One-hot encoding utilities |
 | `plotting_utils.py` | Training visualization utilities |
-| `config.yaml` | Default training configuration |
+| `config.yaml` | Training configuration with defaults and profiles |
 | `01_prepare_test_set.ipynb` | Create held-out test set (CSV + NPZ) |
 | `02_evaluate_model.ipynb` | Load model, predict test set, display metrics |
 
