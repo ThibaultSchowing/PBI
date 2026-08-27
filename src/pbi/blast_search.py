@@ -268,7 +268,7 @@ class BlastSearcher:
         db_prefix = self.get_db_prefix(db)
 
         columns = BLAST_OUTFMT7_COLUMNS if outfmt == 7 else BLAST_OUTFMT6_COLUMNS
-        fmt_str = f"'6 {' '.join(columns)}'" if outfmt == 6 else f"'7 {' '.join(columns)}'"
+        fmt_str = f"{outfmt} {' '.join(columns)}"
 
         cmd = [
             self._blast_bin(program),
