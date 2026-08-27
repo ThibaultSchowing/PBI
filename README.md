@@ -1,6 +1,3 @@
-
-
-
 # PBI-Scope
 ## Dockerized Phage Bacteria Interactions toolkit based on PhageScope
 
