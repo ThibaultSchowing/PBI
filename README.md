@@ -1,11 +1,13 @@
-# PBI-Scope for PERPHECT
 
-![alt](https://github.com/ThibaultSchowing/PBI/blob/main/docs/img/PBI_Schema_Note.png)
+
 
 # PBI-Scope
 ## Dockerized Phage Bacteria Interactions toolkit based on PhageScope
 
-> A proof-of-concept dockerized bioinformatics pipeline that makes phage genomic data from [PhageScope](https://phagescope.deepomics.org/database) and their hosts available in an efficient, structured format for training neural networks and AI models for phage-host interaction prediction. 
+> A proof-of-concept dockerized bioinformatics pipeline that makes phage genomic data from [PhageScope](https://phagescope.deepomics.org/database) and their hosts available in an efficient, structured format for training neural networks and AI models for phage-host interaction prediction.
+
+![alt](https://github.com/ThibaultSchowing/PBI/blob/main/docs/img/PBI_Schema_Note.png)
+
 
 **Install - Wait - Work** The pipeline takes care of everything within Docker !
 
