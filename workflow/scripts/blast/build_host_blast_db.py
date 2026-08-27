@@ -13,6 +13,7 @@ def main():
     db_dir = snakemake.params.db_dir
     db_name = snakemake.params.db_name
     combined_fasta = snakemake.params.combined_fasta
+    max_file_size = snakemake.params.get("max_file_size", "1G")
     output_path = snakemake.output.db
     log_path = snakemake.log[0]
 
@@ -42,6 +43,7 @@ def main():
                         out_f.write(line)
 
     # Build BLAST database
+    # Host genomes are from NCBI RefSeq, so -parse_seqids is safe
     db_prefix = os.path.join(db_dir, db_name)
     cmd = [
         "makeblastdb",
@@ -49,11 +51,11 @@ def main():
         "-dbtype", "nucl",
         "-out", db_prefix,
         "-parse_seqids",
-        "-title", "PBI Host Genomes",
+        "-max_file_size", max_file_size,
     ]
 
     with open(log_path, "w") as log_f:
-        result = subprocess.run(cmd, stderr=log_f, stdout=log_f)
+        result = subprocess.run(cmd, stdout=log_f, stderr=subprocess.STDOUT)
 
     if result.returncode != 0:
         print(f"makeblastdb failed with return code {result.returncode}", file=sys.stderr)

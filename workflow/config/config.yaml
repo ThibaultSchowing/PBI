@@ -105,6 +105,7 @@ reuse_host_resolution_cache: true  # Reuse token resolution cache across reruns
 # BLAST database configuration
 # -----------------------------------
 blast_db_dir: "/data/processed/blast_db"
+blast_max_file_size: "4G"  # Max volume size for makeblastdb (default 1G; increase for millions of sequences)
 blast_db_done_phages: "/data/processed/blast_db/phages/makeblastdb_phages.done"
 blast_db_done_proteins: "/data/processed/blast_db/proteins/makeblastdb_proteins.done"
 blast_db_done_hosts: "/data/processed/blast_db/hosts/makeblastdb_hosts.done"
