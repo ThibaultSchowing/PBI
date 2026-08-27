@@ -34,7 +34,7 @@ rule makeblastdb_phages:
         "../envs/blast.yaml"
     shell:
         """
-        mkdir -p {params.db_dir}
+        mkdir -p {params.db_dir} $(dirname {log})
         makeblastdb \
             -in {input.fasta} \
             -dbtype nucl \
@@ -64,7 +64,7 @@ rule makeblastdb_proteins:
         "../envs/blast.yaml"
     shell:
         """
-        mkdir -p {params.db_dir}
+        mkdir -p {params.db_dir} $(dirname {log})
         makeblastdb \
             -in {input.fasta} \
             -dbtype prot \
