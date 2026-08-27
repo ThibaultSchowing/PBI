@@ -242,15 +242,26 @@ class BlastSearcher:
         if db is None:
             db = DEFAULT_DB_MAP.get(program, "phages")
 
-        return self._run_blast(
-            query=str(fasta_path),
-            program=program,
-            db=db,
-            max_hits=max_hits,
-            evalue=evalue,
-            outfmt=outfmt,
-            extra_args=extra_args,
-        )
+        # Normalize line endings — BLAST on Linux cannot parse \r\n
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".fasta", delete=False
+        ) as tmp:
+            content = fasta_path.read_text()
+            tmp.write(content.replace("\r\n", "\n").replace("\r", "\n"))
+            tmp_path = tmp.name
+
+        try:
+            return self._run_blast(
+                query=tmp_path,
+                program=program,
+                db=db,
+                max_hits=max_hits,
+                evalue=evalue,
+                outfmt=outfmt,
+                extra_args=extra_args,
+            )
+        finally:
+            os.unlink(tmp_path)
 
     def _run_blast(
         self,
