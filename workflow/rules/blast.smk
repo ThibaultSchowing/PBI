@@ -39,7 +39,7 @@ rule makeblastdb_phages:
             -in {input.fasta} \
             -dbtype nucl \
             -out {params.db_dir}/{params.db_name} \
-            -max_file_size {params.max_file_size} \
+            -max_file_sz {params.max_file_size} \
             > {log} 2>&1
         """
 
@@ -69,7 +69,7 @@ rule makeblastdb_proteins:
             -in {input.fasta} \
             -dbtype prot \
             -out {params.db_dir}/{params.db_name} \
-            -max_file_size {params.max_file_size} \
+            -max_file_sz {params.max_file_size} \
             > {log} 2>&1
         """
 

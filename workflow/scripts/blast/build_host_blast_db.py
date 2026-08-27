@@ -51,7 +51,7 @@ def main():
         "-dbtype", "nucl",
         "-out", db_prefix,
         "-parse_seqids",
-        "-max_file_size", max_file_size,
+        "-max_file_sz", max_file_size,
     ]
 
     with open(log_path, "w") as log_f:
