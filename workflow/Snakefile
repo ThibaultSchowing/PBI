@@ -109,7 +109,9 @@ rule all:
         # BLAST databases
         config.get("blast_db_done_phages", "/data/processed/blast_db/phages/makeblastdb_phages.done"),
         config.get("blast_db_done_proteins", "/data/processed/blast_db/proteins/makeblastdb_proteins.done"),
-        config.get("blast_db_done_hosts", "/data/processed/blast_db/hosts/makeblastdb_hosts.done")
+        config.get("blast_db_done_hosts", "/data/processed/blast_db/hosts/makeblastdb_hosts.done"),
+        config.get("blast_db_done_private", "/data/processed/blast_db/private/makeblastdb_private.done"),
+        config.get("blast_db_done_combined", "/data/processed/blast_db/combined/makeblastdb_combined.done")
 
 
 # if launched with auto discovery of snakefile (from the root directory),no need to specify the workflow directory

@@ -29,7 +29,9 @@ rule create_duckdb:
         phage_host_links=config["phage_host_links_output"],
         private_manifest=config["private_manifest_output"],
         public_data_manifest=config["public_data_provenance"]["manifest_csv_output"],
-        pipeline_run_provenance=config["public_data_provenance"]["pipeline_run_provenance_csv_output"]
+        pipeline_run_provenance=config["public_data_provenance"]["pipeline_run_provenance_csv_output"],
+        # Private BLAST DB for duplicate detection (optional, non-blocking)
+        private_blast_db=config.get("blast_db_done_private", ""),
     output:
         db=config["duckdb_output"]
     conda:

@@ -15,7 +15,7 @@ import numpy as np
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import duckdb
 
 from pbi.sequence_retrieval import SequenceRetriever
@@ -193,7 +193,7 @@ class BlastSearchRequest(BaseModel):
     sequence: str
     program: str = "blastn"
     db: Optional[str] = None
-    max_hits: int = 10
+    max_hits: int = Field(default=10, ge=1, le=100, description="Max hits to return (1-100)")
     evalue: float = 1e-5
 
 

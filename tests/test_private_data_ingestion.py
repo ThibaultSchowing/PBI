@@ -58,7 +58,11 @@ def _prepare_minimal_db(conn: duckdb.DuckDBPyConnection):
             Input_Source_Key VARCHAR,
             Input_File VARCHAR,
             Input_Retrieved_At VARCHAR,
-            source_type VARCHAR
+            source_type VARCHAR,
+            is_duplicate_of_public BOOLEAN DEFAULT FALSE,
+            duplicate_public_id VARCHAR,
+            duplicate_pident DOUBLE,
+            duplicate_qcovs DOUBLE
         )
         """
     )
@@ -681,3 +685,145 @@ def test_ingest_private_sources_phage_only(tmp_path):
         "SELECT Host_ID FROM dim_hosts WHERE source_type = 'private'"
     ).fetchall()
     assert host_rows == []
+
+
+# ── Duplicate detection tests ─────────────────────────────────────────────────
+
+
+def test_ensure_duplicate_columns_added():
+    """Ingestion should add duplicate detection columns to fact_phages."""
+    source = _create_private_source(
+        Path("/tmp/_test_dup_cols"),
+        "DupCols",
+        [{"Phage_ID": "P1", "Host_ID": "H1", "Host_name": "Host",
+          "Source_DB": "DupCols", "interaction": "virulent"}],
+        ["P1"],
+        ["H1"],
+    )
+    conn = duckdb.connect(":memory:")
+    _prepare_minimal_db(conn)
+
+    ingest_private_sources_into_db(conn, [str(source)])
+
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(fact_phages)").fetchall()}
+    assert "is_duplicate_of_public" in columns
+    assert "duplicate_public_id" in columns
+    assert "duplicate_pident" in columns
+    assert "duplicate_qcovs" in columns
+
+
+def test_private_phages_default_not_duplicate():
+    """Private phages should default to is_duplicate_of_public = FALSE."""
+    source = _create_private_source(
+        Path("/tmp/_test_dup_default"),
+        "DupDefault",
+        [{"Phage_ID": "P1", "Host_ID": "H1", "Host_name": "Host",
+          "Source_DB": "DupDefault", "interaction": "virulent"}],
+        ["P1"],
+        ["H1"],
+    )
+    conn = duckdb.connect(":memory:")
+    _prepare_minimal_db(conn)
+
+    ingest_private_sources_into_db(conn, [str(source)])
+
+    row = conn.execute(
+        "SELECT is_duplicate_of_public, duplicate_public_id FROM fact_phages "
+        "WHERE Phage_ID = 'P1'"
+    ).fetchone()
+    assert row[0] is False
+    assert row[1] is None
+
+
+def test_duplicate_check_with_no_blast_db(tmp_path):
+    """When blast_db_dir is None, duplicate check is skipped gracefully."""
+    source = _create_private_source(
+        tmp_path / "src",
+        "NoBlast",
+        [{"Phage_ID": "P1", "Host_ID": "H1", "Host_name": "Host",
+          "Source_DB": "NoBlast", "interaction": "virulent"}],
+        ["P1"],
+        ["H1"],
+    )
+    conn = duckdb.connect(":memory:")
+    _prepare_minimal_db(conn)
+
+    summary = ingest_private_sources_into_db(
+        conn, [str(source)], blast_db_dir=None, private_phage_mapping_path=None
+    )
+    assert len(summary["ingested"]) == 1
+    dup_stats = summary.get("duplicate_check", {})
+    assert dup_stats.get("checked", 0) == 0
+
+
+def test_duplicate_check_with_missing_blast_db(tmp_path):
+    """When blast_db_dir points to non-existent path, duplicate check is skipped."""
+    source = _create_private_source(
+        tmp_path / "src",
+        "MissingBlast",
+        [{"Phage_ID": "P1", "Host_ID": "H1", "Host_name": "Host",
+          "Source_DB": "MissingBlast", "interaction": "virulent"}],
+        ["P1"],
+        ["H1"],
+    )
+    conn = duckdb.connect(":memory:")
+    _prepare_minimal_db(conn)
+
+    summary = ingest_private_sources_into_db(
+        conn,
+        [str(source)],
+        blast_db_dir=str(tmp_path / "nonexistent_blast_db"),
+        private_phage_mapping_path=str(tmp_path / "nonexistent_mapping.json"),
+    )
+    assert len(summary["ingested"]) == 1
+    dup_stats = summary.get("duplicate_check", {})
+    assert dup_stats.get("checked", 0) == 0
+
+
+def test_duplicate_check_empty_private_data(tmp_path):
+    """When no private phage mapping exists, duplicate check returns empty stats."""
+    conn = duckdb.connect(":memory:")
+    _prepare_minimal_db(conn)
+
+    from pbi.private_data import check_private_duplicates_against_public
+
+    stats = check_private_duplicates_against_public(
+        conn=conn,
+        blast_db_dir=tmp_path / "blast_db",
+        private_phage_mapping_path=tmp_path / "nonexistent_mapping.json",
+    )
+    assert stats["checked"] == 0
+    assert stats["duplicates_found"] == 0
+
+
+def test_blast_searcher_lists_private_and_combined():
+    """BlastSearcher should list private and combined as valid databases."""
+    from pbi.blast_search import BlastSearcher
+
+    # Create a minimal BlastSearcher with a temp dir
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        searcher = BlastSearcher(tmpdir)
+        dbs = searcher.list_databases()
+        assert "private" in dbs
+        assert "combined" in dbs
+        assert dbs["private"]["type"] == "nucl"
+        assert dbs["combined"]["type"] == "nucl"
+
+
+def test_blast_searcher_get_db_prefix_private_combined():
+    """BlastSearcher.get_db_prefix should work for private and combined."""
+    from pbi.blast_search import BlastSearcher
+
+    import tempfile
+    with tempfile.TemporaryDirectory() as tmpdir:
+        searcher = BlastSearcher(tmpdir)
+        # Create done markers so get_db_prefix finds them
+        for db_name in ("private", "combined"):
+            db_dir = Path(tmpdir) / db_name
+            db_dir.mkdir(parents=True, exist_ok=True)
+            (db_dir / f"makeblastdb_{db_name}.done").touch()
+        prefix = searcher.get_db_prefix("private")
+        assert "all_private" in prefix
+        prefix = searcher.get_db_prefix("combined")
+        assert "all_combined" in prefix

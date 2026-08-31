@@ -114,6 +114,8 @@ class BlastSearcher:
             ("phages", "nucl"),
             ("proteins", "prot"),
             ("hosts", "nucl"),
+            ("private", "nucl"),
+            ("combined", "nucl"),
         ]:
             db_path = self.blast_db_dir / db_name
             done_marker = db_path / f"makeblastdb_{db_name}.done"
@@ -135,12 +137,12 @@ class BlastSearcher:
         Get the BLAST database prefix for a named database.
 
         Args:
-            db_name: One of 'phages', 'proteins', 'hosts'.
+            db_name: One of 'phages', 'proteins', 'hosts', 'private', 'combined'.
 
         Returns:
             Full path prefix for the BLAST database.
         """
-        valid_dbs = {"phages", "proteins", "hosts"}
+        valid_dbs = {"phages", "proteins", "hosts", "private", "combined"}
         if db_name not in valid_dbs:
             raise ValueError(f"Invalid database '{db_name}'. Must be one of: {valid_dbs}")
 

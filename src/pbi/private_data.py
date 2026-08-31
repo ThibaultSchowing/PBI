@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict, Iterable, List, Optional, Set, Tuple
@@ -341,7 +342,37 @@ def write_private_manifest(manifest: Dict, output_path: Path) -> None:
     output_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def ingest_private_sources_into_db(conn: duckdb.DuckDBPyConnection, source_dirs: Iterable[str]) -> Dict:
+def _ensure_duplicate_columns(conn: "duckdb.DuckDBPyConnection") -> None:
+    """Add duplicate detection columns to fact_phages if they don't exist."""
+    try:
+        columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(fact_phages)").fetchall()
+        }
+        cols_to_add = []
+        if "is_duplicate_of_public" not in columns:
+            cols_to_add.append(("is_duplicate_of_public", "BOOLEAN DEFAULT FALSE"))
+        if "duplicate_public_id" not in columns:
+            cols_to_add.append(("duplicate_public_id", "VARCHAR"))
+        if "duplicate_pident" not in columns:
+            cols_to_add.append(("duplicate_pident", "DOUBLE"))
+        if "duplicate_qcovs" not in columns:
+            cols_to_add.append(("duplicate_qcovs", "DOUBLE"))
+
+        for col_name, col_type in cols_to_add:
+            conn.execute(f"ALTER TABLE fact_phages ADD COLUMN {col_name} {col_type}")
+    except Exception:
+        # Columns may already exist or table not yet created - non-critical
+        pass
+
+
+def ingest_private_sources_into_db(
+    conn: duckdb.DuckDBPyConnection,
+    source_dirs: Iterable[str],
+    blast_db_dir: Path | str | None = None,
+    private_phage_mapping_path: Path | str | None = None,
+    pident_threshold: float = 99.0,
+    qcovs_threshold: float = 90.0,
+) -> Dict:
     ingested = []
     skipped = []
     allowed_source_tables = {"fact_phages", "private_interactions", "private_entity_attributes"}
@@ -419,6 +450,9 @@ def ingest_private_sources_into_db(conn: duckdb.DuckDBPyConnection, source_dirs:
     _delete_private_rows_for_sources("private_interactions", current_source_dbs)
     _delete_private_rows_for_sources("private_entity_attributes", current_source_dbs)
 
+    # Ensure duplicate detection columns exist on fact_phages
+    _ensure_duplicate_columns(conn)
+
     existing_private_sources = {
         row[0]
         for row in conn.execute(
@@ -446,6 +480,10 @@ def ingest_private_sources_into_db(conn: duckdb.DuckDBPyConnection, source_dirs:
         private_phages["Completeness"] = pd.NA
         private_phages["Cluster"] = pd.NA
         private_phages["Subcluster"] = pd.NA
+        private_phages["is_duplicate_of_public"] = False
+        private_phages["duplicate_public_id"] = pd.NA
+        private_phages["duplicate_pident"] = pd.NA
+        private_phages["duplicate_qcovs"] = pd.NA
         private_phages = private_phages[
             [
                 "Phage_ID",
@@ -459,6 +497,10 @@ def ingest_private_sources_into_db(conn: duckdb.DuckDBPyConnection, source_dirs:
                 "Cluster",
                 "Subcluster",
                 "source_type",
+                "is_duplicate_of_public",
+                "duplicate_public_id",
+                "duplicate_pident",
+                "duplicate_qcovs",
             ]
         ]
         conn.register("private_phages_df", private_phages)
@@ -583,7 +625,21 @@ def ingest_private_sources_into_db(conn: duckdb.DuckDBPyConnection, source_dirs:
         """
     )
 
-    return {"ingested": ingested, "skipped": skipped}
+    # Run duplicate detection against public BLAST DB if available
+    duplicate_stats: Dict = {"checked": 0, "duplicates_found": 0}
+    if blast_db_dir and private_phage_mapping_path:
+        try:
+            duplicate_stats = check_private_duplicates_against_public(
+                conn=conn,
+                blast_db_dir=blast_db_dir,
+                private_phage_mapping_path=private_phage_mapping_path,
+                pident_threshold=pident_threshold,
+                qcovs_threshold=qcovs_threshold,
+            )
+        except Exception as exc:
+            logger.warning("Duplicate detection failed (non-blocking): %s", exc)
+
+    return {"ingested": ingested, "skipped": skipped, "duplicate_check": duplicate_stats}
 
 
 def _iter_fasta_records(fasta_path: Path) -> Iterable[Tuple[str, str, str]]:
@@ -789,5 +845,179 @@ def prepare_private_sequence_artifacts(
         json.dumps(dict(sorted(host_mapping.items())), indent=2),
         encoding="utf-8",
     )
+
+    return stats
+
+
+def check_private_duplicates_against_public(
+    conn: "duckdb.DuckDBPyConnection",
+    blast_db_dir: Path | str,
+    private_phage_mapping_path: Path | str,
+    pident_threshold: float = 99.0,
+    qcovs_threshold: float = 90.0,
+) -> Dict:
+    """Search private phage sequences against the public BLAST DB to detect duplicates.
+
+    Uses the private phage mapping (source_db -> phage.fasta path) to locate
+    private sequences, then searches each against the public ``phages`` BLAST
+    database. Matches with identity above *pident_threshold* and query coverage
+    above *qcovs_threshold* are flagged as duplicates in ``fact_phages``.
+
+    Args:
+        conn: Active DuckDB connection (must have ``fact_phages`` table).
+        blast_db_dir: Path to the BLAST database directory containing the
+            ``phages/all_phages`` public database.
+        private_phage_mapping_path: Path to the ``private_phage_mapping.json``
+            produced by ``prepare_private_sequences``.
+        pident_threshold: Minimum percent identity to flag as duplicate (default 99.0).
+        qcovs_threshold: Minimum query coverage % to flag as duplicate (default 90.0).
+
+    Returns:
+        Dict with keys ``checked``, ``duplicates_found``, ``sources``, and
+        ``duplicates`` (mapping Phage_ID -> match info).
+    """
+    blast_db_dir = Path(blast_db_dir)
+    private_phage_mapping_path = Path(private_phage_mapping_path)
+
+    stats: Dict = {
+        "checked": 0,
+        "duplicates_found": 0,
+        "sources": [],
+        "duplicates": {},
+    }
+
+    # If no private phage mapping or BLAST DB, skip gracefully
+    if not private_phage_mapping_path.exists():
+        logger.warning(
+            "Private phage mapping not found at %s; skipping duplicate check",
+            private_phage_mapping_path,
+        )
+        return stats
+
+    if not (blast_db_dir / "phages" / "all_phages").exists():
+        logger.warning(
+            "Public BLAST DB not found at %s/phages/all_phages; skipping duplicate check",
+            blast_db_dir,
+        )
+        return stats
+
+    with open(private_phage_mapping_path, encoding="utf-8") as f:
+        phage_mapping: Dict[str, str] = json.load(f)
+
+    if not phage_mapping:
+        logger.info("No private phage sources to check for duplicates")
+        return stats
+
+    # Import BlastSearcher here to avoid circular imports at module level
+    from pbi.blast_search import BlastSearcher
+
+    searcher = BlastSearcher(blast_db_dir)
+
+    # Concatenate all private phage FASTA files into a temporary file
+    import tempfile
+
+    tmp_fasta = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".fasta", delete=False, encoding="utf-8"
+    )
+    seq_source: Dict[str, str] = {}  # seq_id -> source_db
+
+    try:
+        for source_db, fasta_path in sorted(phage_mapping.items()):
+            fasta_path = Path(fasta_path)
+            if not fasta_path.exists():
+                logger.warning(
+                    "Private FASTA not found for source '%s': %s",
+                    source_db, fasta_path,
+                )
+                continue
+            stats["sources"].append(source_db)
+            with open(fasta_path, encoding="utf-8") as in_f:
+                for line in in_f:
+                    tmp_fasta.write(line)
+                    if line.startswith(">"):
+                        seq_id = line[1:].strip().split()[0]
+                        seq_source[seq_id] = source_db
+        tmp_fasta.close()
+
+        if not seq_source:
+            logger.info("No private sequences found to check for duplicates")
+            return stats
+
+        stats["checked"] = len(seq_source)
+
+        # Search private sequences against the public phages DB
+        results = searcher.search_fasta(
+            Path(tmp_fasta.name),
+            program="blastn",
+            db="phages",
+            max_hits=1,
+            evalue=1e-5,
+        )
+
+        if results.empty:
+            logger.info("No BLAST hits found against public data")
+            return stats
+
+        # Filter by identity threshold
+        matches = results[results["pident"] >= pident_threshold].copy()
+
+        if matches.empty:
+            logger.info(
+                "No private phages with >= %.1f%% identity to public data",
+                pident_threshold,
+            )
+            return stats
+
+        # Build duplicate mapping: private Phage_ID -> best public match
+        duplicates: Dict[str, Dict] = {}
+        for _, row in matches.iterrows():
+            query_id = row["qseqid"]
+            subject_id = row["sseqid"]
+            pident = float(row["pident"])
+
+            # Keep only the best hit per query
+            if query_id not in duplicates or pident > duplicates[query_id]["pident"]:
+                duplicates[query_id] = {
+                    "public_phage_id": subject_id,
+                    "pident": pident,
+                    "evalue": float(row.get("evalue", 0)),
+                    "source_db": seq_source.get(query_id, "unknown"),
+                }
+
+        stats["duplicates_found"] = len(duplicates)
+        stats["duplicates"] = duplicates
+
+        # Update fact_phages with duplicate annotations
+        for phage_id, dup_info in duplicates.items():
+            source_db = dup_info["source_db"]
+            conn.execute(
+                """
+                UPDATE fact_phages
+                SET is_duplicate_of_public = TRUE,
+                    duplicate_public_id = ?,
+                    duplicate_pident = ?,
+                    duplicate_qcovs = NULL
+                WHERE Phage_ID = ?
+                  AND Source_DB = ?
+                  AND source_type = 'private'
+                """,
+                [dup_info["public_phage_id"], dup_info["pident"], phage_id, source_db],
+            )
+
+        logger.info(
+            "Duplicate check complete: %d/%d private phages match public data "
+            "(pident>=%.1f%%)",
+            stats["duplicates_found"], stats["checked"], pident_threshold,
+        )
+
+    except FileNotFoundError as exc:
+        logger.warning("BLAST not available or DB missing; skipping duplicate check: %s", exc)
+    except Exception as exc:
+        logger.warning("Duplicate check failed (non-blocking): %s", exc)
+    finally:
+        try:
+            os.unlink(tmp_fasta.name)
+        except OSError:
+            pass
 
     return stats
