@@ -16,12 +16,14 @@
 [![CI Pipeline and DB Tests](https://github.com/ThibaultSchowing/PBI-Scope/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/ThibaultSchowing/PBI-Scope/actions/workflows/ci.yml)
 [![ExPASy SIB](https://img.shields.io/badge/ExPASy-SIB_Resource-E2001A)](https://www.expasy.org/resources/pbi-scope)
 
-> Real-life usage example and guide on how to use PBI-Scope for Phage Bacteria Interaction model training. 
+> Check the example notebooks on how to use PBI-Scope !  
 
 
 1. Preprocessing and integrating you private data
 2. Run the pipeline to include these data into the PBI-Scope database
-3. Use the _pbi_ Python package to generate datasets or stream data into your model training. 
+3. Use the _pbi_ Python package to generate datasets or stream data into your model training.
+4. Use the included BLAST database to search for sequences, with the API or the Python package!
+5. **For more than notebooks, checkout [the project's fork on CI4CB's page](https://github.com/CI4CB-lab/PBI-Scope-PERPHECT) to have a full working example on how to train a neural network with PBI-Scope.** 
 
 ## Workflow
 
