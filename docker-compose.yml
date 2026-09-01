@@ -103,6 +103,7 @@ services:
       - JUPYTER_CONFIG_DIR=/workspace/.jupyter
       # Set PYTHONPATH for proper module imports
       - PYTHONPATH=/app
+      - PBI_API_URL=http://api:8000
       # Optional: set a token for JupyterLab authentication.
       # Leave empty or commented out for no auth (default, localhost only).
       # When set, JupyterLab requires the token to access the UI.
