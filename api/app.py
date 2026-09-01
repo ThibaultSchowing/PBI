@@ -100,30 +100,37 @@ async def lifespan(app: FastAPI):
         logger.info(f"Phage FASTA: {paths['phage_fasta']}")
         logger.info(f"Protein FASTA: {paths['protein_fasta']}")
 
-        # Check required files exist
-        for name in ['database', 'phage_fasta', 'protein_fasta']:
-            if not Path(paths[name]).exists():
-                raise FileNotFoundError(f"{name.capitalize()} not found: {paths[name]}")
+        # Check required files — if missing, start in degraded mode
+        missing = [
+            name for name in ['database', 'phage_fasta', 'protein_fasta']
+            if not Path(paths[name]).exists()
+        ]
+        if missing:
+            logger.warning(
+                "Missing data files: %s. API running in degraded mode "
+                "(metadata/sequence endpoints unavailable).",
+                ", ".join(missing),
+            )
+        else:
+            # Optional host files
+            host_mapping = paths.get('host_mapping')
+            host_fasta = paths.get('host_fasta')
+            if host_mapping and Path(host_mapping).exists():
+                logger.info(f"Host mapping: {host_mapping}")
+            if host_fasta and Path(host_fasta).exists():
+                logger.info(f"Host FASTA: {host_fasta}")
 
-        # Optional host files
-        host_mapping = paths.get('host_mapping')
-        host_fasta = paths.get('host_fasta')
-        if host_mapping and Path(host_mapping).exists():
-            logger.info(f"Host mapping: {host_mapping}")
-        if host_fasta and Path(host_fasta).exists():
-            logger.info(f"Host FASTA: {host_fasta}")
+            retriever = SequenceRetriever(
+                paths['database'],
+                paths['phage_fasta'],
+                paths['protein_fasta'],
+                host_fasta_path=host_fasta if host_fasta and Path(host_fasta).exists() else None,
+                host_mapping_path=host_mapping if host_mapping and Path(host_mapping).exists() else None,
+            )
+            logger.info("Successfully connected to database")
 
-        retriever = SequenceRetriever(
-            paths['database'],
-            paths['phage_fasta'],
-            paths['protein_fasta'],
-            host_fasta_path=host_fasta if host_fasta and Path(host_fasta).exists() else None,
-            host_mapping_path=host_mapping if host_mapping and Path(host_mapping).exists() else None,
-        )
-        logger.info("Successfully connected to database")
-
-        stats = retriever.get_stats()
-        logger.info(f"Database statistics: {stats['database']}")
+            stats = retriever.get_stats()
+            logger.info(f"Database statistics: {stats['database']}")
 
         # Initialize GFF3 retriever (optional)
         gff3_index = paths.get('gff3_index')
@@ -150,8 +157,7 @@ async def lifespan(app: FastAPI):
             logger.warning("BLAST database directory not found, BLAST endpoints will be unavailable")
 
     except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
-        raise
+        logger.error(f"Startup error (non-blocking): {e}")
 
     yield
 
@@ -241,10 +247,17 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    if retriever is None:
-        raise HTTPException(status_code=503, detail="Database not connected")
-    return {"status": "healthy", "database": "connected"}
+    """Health check endpoint.
+
+    Returns 200 in both healthy and degraded modes.  Clients should check
+    ``database_connected`` to determine if metadata/sequence endpoints are
+    available.
+    """
+    return {
+        "status": "healthy" if retriever is not None else "degraded",
+        "database_connected": retriever is not None,
+        "blast_available": blast_searcher is not None,
+    }
 
 
 @app.get("/stats")
