@@ -15,11 +15,12 @@ import numpy as np
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import PlainTextResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import duckdb
 
 from pbi.sequence_retrieval import SequenceRetriever
 from pbi.gff3_retrieval import GFF3Retriever
+from pbi.blast_search import BlastSearcher
 
 # Configure logging
 logging.basicConfig(
@@ -31,6 +32,7 @@ logger = logging.getLogger('api.app')
 # Global retriever instance
 retriever: Optional[SequenceRetriever] = None
 gff3_retriever: Optional[GFF3Retriever] = None
+blast_searcher: Optional[BlastSearcher] = None
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -90,7 +92,7 @@ def get_data_paths():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan context manager for startup and shutdown."""
-    global retriever, gff3_retriever
+    global retriever, gff3_retriever, blast_searcher
 
     try:
         paths = get_data_paths()
@@ -98,30 +100,37 @@ async def lifespan(app: FastAPI):
         logger.info(f"Phage FASTA: {paths['phage_fasta']}")
         logger.info(f"Protein FASTA: {paths['protein_fasta']}")
 
-        # Check required files exist
-        for name in ['database', 'phage_fasta', 'protein_fasta']:
-            if not Path(paths[name]).exists():
-                raise FileNotFoundError(f"{name.capitalize()} not found: {paths[name]}")
+        # Check required files — if missing, start in degraded mode
+        missing = [
+            name for name in ['database', 'phage_fasta', 'protein_fasta']
+            if not Path(paths[name]).exists()
+        ]
+        if missing:
+            logger.warning(
+                "Missing data files: %s. API running in degraded mode "
+                "(metadata/sequence endpoints unavailable).",
+                ", ".join(missing),
+            )
+        else:
+            # Optional host files
+            host_mapping = paths.get('host_mapping')
+            host_fasta = paths.get('host_fasta')
+            if host_mapping and Path(host_mapping).exists():
+                logger.info(f"Host mapping: {host_mapping}")
+            if host_fasta and Path(host_fasta).exists():
+                logger.info(f"Host FASTA: {host_fasta}")
 
-        # Optional host files
-        host_mapping = paths.get('host_mapping')
-        host_fasta = paths.get('host_fasta')
-        if host_mapping and Path(host_mapping).exists():
-            logger.info(f"Host mapping: {host_mapping}")
-        if host_fasta and Path(host_fasta).exists():
-            logger.info(f"Host FASTA: {host_fasta}")
+            retriever = SequenceRetriever(
+                paths['database'],
+                paths['phage_fasta'],
+                paths['protein_fasta'],
+                host_fasta_path=host_fasta if host_fasta and Path(host_fasta).exists() else None,
+                host_mapping_path=host_mapping if host_mapping and Path(host_mapping).exists() else None,
+            )
+            logger.info("Successfully connected to database")
 
-        retriever = SequenceRetriever(
-            paths['database'],
-            paths['phage_fasta'],
-            paths['protein_fasta'],
-            host_fasta_path=host_fasta if host_fasta and Path(host_fasta).exists() else None,
-            host_mapping_path=host_mapping if host_mapping and Path(host_mapping).exists() else None,
-        )
-        logger.info("Successfully connected to database")
-
-        stats = retriever.get_stats()
-        logger.info(f"Database statistics: {stats['database']}")
+            stats = retriever.get_stats()
+            logger.info(f"Database statistics: {stats['database']}")
 
         # Initialize GFF3 retriever (optional)
         gff3_index = paths.get('gff3_index')
@@ -133,9 +142,22 @@ async def lifespan(app: FastAPI):
         else:
             logger.warning("GFF3 index not found, GFF3 endpoints will be unavailable")
 
+        # Initialize BLAST searcher (optional)
+        blast_db_dir = base_path / "blast_db"
+        if blast_db_dir.exists():
+            try:
+                blast_searcher = BlastSearcher(blast_db_dir)
+                blast_dbs = blast_searcher.list_databases()
+                ready = sum(1 for d in blast_dbs.values() if d["exists"])
+                logger.info(f"BLAST databases initialized: {ready}/{len(blast_dbs)} ready")
+            except Exception as e:
+                logger.warning(f"BLAST initialization failed: {e}")
+                blast_searcher = None
+        else:
+            logger.warning("BLAST database directory not found, BLAST endpoints will be unavailable")
+
     except Exception as e:
-        logger.error(f"Failed to connect to database: {e}")
-        raise
+        logger.error(f"Startup error (non-blocking): {e}")
 
     yield
 
@@ -173,6 +195,14 @@ class ProteinSequenceRequest(BaseModel):
     limit: Optional[int] = 1000
 
 
+class BlastSearchRequest(BaseModel):
+    sequence: str
+    program: str = "blastn"
+    db: Optional[str] = None
+    max_hits: int = Field(default=10, ge=1, le=100, description="Max hits to return (1-100)")
+    evalue: float = 1e-5
+
+
 # ── Utility endpoints ────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -207,16 +237,27 @@ async def root():
              "phage_gff3": "/phage/{phage_id}/gff3",
              "gff3_stats": "/gff3/stats",
              "gff3_sources": "/gff3/sources",
+             # BLAST
+             "blast_search": "/blast/search (POST)",
+             "blast_databases": "/blast/databases",
+             "blast_status": "/blast/status",
         }
     }
 
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint."""
-    if retriever is None:
-        raise HTTPException(status_code=503, detail="Database not connected")
-    return {"status": "healthy", "database": "connected"}
+    """Health check endpoint.
+
+    Returns 200 in both healthy and degraded modes.  Clients should check
+    ``database_connected`` to determine if metadata/sequence endpoints are
+    available.
+    """
+    return {
+        "status": "healthy" if retriever is not None else "degraded",
+        "database_connected": retriever is not None,
+        "blast_available": blast_searcher is not None,
+    }
 
 
 @app.get("/stats")
@@ -629,3 +670,72 @@ async def get_gff3_sources():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+# ── BLAST endpoints ───────────────────────────────────────────────────────────
+
+@app.post("/blast/search")
+async def blast_search(request: BlastSearchRequest):
+    """Search a sequence against BLAST databases."""
+    if blast_searcher is None:
+        raise HTTPException(status_code=503, detail="BLAST databases not available")
+    try:
+        df = blast_searcher.search_sequence(
+            request.sequence,
+            program=request.program,
+            db=request.db,
+            max_hits=request.max_hits,
+            evalue=request.evalue,
+        )
+        return {
+            "success": True,
+            "program": request.program,
+            "db": request.db or "auto",
+            "hits": len(df),
+            "results": _df_to_records(df),
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"BLAST search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/blast/databases")
+async def get_blast_databases():
+    """List available BLAST databases and their status."""
+    if blast_searcher is None:
+        raise HTTPException(status_code=503, detail="BLAST databases not available")
+    try:
+        dbs = blast_searcher.list_databases()
+        return {"success": True, "databases": dbs}
+    except Exception as e:
+        logger.error(f"Error listing BLAST databases: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/blast/status")
+async def get_blast_status():
+    """Get BLAST installation and database status."""
+    import shutil
+    blastn_path = shutil.which("blastn")
+    blast_installed = blastn_path is not None
+
+    databases_built = False
+    available_dbs = []
+    if blast_searcher is not None:
+        try:
+            dbs = blast_searcher.list_databases()
+            available_dbs = [name for name, info in dbs.items() if info["exists"]]
+            databases_built = len(available_dbs) > 0
+        except Exception:
+            pass
+
+    return {
+        "success": True,
+        "blast_installed": blast_installed,
+        "databases_built": databases_built,
+        "available_databases": available_dbs,
+    }

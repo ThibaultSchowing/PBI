@@ -105,7 +105,13 @@ rule all:
         config["host_index_complete_flag"],
         config["host_fasta_mapping"],
         config["host_metadata_output"],
-        config["host_status_report"]
+        config["host_status_report"],
+        # BLAST databases
+        config.get("blast_db_done_phages", "/data/processed/blast_db/phages/makeblastdb_phages.done"),
+        config.get("blast_db_done_proteins", "/data/processed/blast_db/proteins/makeblastdb_proteins.done"),
+        config.get("blast_db_done_hosts", "/data/processed/blast_db/hosts/makeblastdb_hosts.done"),
+        config.get("blast_db_done_private", "/data/processed/blast_db/private/makeblastdb_private.done"),
+        config.get("blast_db_done_combined", "/data/processed/blast_db/combined/makeblastdb_combined.done")
 
 
 # if launched with auto discovery of snakefile (from the root directory),no need to specify the workflow directory
@@ -119,3 +125,5 @@ include: "rules/database.smk"
 include: "rules/sequences.smk"
 
 include: "rules/hosts.smk"
+
+include: "rules/blast.smk"

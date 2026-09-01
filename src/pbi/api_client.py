@@ -412,3 +412,69 @@ class APIClient:
 
     def __exit__(self, *args):
         self.close()
+
+    # ── BLAST methods ──────────────────────────────────────────────────────
+
+    def blast_search(
+        self,
+        sequence: str,
+        program: str = "blastn",
+        db: Optional[str] = None,
+        max_hits: int = 10,
+        evalue: float = 1e-5,
+    ) -> pd.DataFrame:
+        """Search a sequence against BLAST databases via the API.
+
+        Parameters
+        ----------
+        sequence:
+            Query sequence (nucleotide or protein depending on *program*).
+        program:
+            BLAST program: ``"blastn"``, ``"blastp"``, ``"blastx"``,
+            ``"tblastn"``, ``"tblastx"``.
+        db:
+            Database to search: ``"phages"``, ``"proteins"``, ``"hosts"``,
+            ``"private"``, ``"combined"``, or ``None`` for auto-selection.
+        max_hits:
+            Maximum number of hits to return (server caps at 100).
+        evalue:
+            E-value threshold.
+
+        Returns
+        -------
+        pd.DataFrame
+            BLAST results in tabular format.
+        """
+        payload = {
+            "sequence": sequence,
+            "program": program,
+            "max_hits": max_hits,
+            "evalue": evalue,
+        }
+        if db is not None:
+            payload["db"] = db
+        result = self._post("/blast/search", payload)
+        return self._records_to_df(result.get("results", []))
+
+    def list_blast_databases(self) -> Dict:
+        """List available BLAST databases and their status.
+
+        Returns
+        -------
+        dict
+            Mapping of database name to info dict with keys:
+            ``type`` (nucl/prot), ``exists`` (bool), ``path`` (str).
+        """
+        result = self._get("/blast/databases")
+        return result.get("databases", {})
+
+    def blast_status(self) -> Dict:
+        """Get BLAST installation and database status.
+
+        Returns
+        -------
+        dict
+            Keys: ``blast_installed``, ``databases_built``,
+            ``available_databases``.
+        """
+        return self._get("/blast/status")

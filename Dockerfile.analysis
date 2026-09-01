@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     build-essential \
+    ncbi-blast+ \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy entire project to get workflow scripts and all dependencies

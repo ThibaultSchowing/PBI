@@ -156,7 +156,9 @@ class TestHealthEndpoint:
         try:
             client = TestClient(app_module.app)
             resp = client.get("/health")
-            assert resp.status_code == 503
+            assert resp.status_code == 200
+            assert resp.json()["status"] == "degraded"
+            assert resp.json()["database_connected"] is False
         finally:
             app_module.retriever = original
 

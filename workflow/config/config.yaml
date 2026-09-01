@@ -101,6 +101,28 @@ skip_existing_downloads: true  # Skip already downloaded genomes
 validate_file_checksums: true  # Validate downloaded file integrity
 reuse_host_resolution_cache: true  # Reuse token resolution cache across reruns
 
+# -----------------------------------
+# BLAST database configuration
+# -----------------------------------
+blast_db_dir: "/data/processed/blast_db"
+blast_max_file_size: "4G"  # Max volume size for makeblastdb (default 1G; increase for millions of sequences)
+blast_db_done_phages: "/data/processed/blast_db/phages/makeblastdb_phages.done"
+blast_db_done_proteins: "/data/processed/blast_db/proteins/makeblastdb_proteins.done"
+blast_db_done_hosts: "/data/processed/blast_db/hosts/makeblastdb_hosts.done"
+blast_db_done_private: "/data/processed/blast_db/private/makeblastdb_private.done"
+blast_db_done_combined: "/data/processed/blast_db/combined/makeblastdb_combined.done"
+makeblastdb_phages_log: "/pipeline-logs/logs/makeblastdb_phages.log"
+makeblastdb_proteins_log: "/pipeline-logs/logs/makeblastdb_proteins.log"
+makeblastdb_hosts_log: "/pipeline-logs/logs/makeblastdb_hosts.log"
+makeblastdb_private_log: "/pipeline-logs/logs/makeblastdb_private.log"
+makeblastdb_combined_log: "/pipeline-logs/logs/makeblastdb_combined.log"
+check_private_duplicates_log: "/pipeline-logs/logs/check_private_duplicates.log"
+
+# Duplicate detection thresholds
+duplicate_pident_threshold: 99.0
+duplicate_qcovs_threshold: 90.0
+private_duplicate_report: "/private-data/private_duplicate_report.json"
+
 # Public data provenance and version-pinning foundation
 public_data_provider:
   name: "PhageScope"

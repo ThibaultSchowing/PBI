@@ -61,6 +61,75 @@ def _cmd_validate_private(args: argparse.Namespace) -> int:
     return 0 if summary["sources_invalid"] == 0 else 1
 
 
+# Default BLAST database path (container mode)
+_DEFAULT_BLAST_DB_DIR = "/data/processed/blast_db"
+
+
+def _cmd_blast_search(args: argparse.Namespace) -> int:
+    """Search a sequence against BLAST databases."""
+    from .blast_search import BlastSearcher
+
+    blast_db_dir = args.blast_db_dir or _DEFAULT_BLAST_DB_DIR
+
+    if not Path(blast_db_dir).exists():
+        print(f"BLAST database directory not found: {blast_db_dir}", file=sys.stderr)
+        print("Run the pipeline to build BLAST databases first.", file=sys.stderr)
+        return 1
+
+    try:
+        searcher = BlastSearcher(blast_db_dir)
+
+        # Check databases
+        if args.list_databases:
+            dbs = searcher.list_databases()
+            print("Available BLAST databases:")
+            for name, info in dbs.items():
+                status = "READY" if info["exists"] else "NOT BUILT"
+                print(f"  [{status}] {name} ({info['type']})")
+            return 0
+
+        # Validate inputs
+        if not args.sequence and not args.input:
+            print("Error: provide --sequence or --input", file=sys.stderr)
+            return 1
+
+        program = args.program
+        db = args.db
+        max_hits = args.max_hits
+        evalue = args.evalue
+
+        if args.input:
+            results = searcher.search_fasta(
+                args.input, program=program, db=db,
+                max_hits=max_hits, evalue=evalue,
+            )
+        else:
+            results = searcher.search_sequence(
+                args.sequence, program=program, db=db,
+                max_hits=max_hits, evalue=evalue,
+            )
+
+        if results.empty:
+            print("No hits found.")
+            return 0
+
+        # Output
+        if args.output:
+            results.to_csv(args.output, index=False)
+            print(f"Results written to {args.output} ({len(results)} hits)")
+        else:
+            print(results.to_string(index=False))
+
+        return 0
+
+    except FileNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(f"Error running BLAST search: {e}", file=sys.stderr)
+        return 1
+
+
 def _cmd_get_gff3(args: argparse.Namespace) -> int:
     """Retrieve GFF3 content for a phage."""
     from .gff3_retrieval import GFF3Retriever
@@ -178,6 +247,62 @@ def build_parser() -> argparse.ArgumentParser:
         help="List all phage IDs (optionally filter by source DB)",
     )
     get_gff3.set_defaults(func=_cmd_get_gff3)
+
+    blast_search = subparsers.add_parser(
+        "blast-search",
+        help="Search a sequence against BLAST databases",
+    )
+    blast_search.add_argument(
+        "sequence",
+        nargs="?",
+        default=None,
+        help="Query sequence (DNA or protein)",
+    )
+    blast_search.add_argument(
+        "--input", "-i",
+        default=None,
+        help="Path to query FASTA file",
+    )
+    blast_search.add_argument(
+        "--program", "-p",
+        default="blastn",
+        choices=["blastn", "blastp", "blastx", "tblastn", "tblastx"],
+        help="BLAST program (default: blastn)",
+    )
+    blast_search.add_argument(
+        "--db", "-d",
+        default=None,
+        choices=["phages", "proteins", "hosts"],
+        help="Database to search (auto-selected if not given)",
+    )
+    blast_search.add_argument(
+        "--max-hits", "-m",
+        type=int,
+        default=10,
+        help="Maximum number of hits (default: 10)",
+    )
+    blast_search.add_argument(
+        "--evalue", "-e",
+        type=float,
+        default=1e-5,
+        help="E-value threshold (default: 1e-5)",
+    )
+    blast_search.add_argument(
+        "--output", "-o",
+        default=None,
+        help="Output CSV file (prints to stdout if not given)",
+    )
+    blast_search.add_argument(
+        "--blast-db-dir",
+        default=None,
+        help="Path to BLAST database directory",
+    )
+    blast_search.add_argument(
+        "--list-databases",
+        action="store_true",
+        help="List available BLAST databases and their status",
+    )
+    blast_search.set_defaults(func=_cmd_blast_search)
 
     return parser
 
