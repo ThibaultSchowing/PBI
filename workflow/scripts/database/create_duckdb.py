@@ -178,7 +178,11 @@ def create_star_schema_duckdb():
         Cluster,
         Subcluster,
         {optional_select_sql},
-        'public' as source_type
+        'public' as source_type,
+        FALSE as is_duplicate_of_public,
+        NULL::VARCHAR as duplicate_public_id,
+        NULL::DOUBLE as duplicate_pident,
+        NULL::DOUBLE as duplicate_qcovs
     FROM read_csv(?,
                   header=true,
                   all_varchar=true,
@@ -539,7 +543,28 @@ def create_star_schema_duckdb():
                 if source.get("is_valid", False) and source.get("source_dir")
             ]
             if valid_source_dirs:
-                private_ingestion_summary = ingest_private_sources_into_db(conn, valid_source_dirs)
+                # Resolve BLAST DB dir and private phage mapping for duplicate detection
+                blast_db_dir = snakemake.config.get("blast_db_dir", "")
+                if blast_db_dir and not os.path.isabs(blast_db_dir):
+                    blast_db_dir = str(REPO_ROOT / blast_db_dir.lstrip("/"))
+                private_phage_mapping = snakemake.config.get("private_phage_mapping", "")
+                pident_threshold = float(snakemake.config.get("duplicate_pident_threshold", 99.0))
+                qcovs_threshold = float(snakemake.config.get("duplicate_qcovs_threshold", 90.0))
+
+                private_ingestion_summary = ingest_private_sources_into_db(
+                    conn,
+                    valid_source_dirs,
+                    blast_db_dir=blast_db_dir if blast_db_dir and os.path.exists(blast_db_dir) else None,
+                    private_phage_mapping_path=private_phage_mapping if private_phage_mapping and os.path.exists(private_phage_mapping) else None,
+                    pident_threshold=pident_threshold,
+                    qcovs_threshold=qcovs_threshold,
+                )
+                dup_stats = private_ingestion_summary.get("duplicate_check", {})
+                if dup_stats.get("duplicates_found", 0) > 0:
+                    logging.info(
+                        "⚠️  Duplicate check: %d/%d private phages match public data",
+                        dup_stats["duplicates_found"], dup_stats["checked"],
+                    )
                 for skipped_source in private_ingestion_summary["skipped"]:
                     logging.warning(
                         "⚠️  Skipped private source '%s': %s",
@@ -609,6 +634,7 @@ def create_star_schema_duckdb():
     conn.execute("CREATE INDEX idx_phages_id ON fact_phages(Phage_ID)")
     conn.execute("CREATE INDEX idx_phages_source ON fact_phages(Source_DB)")
     conn.execute("CREATE INDEX idx_phages_source_type ON fact_phages(source_type)")
+    conn.execute("CREATE INDEX idx_phages_dup ON fact_phages(is_duplicate_of_public)")
     
     # Indexes for dim_proteins table
     conn.execute("CREATE INDEX idx_proteins_phage ON dim_proteins(Phage_ID)")

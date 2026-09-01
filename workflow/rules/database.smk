@@ -12,6 +12,17 @@ def private_root_dependency(wildcards):
     return [str(root_path)] if root_path.exists() else []
 
 
+def private_blast_db_dependency(wildcards):
+    """Return the private BLAST DB done marker if it exists, else empty list.
+
+    This makes the dependency optional so the pipeline works even when
+    no private data or BLAST DB is present (e.g. in CI).
+    """
+    blast_db_dir = config.get("blast_db_dir", "/data/processed/blast_db")
+    done_marker = Path(blast_db_dir) / "private" / "makeblastdb_private.done"
+    return [str(done_marker)] if done_marker.exists() else []
+
+
 rule create_duckdb:
     input:
         phage_data=config["phage_metadata_merged_output"], 
@@ -29,7 +40,9 @@ rule create_duckdb:
         phage_host_links=config["phage_host_links_output"],
         private_manifest=config["private_manifest_output"],
         public_data_manifest=config["public_data_provenance"]["manifest_csv_output"],
-        pipeline_run_provenance=config["public_data_provenance"]["pipeline_run_provenance_csv_output"]
+        pipeline_run_provenance=config["public_data_provenance"]["pipeline_run_provenance_csv_output"],
+        # Private BLAST DB for duplicate detection (optional, non-blocking)
+        private_blast_db=private_blast_db_dependency,
     output:
         db=config["duckdb_output"]
     conda:
