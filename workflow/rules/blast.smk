@@ -110,10 +110,11 @@ rule makeblastdb_private:
     against the public data and for user queries via the API/CLI.
     """
     input:
-        private_phage_dir = config["private_phage_genomes_intermediate"]
+        private_phage_mapping = config["private_phage_mapping"]
     output:
         db = touch(os.path.join(BLAST_DB_DIR, "private", "makeblastdb_private.done"))
     params:
+        private_phage_dir = config["private_phage_genomes_intermediate"],
         db_dir = os.path.join(BLAST_DB_DIR, "private"),
         db_name = "all_private",
         max_file_size = BLAST_MAX_FILE_SIZE
@@ -135,10 +136,11 @@ rule makeblastdb_combined:
     """
     input:
         public_fasta = config["all_phages_fasta"],
-        private_phage_dir = config["private_phage_genomes_intermediate"]
+        private_phage_mapping = config["private_phage_mapping"]
     output:
         db = touch(os.path.join(BLAST_DB_DIR, "combined", "makeblastdb_combined.done"))
     params:
+        private_phage_dir = config["private_phage_genomes_intermediate"],
         db_dir = os.path.join(BLAST_DB_DIR, "combined"),
         db_name = "all_combined",
         max_file_size = BLAST_MAX_FILE_SIZE

@@ -13,7 +13,7 @@ from snakemake.io import touch
 
 
 def main():
-    private_phage_dir = snakemake.input.private_phage_dir
+    private_phage_dir = snakemake.params.private_phage_dir
     db_dir = snakemake.params.db_dir
     db_name = snakemake.params.db_name
     max_file_size = snakemake.params.get("max_file_size", "1G")

@@ -235,7 +235,7 @@ rule download_protein_fasta:
     cache: True
     shell:
         """
-        wget -c -O {output}.tmp {params.url} && mv {output}.tmp {output} || (rm -f {output}.tmp; exit 1)
+        wget --timeout=300 --tries=3 -c -O {output}.tmp {params.url} && mv {output}.tmp {output} || (rm -f {output}.tmp; exit 1)
         """
 
 rule extract_protein_fasta:
@@ -266,7 +266,7 @@ rule download_phage_fasta:
     threads: 8
     shell:
         """
-        wget -c -O {output}.tmp {params.url} && mv {output}.tmp {output} || (rm -f {output}.tmp; exit 1)
+        wget --timeout=300 --tries=3 -c -O {output}.tmp {params.url} && mv {output}.tmp {output} || (rm -f {output}.tmp; exit 1)
         """
 
 rule extract_phage_fasta:
