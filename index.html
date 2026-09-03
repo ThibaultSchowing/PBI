@@ -1503,11 +1503,12 @@
 <p>PBI-Scope is a reproducible Docker-first pipeline that prepares phage-host data for analysis and machine learning.</p>
 <p>It combines:</p>
 <ol>
-<li><strong>Public phage data</strong> from <a href="https://phagescope.deepomics.org/">PhageScope</a> (which itself aggregates multiple phage sources)</li>
-<li><strong>Optional private datasets</strong> from <code>private_data/</code></li>
+<li><strong>Public phage data</strong> from <a href="https://phagescope.deepomics.org/">PhageScope</a> (which itself aggregates multiple phage sources). It includes Genomes, Proteins and large variety of metadata. </li>
+<li><strong>Optional private datasets</strong> fully local in <code>private_data/</code></li>
 <li><strong>Host genome resolution/download</strong> from NCBI RefSeq</li>
+<li><strong>BLAST</strong> database build for Nucleotide and Protein</li>
 </ol>
-<p>Outputs are stored in a shared data volume and consumed through the <code>pbi</code> Python package or the REST API.</p>
+<p>Outputs are stored in a shared data volume and made available through the <code>pbi</code> Python package or the REST API.</p>
 <div class="admonition info">
 <p class="admonition-title">Database overview and data sample available here: </p>
 <p>For a quick visual overview of all PhageScope tables and data quality, see the <a href="https://thibaultschowing.github.io/PBI-Scope/reports/database_validation.html">Database Validation Report</a> and <a href="https://thibaultschowing.github.io/PBI-Scope/reports/phage_metadata_report.html">Phage Metadata Report</a>.</p>
