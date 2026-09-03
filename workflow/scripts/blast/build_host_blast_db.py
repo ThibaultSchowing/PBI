@@ -23,7 +23,10 @@ def main():
     with open(host_mapping_path) as f:
         host_mapping = json.load(f)
 
-    if not host_mapping:
+    if os.path.exists(combined_fasta):
+        print(f"Combined FASTA already exists ({combined_fasta}), skipping concatenation",
+              file=sys.stderr)
+    elif not host_mapping:
         print("Warning: No host genomes found in mapping. Creating empty BLAST DB.",
               file=sys.stderr)
         # Create an empty FASTA so makeblastdb doesn't fail
