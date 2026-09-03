@@ -108,10 +108,6 @@ def index_host_files(mapping_file: str, log_file: str, qc_log_file: str):
         if index_file.exists():
             logging.debug(f"Index already exists for {host_id}")
             row['index_status'] = 'already_indexed'
-            # Still run QC so the log is complete
-            qc = run_qc(fasta_path)
-            row.update(qc)
-            qc_rows.append(row)
             skipped_count += 1
             continue
 
