@@ -4,14 +4,6 @@
 from pathlib import Path
 
 
-def private_root_dependency(wildcards):
-    root = config.get("private_data_root", "")
-    if not root:
-        return []
-    root_path = Path(root)
-    return [str(root_path)] if root_path.exists() else []
-
-
 def private_blast_db_dependency(wildcards):
     """Return the private BLAST DB done marker if it exists, else empty list.
 
@@ -51,9 +43,6 @@ rule create_duckdb:
         "../scripts/database/create_duckdb.py"   
 
 rule prepare_private_sources:
-    input:
-        # list of directories in private_data_root, [] if empty
-        private_root=private_root_dependency 
     output:
         manifest=config["private_manifest_output"]
     conda:

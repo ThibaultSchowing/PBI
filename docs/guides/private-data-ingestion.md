@@ -1,5 +1,13 @@
 # Private Data Ingestion
 
+> **⚠️ Important:** After adding, removing, or modifying private data sources, you **must** delete the manifest file to force the pipeline to re-scan your data:
+>
+> ```bash
+> docker exec <container_name> rm /private-data/private_manifest.json
+> ```
+>
+> Without this step, the pipeline will reuse the cached manifest and your changes will be ignored.
+
 PBI-Scope can ingest private sources from `private_data/` in addition to public PhageScope data.
 
 ## Directory structure

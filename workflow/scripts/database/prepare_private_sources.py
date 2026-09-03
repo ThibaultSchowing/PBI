@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import json
 import logging
 import sys
 from pathlib import Path
@@ -12,6 +13,17 @@ if str(SRC_PATH) not in sys.path:
     sys.path.insert(0, str(SRC_PATH))
 
 from pbi.private_data import build_private_manifest, write_private_manifest  # noqa: E402
+
+
+def _manifests_equal(existing_path: Path, new_manifest: dict) -> bool:
+    """Check if existing manifest JSON is identical to the new one."""
+    if not existing_path.exists():
+        return False
+    try:
+        existing = json.loads(existing_path.read_text(encoding="utf-8"))
+        return existing == new_manifest
+    except (json.JSONDecodeError, OSError):
+        return False
 
 
 def main():
@@ -30,6 +42,14 @@ def main():
             "sources_invalid": 0,
             "sources": [],
         }
+        if _manifests_equal(output_path, manifest):
+            logging.warning(
+                "Manifest unchanged (empty root). If you added/removed private data, "
+                "delete the manifest to force a re-scan: "
+                "rm %s",
+                output_path,
+            )
+            return
         write_private_manifest(manifest, output_path)
         logging.info(
             "Private data root '%s' is absent or empty; wrote empty manifest",
@@ -46,6 +66,15 @@ def main():
         [str(root_path)],
         excluded_source_dirs=excluded_source_dirs,
     )
+    if _manifests_equal(output_path, manifest):
+        logging.warning(
+            "Manifest unchanged (%d sources, %d valid). If you added/removed "
+            "private data, delete the manifest to force a re-scan: rm %s",
+            manifest["sources_found"],
+            manifest["sources_valid"],
+            output_path,
+        )
+        return
     write_private_manifest(manifest, output_path)
     logging.info(
         "Prepared private manifest with %d sources (%d valid, %d invalid)",
