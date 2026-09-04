@@ -14,6 +14,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -107,7 +108,8 @@ class BlastSearcher:
 
         Returns:
             Dict mapping database name to info dict with keys:
-            type (nucl/prot), exists (bool), path (str).
+            type (nucl/prot), exists (bool), path (str),
+            total_size_mb (float), total_size_gb (float).
         """
         databases = {}
         for db_name, db_type in [
@@ -120,15 +122,29 @@ class BlastSearcher:
             db_path = self.blast_db_dir / db_name
             done_marker = db_path / f"makeblastdb_{db_name}.done"
             db_prefix = db_path / f"all_{db_name}"
-            exists = done_marker.exists() or (
+
+            # Check for split volumes (e.g., all_phages.00.nsq, all_phages.01.nsq)
+            has_volumes = any(
+                db_prefix.with_suffix(f".{i:02d}.nsq").exists()
+                if db_type == "nucl"
+                else db_prefix.with_suffix(f".{i:02d}.psq").exists()
+                for i in range(100)
+            )
+
+            exists = done_marker.exists() or has_volumes or (
                 db_prefix.with_suffix(".nsq").exists()  # nucleotide
                 if db_type == "nucl"
                 else db_prefix.with_suffix(".psq").exists()  # protein
             )
+
+            total_size = self.get_database_size(db_name)
+
             databases[db_name] = {
                 "type": db_type,
                 "exists": exists,
                 "path": str(db_path),
+                "total_size_mb": total_size / (1024 * 1024),
+                "total_size_gb": total_size / (1024 ** 3),
             }
         return databases
 
@@ -157,6 +173,40 @@ class BlastSearcher:
                 )
         return str(db_path)
 
+    def get_database_size(self, db_name: str) -> int:
+        """
+        Get total size of a BLAST database in bytes.
+
+        Handles both single-file and split (volumed) databases.
+
+        Args:
+            db_name: One of 'phages', 'proteins', 'hosts', 'private', 'combined'.
+
+        Returns:
+            Total size in bytes.
+        """
+        db_path = self.blast_db_dir / db_name
+        db_prefix = db_path / f"all_{db_name}"
+
+        total_size = 0
+
+        # Check for split volumes (.00, .01, .02, etc.)
+        for vol_num in range(100):  # Support up to 100 volumes
+            vol_suffix = f".{vol_num:02d}"
+            for ext in [".nsq", ".psq", ".nhr", ".nin", ".phr", ".pin"]:
+                vol_file = db_prefix.with_suffix(vol_suffix + ext)
+                if vol_file.exists():
+                    total_size += vol_file.stat().st_size
+
+        # If no split volumes found, check single file
+        if total_size == 0:
+            for ext in [".nsq", ".psq"]:
+                single_file = db_prefix.with_suffix(ext)
+                if single_file.exists():
+                    total_size += single_file.stat().st_size
+
+        return total_size
+
     def search_sequence(
         self,
         sequence: str,
@@ -166,6 +216,8 @@ class BlastSearcher:
         evalue: float = 1e-5,
         outfmt: int = 6,
         extra_args: list[str] | None = None,
+        timeout: int = 1800,
+        num_threads: int = 1,
     ) -> pd.DataFrame:
         """
         Search a single sequence against a BLAST database.
@@ -178,6 +230,8 @@ class BlastSearcher:
             evalue: E-value threshold.
             outfmt: Output format (6 or 7). Format 7 includes query/subject lengths.
             extra_args: Additional command-line arguments.
+            timeout: Timeout in seconds (default 1800 = 30 minutes).
+            num_threads: Number of threads for BLAST (default 1).
 
         Returns:
             DataFrame with BLAST results.
@@ -205,6 +259,8 @@ class BlastSearcher:
                 evalue=evalue,
                 outfmt=outfmt,
                 extra_args=extra_args,
+                timeout=timeout,
+                num_threads=num_threads,
             )
         finally:
             os.unlink(tmp_path)
@@ -218,6 +274,8 @@ class BlastSearcher:
         evalue: float = 1e-5,
         outfmt: int = 6,
         extra_args: list[str] | None = None,
+        timeout: int = 1800,
+        num_threads: int = 1,
     ) -> pd.DataFrame:
         """
         Search a FASTA file against a BLAST database.
@@ -230,6 +288,8 @@ class BlastSearcher:
             evalue: E-value threshold.
             outfmt: Output format (6 or 7).
             extra_args: Additional command-line arguments.
+            timeout: Timeout in seconds (default 1800 = 30 minutes).
+            num_threads: Number of threads for BLAST (default 1).
 
         Returns:
             DataFrame with BLAST results.
@@ -261,6 +321,8 @@ class BlastSearcher:
                 evalue=evalue,
                 outfmt=outfmt,
                 extra_args=extra_args,
+                timeout=timeout,
+                num_threads=num_threads,
             )
         finally:
             os.unlink(tmp_path)
@@ -274,11 +336,35 @@ class BlastSearcher:
         evalue: float,
         outfmt: int,
         extra_args: list[str] | None = None,
+        timeout: int = 1800,
+        num_threads: int = 1,
     ) -> pd.DataFrame:
         """
         Execute a BLAST search and return results as a DataFrame.
+
+        Args:
+            query: Path to query FASTA file.
+            program: BLAST program (blastn, blastp, blastx, tblastn, tblastx).
+            db: Database name (phages, proteins, hosts, private, combined).
+            max_hits: Maximum number of hits to return.
+            evalue: E-value threshold.
+            outfmt: Output format (6 or 7).
+            extra_args: Additional command-line arguments.
+            timeout: Timeout in seconds (default 1800 = 30 minutes).
+            num_threads: Number of threads for BLAST (default 1).
+
+        Returns:
+            DataFrame with BLAST results.
         """
         db_prefix = self.get_db_prefix(db)
+        db_size = self.get_database_size(db)
+        db_size_gb = db_size / (1024 ** 3)
+
+        logger.info(
+            "Starting BLAST search: program=%s, db=%s (%.2f GB), "
+            "max_hits=%d, evalue=%g, timeout=%ds, num_threads=%d",
+            program, db, db_size_gb, max_hits, evalue, timeout, num_threads,
+        )
 
         columns = BLAST_OUTFMT7_COLUMNS if outfmt == 7 else BLAST_OUTFMT6_COLUMNS
         fmt_str = f"{outfmt} {' '.join(columns)}"
@@ -290,7 +376,7 @@ class BlastSearcher:
             "-outfmt", fmt_str,
             "-max_target_seqs", str(max_hits),
             "-evalue", str(evalue),
-            "-num_threads", "1",
+            "-num_threads", str(num_threads),
         ]
 
         if extra_args:
@@ -298,11 +384,38 @@ class BlastSearcher:
 
         logger.debug("Running BLAST: %s", " ".join(cmd))
 
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 minute timeout
+        start_time = time.time()
+
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired as e:
+            elapsed = time.time() - start_time
+            logger.error(
+                "BLAST timed out after %.1f seconds (timeout=%ds). "
+                "Database: %s (%.2f GB), Program: %s",
+                elapsed, timeout, db, db_size_gb, program,
+            )
+            raise RuntimeError(
+                f"BLAST search timed out after {elapsed:.1f} seconds (timeout={timeout}s).\n"
+                f"Database: {db} ({db_size_gb:.2f} GB)\n"
+                f"Program: {program}\n"
+                f"Query: {query}\n\n"
+                f"This database is very large ({db_size_gb:.2f} GB). "
+                f"Consider:\n"
+                f"1. Increasing timeout: searcher.search_sequence(..., timeout=3600)\n"
+                f"2. Using a smaller database\n"
+                f"3. Using more threads: searcher.search_sequence(..., num_threads=4)\n"
+            ) from e
+
+        elapsed = time.time() - start_time
+        logger.info(
+            "BLAST completed in %.2f seconds (database: %s, %.2f GB)",
+            elapsed, db, db_size_gb,
         )
 
         if result.returncode != 0:
@@ -332,6 +445,8 @@ class BlastSearcher:
         db: str | None = None,
         max_hits: int = 10,
         evalue: float = 1e-5,
+        timeout: int = 1800,
+        num_threads: int = 1,
     ) -> pd.DataFrame:
         """
         Search a sequence and add human-readable annotations from the database.
@@ -345,6 +460,8 @@ class BlastSearcher:
             db: Database name.
             max_hits: Maximum hits.
             evalue: E-value threshold.
+            timeout: Timeout in seconds (default 1800 = 30 minutes).
+            num_threads: Number of threads for BLAST (default 1).
 
         Returns:
             DataFrame with BLAST results and annotations.
@@ -352,6 +469,7 @@ class BlastSearcher:
         df = self.search_sequence(
             sequence, program=program, db=db,
             max_hits=max_hits, evalue=evalue, outfmt=7,
+            timeout=timeout, num_threads=num_threads,
         )
 
         if df.empty:
