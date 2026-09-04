@@ -2,6 +2,10 @@
 .git
 .gitignore
 
+# mount_scripts/ is NOT used in main docker-compose.yml
+# It's a separate custom container (docker-compose.custom.yml)
+mount_scripts/
+
 # Python cache
 __pycache__/
 *.py[cod]
