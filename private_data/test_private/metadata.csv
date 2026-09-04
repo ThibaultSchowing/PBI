@@ -1,0 +1,6 @@
+Phage_ID,Host_ID,Host_name,Source_DB,interaction,Description,Year_Isolated
+TEST_PHAGE_ALPHA,TEST_HOST_ECOLI_A,Escherichia coli K-12,test_private,virulent,Test lytic phage infecting E. coli,2024
+TEST_PHAGE_BETA,TEST_HOST_ECOLI_A,Escherichia coli K-12,test_private,temperate,Test lysogenic phage infecting E. coli,2024
+TEST_PHAGE_GAMMA,TEST_HOST_BSUBT_B,Bacillus subtilis 168,test_private,virulent,Test lytic phage infecting B. subtilis,2024
+TEST_PHAGE_DELTA,TEST_HOST_BSUBT_B,Bacillus subtilis 168,test_private,temperate,Test lysogenic phage infecting B. subtilis,2024
+TEST_PHAGE_EPSILON,TEST_HOST_PAERUG_C,Pseudomonas aeruginosa PA01,test_private,virulent,Test lytic phage infecting P. aeruginosa,2024

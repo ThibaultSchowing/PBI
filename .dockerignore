@@ -42,16 +42,27 @@ Thumbs.db
 
 # Data directories (these should be in volumes)
 data/
+private_data/
+!private_data/test_private/
+!private_data/test_private/**
 .snakemake/
+
+# Documentation and graphics (not needed in any container)
+docs/
+graphics/
+site/
+mkdocs.yml
+
+# Generated outputs and logs (mounted at runtime)
+outputs/
+pipeline_logs/
+
+# CI/CD
+.github/
 
 # Notebooks
 notebooks/
 *.ipynb
-
-# Documentation build
-docs/_build/
-mkdocs/
-site/
 
 # Tests
 tests/
